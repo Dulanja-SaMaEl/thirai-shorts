@@ -1,15 +1,15 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '../../context/AuthContext';
 import { Shield, Award, Lock, Mail, KeyRound, Film, ArrowRight, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectPath = searchParams.get('redirect') || '/admin';
+  const redirectPath = searchParams ? (searchParams.get('redirect') || '/admin') : '/admin';
 
   const { login } = useAuth();
 
@@ -186,5 +186,13 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="text-center py-20 font-bold text-gold-400">Loading Portal Authentication...</div>}>
+      <LoginForm />
+    </Suspense>
   );
 }
