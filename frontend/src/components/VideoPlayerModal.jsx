@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import { X, Play, Award, Star, Download, Eye, ThumbsUp, Film, Calendar, Mail } from 'lucide-react';
+import { X, Play, Award, Star, Download, Eye, ThumbsUp, Film, Calendar, Mail, Trophy } from 'lucide-react';
 
 export default function VideoPlayerModal({ movie, onClose, onOpenVoteModal }) {
   if (!movie) return null;

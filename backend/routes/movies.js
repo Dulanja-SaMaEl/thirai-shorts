@@ -17,8 +17,8 @@ const DEMO_MOVIES = [
     uploader_email: 'director@thiraiplus.com',
     status: 'approved',
     view_count: 1420,
-    is_winner: true,
-    winner_category: 'Best Visual Effects',
+    is_winner: false,
+    winner_category: null,
     created_at: new Date().toISOString(),
     reviews: [
       {
@@ -104,10 +104,9 @@ router.get('/winners', async (req, res) => {
       .from('movies')
       .select('*')
       .eq('is_winner', true);
-    const returnWinners = (winners && winners.length > 0) ? winners : DEMO_MOVIES;
-    return res.status(200).json({ success: true, winners: returnWinners });
+    return res.status(200).json({ success: true, winners: winners || [] });
   } catch (error) {
-    return res.status(200).json({ success: true, winners: DEMO_MOVIES });
+    return res.status(200).json({ success: true, winners: [] });
   }
 });
 

@@ -53,7 +53,10 @@ export default function HomePage() {
     <div className="space-y-10">
       
       {/* Hero Section / Winner Showcase */}
-      <WinnerShowcase winners={winners} />
+      <WinnerShowcase
+        winners={winners}
+        onOpenPlayerModal={(m) => setSelectedPlayingMovie(m)}
+      />
 
       {/* Community Rating Timer Banner */}
       <CommunityTimer />

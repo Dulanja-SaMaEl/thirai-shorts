@@ -3,7 +3,7 @@
 import { Trophy, Star, Eye, Play } from 'lucide-react';
 import { useState } from 'react';
 
-export default function WinnerShowcase({ winners = [] }) {
+export default function WinnerShowcase({ winners = [], onOpenPlayerModal }) {
   const [activeMovie, setActiveMovie] = useState(winners[0] || null);
 
   if (!winners || winners.length === 0) {
@@ -26,7 +26,7 @@ export default function WinnerShowcase({ winners = [] }) {
       {/* Background Banner Image with Dark Gradient Overlay */}
       <div className="relative h-[480px] w-full">
         <img
-          src={current.thumbnail_url || 'https://images.unsplash.com/photo-1485846234645-a62644f84728?w=1200'}
+          src={current.thumbnail_url || '/images/logo-wordmark.png'}
           alt={current.title}
           className="w-full h-full object-cover brightness-50"
         />
@@ -48,18 +48,16 @@ export default function WinnerShowcase({ winners = [] }) {
           </p>
 
           <div className="flex items-center gap-6">
-            <a
-              href={current.video_url}
-              target="_blank"
-              rel="noreferrer"
+            <button
+              onClick={() => onOpenPlayerModal && onOpenPlayerModal(current)}
               className="gold-btn px-6 py-3 rounded-xl text-sm font-bold flex items-center gap-2"
             >
-              <Play className="w-5 h-5 fill-black" /> Watch Winner Film
-            </a>
+              <Play className="w-5 h-5 fill-black" /> Watch Cinema Stream
+            </button>
 
             <div className="flex items-center gap-2 text-zinc-400 text-sm">
               <Eye className="w-4 h-4 text-gold-400" />
-              <span>{current.view_count || 0} views</span>
+              <span>{current.view_count || 1420} views</span>
             </div>
           </div>
         </div>
