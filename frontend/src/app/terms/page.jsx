@@ -44,7 +44,7 @@ export default function TermsOfSubmissionPage() {
             <DollarSign className="w-5 h-5 text-gold-400" /> 2. Submission Fees & Refund Policy
           </h2>
           <p>
-            An official festival entry fee of <strong>$25.00 USD</strong> is required per film submission to cover jury review honorariums and cloud distribution infrastructure. Submission fees are non-refundable once the film enters jury evaluation.
+            An official festival entry fee of <strong>Rs. 2,500</strong> is required per film submission to cover jury review honorariums and cloud distribution infrastructure. Submission fees are non-refundable once the film enters jury evaluation.
           </p>
         </section>
 

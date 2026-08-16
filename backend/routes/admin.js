@@ -57,8 +57,8 @@ router.get('/dashboard', async (req, res) => {
         rejectedCount: 0,
         totalViews: 1420,
         totalReviews: 1,
-        totalRevenueUSD: '25.00',
-        revenueChartData: [{ month: '2026-08', revenue: 25.00 }]
+        totalRevenueFormatted: 'Rs. 2,500',
+        revenueChartData: [{ month: '2026-08', revenue: 2500 }]
       }
     });
   }
