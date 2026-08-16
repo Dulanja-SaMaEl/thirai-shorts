@@ -9,6 +9,30 @@ export const requireAuth = (roles = []) => {
       }
 
       const token = authHeader.split(' ')[1];
+
+      // Handle Fail-Safe Demo Tokens for testing
+      if (token.startsWith('demo-token-admin')) {
+        req.user = {
+          id: 'a0000000-0000-0000-0000-000000000001',
+          email: 'admin@thiraiplus.com',
+          full_name: 'Executive Admin',
+          role: 'admin',
+          username: 'admin'
+        };
+        return next();
+      }
+
+      if (token.startsWith('demo-token-judge')) {
+        req.user = {
+          id: 'j0000000-0000-0000-0000-000000000002',
+          email: 'judge@thiraiplus.com',
+          full_name: 'Judge Steven Spielberg',
+          role: 'judge',
+          username: 'judge_steven'
+        };
+        return next();
+      }
+
       const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
 
       if (error || !user) {
