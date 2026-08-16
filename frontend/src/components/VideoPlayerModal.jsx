@@ -1,10 +1,27 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, Play, Star, Download, ThumbsUp, Film, Calendar, Mail, Trophy } from 'lucide-react';
+import api from '../lib/api';
 
 export default function VideoPlayerModal({ movie, onClose, onOpenVoteModal }) {
   if (!movie) return null;
+
+  const [viewCount, setViewCount] = useState(movie.view_count || 1420);
+
+  useEffect(() => {
+    // 1. Optimistic view count increment (+1)
+    setViewCount(prev => prev + 1);
+
+    // 2. Persist view count in backend
+    api.post(`/movies/${movie.id}/view`)
+      .then(res => {
+        if (res.data.success && res.data.view_count) {
+          setViewCount(res.data.view_count);
+        }
+      })
+      .catch(err => console.warn('View count increment note:', err));
+  }, [movie.id]);
 
   return (
     <div
@@ -58,7 +75,7 @@ export default function VideoPlayerModal({ movie, onClose, onOpenVoteModal }) {
                   </span>
                 )}
                 <span className="text-xs bg-zinc-800 text-zinc-300 px-2.5 py-0.5 rounded-md font-mono">
-                  {movie.view_count || 1420} Views
+                  {viewCount} Views
                 </span>
               </div>
 
