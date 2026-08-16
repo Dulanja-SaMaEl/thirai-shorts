@@ -1,11 +1,14 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { Shield, Eye, Star, DollarSign, Film, UserPlus, Clock, CheckCircle2, XCircle, AlertTriangle, BarChart3, Trophy } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+import Link from 'next/link';
+import { Shield, Eye, Star, DollarSign, Film, UserPlus, Clock, CheckCircle2, XCircle, AlertTriangle, BarChart3, Trophy, LogIn } from 'lucide-react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import api from '../../lib/api';
 
 export default function AdminPanelPage() {
+  const { user, loading: authLoading } = useAuth();
   const [activeTab, setActiveTab] = useState('moderation'); // moderation | analytics | judges | timer
 
   // Dashboard Data
@@ -33,8 +36,32 @@ export default function AdminPanelPage() {
   const [timerMsg, setTimerMsg] = useState('');
 
   useEffect(() => {
-    fetchAdminData();
-  }, []);
+    if (user && user.role === 'admin') {
+      fetchAdminData();
+    }
+  }, [user]);
+
+  if (authLoading) {
+    return <div className="text-center py-24 font-bold text-gold-400">Verifying Admin Permissions...</div>;
+  }
+
+  if (!user || user.role !== 'admin') {
+    return (
+      <div className="max-w-md mx-auto my-16 bg-surface-card border border-gold-500/40 rounded-3xl p-8 text-center space-y-4 shadow-gold-glow glass-panel">
+        <Shield className="w-12 h-12 text-gold-400 mx-auto animate-pulse" />
+        <h2 className="text-2xl font-extrabold text-white">Admin Authentication Required</h2>
+        <p className="text-xs text-zinc-400">
+          This portal is restricted to Executive Admins. Please log in with admin credentials.
+        </p>
+        <Link
+          href="/login?redirect=/admin"
+          className="gold-btn py-3 px-6 rounded-xl text-xs font-bold uppercase tracking-wider inline-flex items-center gap-2 shadow-gold-glow"
+        >
+          <LogIn className="w-4 h-4" /> Go to Portal Login
+        </Link>
+      </div>
+    );
+  }
 
   const fetchAdminData = async () => {
     setLoading(true);

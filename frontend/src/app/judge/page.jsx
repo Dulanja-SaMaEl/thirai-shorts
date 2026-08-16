@@ -1,10 +1,13 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { Award, Star, MessageSquare, CheckCircle, ShieldAlert, Film, Play } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+import Link from 'next/link';
+import { Award, Star, MessageSquare, CheckCircle, ShieldAlert, Film, Play, LogIn } from 'lucide-react';
 import api from '../../lib/api';
 
 export default function JudgePanelPage() {
+  const { user, loading: authLoading } = useAuth();
   const [movies, setMovies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedMovie, setSelectedMovie] = useState(null);
@@ -17,8 +20,32 @@ export default function JudgePanelPage() {
   const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
-    fetchAssignedMovies();
-  }, []);
+    if (user && (user.role === 'judge' || user.role === 'admin')) {
+      fetchAssignedMovies();
+    }
+  }, [user]);
+
+  if (authLoading) {
+    return <div className="text-center py-24 font-bold text-gold-400">Verifying Jury Permissions...</div>;
+  }
+
+  if (!user || (user.role !== 'judge' && user.role !== 'admin')) {
+    return (
+      <div className="max-w-md mx-auto my-16 bg-surface-card border border-gold-500/40 rounded-3xl p-8 text-center space-y-4 shadow-gold-glow glass-panel">
+        <Award className="w-12 h-12 text-gold-400 mx-auto animate-bounce" />
+        <h2 className="text-2xl font-extrabold text-white">Jury Authentication Required</h2>
+        <p className="text-xs text-zinc-400">
+          This portal is reserved for official festival judges. Please log in with your jury credentials.
+        </p>
+        <Link
+          href="/login?redirect=/judge"
+          className="gold-btn py-3 px-6 rounded-xl text-xs font-bold uppercase tracking-wider inline-flex items-center gap-2 shadow-gold-glow"
+        >
+          <LogIn className="w-4 h-4" /> Go to Portal Login
+        </Link>
+      </div>
+    );
+  }
 
   const fetchAssignedMovies = async () => {
     setLoading(true);

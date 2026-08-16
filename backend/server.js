@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 
 // Import Routes
+import authRoutes from './routes/auth.js';
 import uploadRoutes from './routes/upload.js';
 import movieRoutes from './routes/movies.js';
 import adminRoutes from './routes/admin.js';
@@ -17,7 +18,14 @@ const PORT = process.env.PORT || 5000;
 
 // CORS setup for Frontend Next.js integration
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl) or any Vercel domain
+    if (!origin || origin.includes('vercel.app') || origin.includes('localhost')) {
+      callback(null, true);
+    } else {
+      callback(null, true); // Permissive CORS for deployed web app
+    }
+  },
   credentials: true
 }));
 
@@ -37,6 +45,7 @@ app.get('/api/health', (req, res) => {
 });
 
 // API Routes
+app.use('/api/auth', authRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/movies', movieRoutes);
 app.use('/api/admin', adminRoutes);
