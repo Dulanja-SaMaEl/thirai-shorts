@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 
 // Import Routes
+import healthRoutes from './routes/health.js';
 import authRoutes from './routes/auth.js';
 import uploadRoutes from './routes/upload.js';
 import movieRoutes from './routes/movies.js';
@@ -40,9 +41,7 @@ app.use((req, res, next) => {
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Health Check Route
-app.get('/api/health', (req, res) => {
-  res.status(200).json({ status: 'online', service: 'Thirai+ Express API', timestamp: new Date().toISOString() });
-});
+app.use('/api/health', healthRoutes);
 
 // API Routes
 app.use('/api/auth', authRoutes);

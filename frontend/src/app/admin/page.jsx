@@ -7,6 +7,8 @@ import { Shield, Eye, Star, DollarSign, Film, UserPlus, Clock, CheckCircle2, XCi
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import api from '../../lib/api';
 
+import SystemStatusWidget from '../../components/SystemStatusWidget';
+
 export default function AdminPanelPage() {
   const { user, loading: authLoading } = useAuth();
   const [activeTab, setActiveTab] = useState('moderation'); // moderation | analytics | judges | timer
@@ -187,6 +189,9 @@ export default function AdminPanelPage() {
           })}
         </div>
       </div>
+
+      {/* Infrastructure Diagnostics Monitor */}
+      <SystemStatusWidget />
 
       {/* Tab Content 1: Moderation Queue */}
       {activeTab === 'moderation' && (

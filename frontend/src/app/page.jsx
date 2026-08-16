@@ -9,6 +9,8 @@ import VotingModal from '../components/VotingModal';
 import { Film, Filter, TrendingUp, Sparkles, AlertCircle } from 'lucide-react';
 import api from '../lib/api';
 
+import SystemStatusWidget from '../components/SystemStatusWidget';
+
 export default function HomePage() {
   const [movies, setMovies] = useState([]);
   const [winners, setWinners] = useState([]);
@@ -124,6 +126,9 @@ export default function HomePage() {
           </div>
         )}
       </section>
+
+      {/* Live System Diagnostics Status Widget */}
+      <SystemStatusWidget />
 
       {/* Contact Us Section */}
       <ContactForm />

@@ -17,19 +17,11 @@ export default function Header() {
         
         {/* Brand Logo */}
         <Link href="/" className="flex items-center gap-3 group">
-          <div className="w-10 h-10 rounded-xl bg-gold-gradient p-0.5 shadow-gold-glow flex items-center justify-center group-hover:scale-105 transition-transform">
-            <div className="w-full h-full bg-black rounded-[10px] flex items-center justify-center">
-              <Film className="w-5 h-5 text-gold-400" />
-            </div>
-          </div>
-          <div>
-            <span className="text-2xl font-extrabold tracking-wider font-mono text-white">
-              THIRAI<span className="gold-text-gradient">+</span>
-            </span>
-            <span className="block text-[10px] text-zinc-400 tracking-widest uppercase font-semibold">
-              Cinematic Shorts Platform
-            </span>
-          </div>
+          <img
+            src="/images/logo-wordmark.png"
+            alt="Thirai+"
+            className="h-9 w-auto object-contain group-hover:scale-105 transition-transform"
+          />
         </Link>
 
         {/* Navigation Links */}

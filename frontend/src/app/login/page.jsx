@@ -59,15 +59,12 @@ function LoginForm() {
         
         {/* Thirai+ Wordmark Logo Header */}
         <div className="text-center space-y-3">
-          <div className="inline-flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-gold-gradient p-0.5 shadow-gold-glow flex items-center justify-center">
-              <div className="w-full h-full bg-black rounded-[14px] flex items-center justify-center">
-                <Film className="w-6 h-6 text-gold-400" />
-              </div>
-            </div>
-            <span className="text-3xl font-extrabold tracking-wider font-mono text-white">
-              THIRAI<span className="gold-text-gradient">+</span>
-            </span>
+          <div className="inline-flex items-center justify-center">
+            <img
+              src="/images/logo-icon.png"
+              alt="Thirai+"
+              className="w-24 h-24 object-contain mx-auto drop-shadow-[0_0_15px_rgba(255,215,0,0.4)]"
+            />
           </div>
           <h2 className="text-xl font-bold text-white tracking-tight">Portal Authentication</h2>
           <p className="text-xs text-zinc-400">
