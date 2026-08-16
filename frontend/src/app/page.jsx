@@ -6,10 +6,10 @@ import MovieCard from '../components/MovieCard';
 import CommunityTimer from '../components/CommunityTimer';
 import ContactForm from '../components/ContactForm';
 import VotingModal from '../components/VotingModal';
+import VideoPlayerModal from '../components/VideoPlayerModal';
+import SystemStatusWidget from '../components/SystemStatusWidget';
 import { Film, Filter, TrendingUp, Sparkles, AlertCircle } from 'lucide-react';
 import api from '../lib/api';
-
-import SystemStatusWidget from '../components/SystemStatusWidget';
 
 export default function HomePage() {
   const [movies, setMovies] = useState([]);
@@ -18,6 +18,7 @@ export default function HomePage() {
   const [filterSort, setFilterSort] = useState('newest');
   const [filterStatus, setFilterStatus] = useState('all');
   const [selectedVotingMovie, setSelectedVotingMovie] = useState(null);
+  const [selectedPlayingMovie, setSelectedPlayingMovie] = useState(null);
 
   useEffect(() => {
     fetchGalleryData();
@@ -121,6 +122,7 @@ export default function HomePage() {
                 key={movie.id}
                 movie={movie}
                 onOpenVoteModal={(m) => setSelectedVotingMovie(m)}
+                onOpenPlayerModal={(m) => setSelectedPlayingMovie(m)}
               />
             ))}
           </div>
@@ -132,6 +134,15 @@ export default function HomePage() {
 
       {/* Contact Us Section */}
       <ContactForm />
+
+      {/* Interactive Cinema Video Player Modal */}
+      {selectedPlayingMovie && (
+        <VideoPlayerModal
+          movie={selectedPlayingMovie}
+          onClose={() => setSelectedPlayingMovie(null)}
+          onOpenVoteModal={(m) => setSelectedVotingMovie(m)}
+        />
+      )}
 
       {/* Community Voting Anti-Spam Modal */}
       {selectedVotingMovie && (
