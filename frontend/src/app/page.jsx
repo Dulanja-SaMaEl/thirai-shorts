@@ -7,7 +7,6 @@ import CommunityTimer from '../components/CommunityTimer';
 import ContactForm from '../components/ContactForm';
 import VotingModal from '../components/VotingModal';
 import VideoPlayerModal from '../components/VideoPlayerModal';
-import SystemStatusWidget from '../components/SystemStatusWidget';
 import { Film, Filter, TrendingUp, Sparkles, AlertCircle } from 'lucide-react';
 import api from '../lib/api';
 
@@ -131,9 +130,6 @@ export default function HomePage() {
           </div>
         )}
       </section>
-
-      {/* Live System Diagnostics Status Widget */}
-      <SystemStatusWidget />
 
       {/* Contact Us Section */}
       <ContactForm />

@@ -126,18 +126,21 @@ export default function AdminPanelPage() {
     }
   };
 
-  const handleToggleCommunityTimer = async (e) => {
-    e.preventDefault();
+  const handleToggleCommunityTimer = async (e, forceStatus = null) => {
+    if (e) e.preventDefault();
     setTimerMsg('');
+
+    const targetStatus = forceStatus !== null ? forceStatus : timerActive;
 
     try {
       const res = await api.post('/admin/community-rating-timer', {
-        is_active: timerActive,
+        is_active: targetStatus,
         duration_hours: durationHours
       });
 
       if (res.data.success) {
-        setTimerMsg(`Community timer setting saved! Status: ${timerActive ? 'ACTIVE' : 'INACTIVE'}`);
+        setTimerActive(targetStatus);
+        setTimerMsg(`Community rating event is now: ${targetStatus ? 'ACTIVE' : 'DEACTIVATED / CANCELED'}`);
       }
     } catch (err) {
       setTimerMsg('Failed to update timer status.');
@@ -489,15 +492,16 @@ export default function AdminPanelPage() {
           <form onSubmit={handleToggleCommunityTimer} className="space-y-6">
             <div className="flex items-center justify-between p-4 rounded-2xl bg-black border border-zinc-800">
               <div>
-                <h4 className="text-sm font-bold text-white">Enable Community Rating Event</h4>
-                <p className="text-xs text-zinc-400">When enabled, the public can submit verified 1-10 scores.</p>
+                <h4 className="text-sm font-bold text-white">Event Operational Status</h4>
+                <p className="text-xs text-zinc-400 mt-0.5">
+                  Currently: <strong className={timerActive ? "text-emerald-400 font-extrabold" : "text-rose-400 font-extrabold"}>
+                    {timerActive ? "ACTIVE (Public Voting Live)" : "INACTIVE / CANCELED"}
+                  </strong>
+                </p>
               </div>
-              <input
-                type="checkbox"
-                checked={timerActive}
-                onChange={(e) => setTimerActive(e.target.checked)}
-                className="w-6 h-6 accent-gold-500 cursor-pointer"
-              />
+              <span className={`px-3 py-1 rounded-full text-xs font-bold font-mono ${timerActive ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40" : "bg-zinc-800 text-zinc-400"}`}>
+                {timerActive ? "● EVENT LIVE" : "○ EVENT STOPPED"}
+              </span>
             </div>
 
             <div>
@@ -516,12 +520,23 @@ export default function AdminPanelPage() {
               </select>
             </div>
 
-            <button
-              type="submit"
-              className="w-full gold-btn py-3 rounded-xl text-xs font-bold uppercase tracking-wider"
-            >
-              Update Event Status & Timer
-            </button>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <button
+                type="button"
+                onClick={(e) => handleToggleCommunityTimer(e, true)}
+                className="gold-btn py-3 rounded-xl text-xs font-bold uppercase tracking-wider shadow-gold-glow flex items-center justify-center gap-2"
+              >
+                <Clock className="w-4 h-4" /> Activate / Start Event
+              </button>
+
+              <button
+                type="button"
+                onClick={(e) => handleToggleCommunityTimer(e, false)}
+                className="py-3 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/50 text-rose-300 text-xs font-extrabold uppercase tracking-wider flex items-center justify-center gap-2 transition-colors"
+              >
+                <XCircle className="w-4 h-4" /> Cancel / Deactivate Event
+              </button>
+            </div>
           </form>
         </div>
       )}

@@ -1,24 +1,37 @@
 "use client";
 
 import { useState } from 'react';
-import { X, Play, Award, Star, Download, Eye, ThumbsUp, Film, Calendar, Mail, Trophy } from 'lucide-react';
+import { X, Play, Star, Download, ThumbsUp, Film, Calendar, Mail, Trophy } from 'lucide-react';
 
 export default function VideoPlayerModal({ movie, onClose, onOpenVoteModal }) {
   if (!movie) return null;
 
-  const [isPlaying, setIsPlaying] = useState(false);
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fade-in overflow-y-auto">
-      <div className="relative w-full max-w-4xl bg-surface-card border border-gold-500/30 rounded-3xl overflow-hidden shadow-gold-glow-lg glass-panel my-8">
+    <div
+      onClick={onClose}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/95 backdrop-blur-lg animate-fade-in overflow-y-auto"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="relative w-full max-w-4xl bg-surface-card border border-gold-500/40 rounded-3xl overflow-hidden shadow-gold-glow-lg glass-panel my-8"
+      >
         
-        {/* Close Button */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 z-20 w-10 h-10 rounded-full bg-black/80 border border-zinc-700 text-zinc-300 hover:text-white flex items-center justify-center hover:scale-110 transition-transform"
-        >
-          <X className="w-5 h-5" />
-        </button>
+        {/* Top Header Bar with Close Button */}
+        <div className="flex items-center justify-between px-6 py-4 bg-black/80 border-b border-zinc-800">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-gold-400 animate-pulse" />
+            <span className="text-xs font-bold text-gold-400 uppercase tracking-widest">
+              Thirai+ Cinema Player
+            </span>
+          </div>
+
+          <button
+            onClick={onClose}
+            className="px-4 py-1.5 rounded-full bg-gold-500/10 hover:bg-gold-500/20 border border-gold-500/40 text-gold-300 hover:text-white text-xs font-extrabold flex items-center gap-1.5 transition-all shadow-gold-glow"
+          >
+            <X className="w-4 h-4" /> CLOSE PLAYER
+          </button>
+        </div>
 
         {/* Cinema HTML5 Video Player */}
         <div className="relative aspect-video w-full bg-black border-b border-zinc-800 flex items-center justify-center">
@@ -41,7 +54,7 @@ export default function VideoPlayerModal({ movie, onClose, onOpenVoteModal }) {
               <div className="flex items-center gap-2 mb-2">
                 {movie.is_winner && (
                   <span className="gold-btn px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider flex items-center gap-1">
-                    <Trophy className="w-3 h-3 fill-black" /> Winner: {movie.winner_category || 'Best Film'}
+                    <Trophy className="w-3 h-3 fill-black" /> Winner: {movie.winner_category || 'Grand Winner'}
                   </span>
                 )}
                 <span className="text-xs bg-zinc-800 text-zinc-300 px-2.5 py-0.5 rounded-md font-mono">
@@ -126,6 +139,16 @@ export default function VideoPlayerModal({ movie, onClose, onOpenVoteModal }) {
               </div>
             </div>
           )}
+
+          {/* Bottom Footer Close Button */}
+          <div className="pt-4 border-t border-zinc-800 flex justify-end">
+            <button
+              onClick={onClose}
+              className="px-6 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 hover:border-gold-500 text-zinc-300 hover:text-white text-xs font-bold flex items-center gap-2 transition-all"
+            >
+              <X className="w-4 h-4 text-gold-400" /> Close Video Stream
+            </button>
+          </div>
 
         </div>
       </div>
