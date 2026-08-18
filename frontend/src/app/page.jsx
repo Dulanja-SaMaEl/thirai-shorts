@@ -7,7 +7,7 @@ import CommunityTimer from '../components/CommunityTimer';
 import ContactForm from '../components/ContactForm';
 import VotingModal from '../components/VotingModal';
 import VideoPlayerModal from '../components/VideoPlayerModal';
-import { Film, Filter, TrendingUp, Sparkles, AlertCircle } from 'lucide-react';
+import { Film, TrendingUp, AlertCircle } from 'lucide-react';
 import api from '../lib/api';
 
 export default function HomePage() {
@@ -15,13 +15,12 @@ export default function HomePage() {
   const [winners, setWinners] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterSort, setFilterSort] = useState('newest');
-  const [filterStatus, setFilterStatus] = useState('all');
   const [selectedVotingMovie, setSelectedVotingMovie] = useState(null);
   const [selectedPlayingMovie, setSelectedPlayingMovie] = useState(null);
 
   useEffect(() => {
     fetchGalleryData();
-  }, [filterSort, filterStatus]);
+  }, [filterSort]);
 
   const fetchGalleryData = async () => {
     setLoading(true);
@@ -33,11 +32,7 @@ export default function HomePage() {
       }
 
       // Fetch Gallery Movies
-      let url = `/movies?sort=${filterSort}`;
-      if (filterStatus !== 'all') {
-        url += `&status=${filterStatus}`;
-      }
-      const moviesRes = await api.get(url);
+      const moviesRes = await api.get(`/movies?sort=${filterSort}`);
       if (moviesRes.data.success) {
         setMovies(moviesRes.data.movies || []);
       }
@@ -49,18 +44,9 @@ export default function HomePage() {
   };
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-12">
       
-      {/* Hero Section / Winner Showcase */}
-      <WinnerShowcase
-        winners={winners}
-        onOpenPlayerModal={(m) => setSelectedPlayingMovie(m)}
-      />
-
-      {/* Community Rating Timer Banner */}
-      <CommunityTimer />
-
-      {/* Movie Gallery Section Header */}
+      {/* 1. Film Festival Gallery Section (Now on Top) */}
       <section className="space-y-6">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-gold-500/20 pb-4">
           <div>
@@ -69,38 +55,22 @@ export default function HomePage() {
               <h2 className="text-2xl font-extrabold text-white">Film Festival Gallery</h2>
             </div>
             <p className="text-xs text-zinc-400 mt-1">
-              Browse official selections and newly submitted entries. Pending movies appear faded during jury moderation.
+              Browse official selections and newly submitted short film entries.
             </p>
           </div>
 
-          {/* Sort & Filter Controls */}
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 bg-surface-card border border-zinc-800 rounded-xl px-3 py-1.5 text-xs text-zinc-300">
-              <TrendingUp className="w-3.5 h-3.5 text-gold-400" />
-              <span>Sort:</span>
-              <select
-                value={filterSort}
-                onChange={(e) => setFilterSort(e.target.value)}
-                className="bg-transparent text-gold-400 font-semibold focus:outline-none cursor-pointer"
-              >
-                <option value="newest" className="bg-black text-white">Newest Additions</option>
-                <option value="popular" className="bg-black text-white">Most Viewed</option>
-              </select>
-            </div>
-
-            <div className="flex items-center gap-2 bg-surface-card border border-zinc-800 rounded-xl px-3 py-1.5 text-xs text-zinc-300">
-              <Filter className="w-3.5 h-3.5 text-gold-400" />
-              <span>State:</span>
-              <select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-                className="bg-transparent text-gold-400 font-semibold focus:outline-none cursor-pointer"
-              >
-                <option value="all" className="bg-black text-white">All Submissions</option>
-                <option value="approved" className="bg-black text-white">Approved Only</option>
-                <option value="pending" className="bg-black text-white">Pending Moderation</option>
-              </select>
-            </div>
+          {/* Sort Control Only (State Dropdown Removed) */}
+          <div className="flex items-center gap-2 bg-surface-card border border-zinc-800 rounded-xl px-3.5 py-2 text-xs text-zinc-300">
+            <TrendingUp className="w-4 h-4 text-gold-400" />
+            <span className="font-semibold text-zinc-400">Sort:</span>
+            <select
+              value={filterSort}
+              onChange={(e) => setFilterSort(e.target.value)}
+              className="bg-transparent text-gold-400 font-bold focus:outline-none cursor-pointer"
+            >
+              <option value="newest" className="bg-black text-white">Newest Additions</option>
+              <option value="popular" className="bg-black text-white">Most Viewed</option>
+            </select>
           </div>
         </div>
 
@@ -131,7 +101,16 @@ export default function HomePage() {
         )}
       </section>
 
-      {/* Contact Us Section */}
+      {/* 2. Community Rating Timer Banner */}
+      <CommunityTimer />
+
+      {/* 3. Annual Thirai+ Festival Winners (Now Down Below Gallery) */}
+      <WinnerShowcase
+        winners={winners}
+        onOpenPlayerModal={(m) => setSelectedPlayingMovie(m)}
+      />
+
+      {/* 4. Contact Us Section */}
       <ContactForm />
 
       {/* Interactive Cinema Video Player Modal */}
