@@ -7,7 +7,7 @@ const router = express.Router();
 
 const DEMO_MOVIES = [
   {
-    id: 'demo-winter-film-001',
+    id: 'e0000000-0000-0000-0000-000000000001',
     title: 'Blue End Screen: Winter Outro',
     description: 'A breathtaking visual journey capturing winter landscapes, serene typography, and high-contrast cinematic atmosphere.',
     thumbnail_url: '/images/logo-wordmark.png',

@@ -19,7 +19,7 @@ export const DEMO_USERS = {
   'judge@thiraiplus.com': {
     password: 'Judge@123456',
     user: {
-      id: 'j0000000-0000-0000-0000-000000000002',
+      id: 'b0000000-0000-0000-0000-000000000002',
       email: 'judge@thiraiplus.com',
       full_name: 'Judge Steven Spielberg',
       role: 'judge',
@@ -33,7 +33,7 @@ export const DEMO_USERS = {
   'viewer@thiraiplus.com': {
     password: 'Viewer@123456',
     user: {
-      id: 'v0000000-0000-0000-0000-000000000003',
+      id: 'd0000000-0000-0000-0000-000000000004',
       email: 'viewer@thiraiplus.com',
       full_name: 'Cinema Enthusiast',
       role: 'viewer',
