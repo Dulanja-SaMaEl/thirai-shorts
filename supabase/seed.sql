@@ -9,7 +9,6 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- 2. Safely Upsert into Supabase Native Auth (auth.users & auth.identities)
--- Prevents "duplicate key value violates unique constraint users_email_partial_key"
 DO $$ 
 DECLARE
     admin_uuid UUID;
@@ -115,15 +114,30 @@ BEGIN
             );
         END IF;
 
-        -- Ensure identities table has matching rows
+        -- Ensure identities table has matching rows (safely handling UUID id and optional provider_id)
         IF EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'auth' AND table_name = 'identities') THEN
-            INSERT INTO auth.identities (id, user_id, identity_data, provider, last_sign_in_at, created_at, updated_at)
-            VALUES 
-                (admin_uuid::text, admin_uuid, json_build_object('sub', admin_uuid::text, 'email', 'admin@thiraiplus.com')::jsonb, 'email', NOW(), NOW(), NOW()),
-                (judge_uuid::text, judge_uuid, json_build_object('sub', judge_uuid::text, 'email', 'judge@thiraiplus.com')::jsonb, 'email', NOW(), NOW(), NOW()),
-                (director_uuid::text, director_uuid, json_build_object('sub', director_uuid::text, 'email', 'director@thiraiplus.com')::jsonb, 'email', NOW(), NOW(), NOW()),
-                (viewer_uuid::text, viewer_uuid, json_build_object('sub', viewer_uuid::text, 'email', 'viewer@thiraiplus.com')::jsonb, 'email', NOW(), NOW(), NOW())
-            ON CONFLICT (provider, id) DO NOTHING;
+            BEGIN
+                IF EXISTS (SELECT FROM information_schema.columns WHERE table_schema = 'auth' AND table_name = 'identities' AND column_name = 'provider_id') THEN
+                    INSERT INTO auth.identities (id, user_id, provider_id, identity_data, provider, last_sign_in_at, created_at, updated_at)
+                    VALUES 
+                        (admin_uuid, admin_uuid, admin_uuid::text, json_build_object('sub', admin_uuid::text, 'email', 'admin@thiraiplus.com')::jsonb, 'email', NOW(), NOW(), NOW()),
+                        (judge_uuid, judge_uuid, judge_uuid::text, json_build_object('sub', judge_uuid::text, 'email', 'judge@thiraiplus.com')::jsonb, 'email', NOW(), NOW(), NOW()),
+                        (director_uuid, director_uuid, director_uuid::text, json_build_object('sub', director_uuid::text, 'email', 'director@thiraiplus.com')::jsonb, 'email', NOW(), NOW(), NOW()),
+                        (viewer_uuid, viewer_uuid, viewer_uuid::text, json_build_object('sub', viewer_uuid::text, 'email', 'viewer@thiraiplus.com')::jsonb, 'email', NOW(), NOW(), NOW())
+                    ON CONFLICT DO NOTHING;
+                ELSE
+                    INSERT INTO auth.identities (id, user_id, identity_data, provider, last_sign_in_at, created_at, updated_at)
+                    VALUES 
+                        (admin_uuid, admin_uuid, json_build_object('sub', admin_uuid::text, 'email', 'admin@thiraiplus.com')::jsonb, 'email', NOW(), NOW(), NOW()),
+                        (judge_uuid, judge_uuid, json_build_object('sub', judge_uuid::text, 'email', 'judge@thiraiplus.com')::jsonb, 'email', NOW(), NOW(), NOW()),
+                        (director_uuid, director_uuid, director_uuid::text, json_build_object('sub', director_uuid::text, 'email', 'director@thiraiplus.com')::jsonb, 'email', NOW(), NOW(), NOW()),
+                        (viewer_uuid, viewer_uuid, viewer_uuid::text, json_build_object('sub', viewer_uuid::text, 'email', 'viewer@thiraiplus.com')::jsonb, 'email', NOW(), NOW(), NOW())
+                    ON CONFLICT DO NOTHING;
+                END IF;
+            EXCEPTION WHEN OTHERS THEN
+                -- Never let identity sync prevent schema completion
+                RAISE NOTICE 'identities notice: %', SQLERRM;
+            END;
         END IF;
 
     END IF;
