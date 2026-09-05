@@ -219,6 +219,21 @@ router.post('/:id/unlock', requireAuth(), async (req, res) => {
       console.warn('Supabase DB check unlock notice:', e.message);
     }
 
+    // 2.5 Check if user has active VIP Subscription Pass (Unlimited Streaming)
+    if (req.user.subscription_status === 'active') {
+      userStore.unlockMovie(userId, id);
+      try {
+        await supabaseAdmin.from('user_movie_unlocks').upsert({ user_id: userId, movie_id: id });
+      } catch (e) {}
+      return res.status(200).json({
+        success: true,
+        unlocked: true,
+        is_vip: true,
+        tokens_balance: req.user.tokens_balance ?? 2,
+        message: 'VIP Pass Active! Unlocked with unlimited streaming.'
+      });
+    }
+
     // 3. Check token balance (must have at least 1 token)
     const currentTokens = Number(req.user.tokens_balance ?? 0);
     if (currentTokens < 1) {

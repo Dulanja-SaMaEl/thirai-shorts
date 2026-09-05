@@ -11,6 +11,8 @@ export const DEMO_USERS = {
       role: 'admin',
       username: 'admin',
       tokens_balance: 999,
+      subscription_tier: 'yearly',
+      subscription_status: 'active',
       profile_pic_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150'
     }
   },
@@ -23,6 +25,8 @@ export const DEMO_USERS = {
       role: 'judge',
       username: 'judge_steven',
       tokens_balance: 999,
+      subscription_tier: 'yearly',
+      subscription_status: 'active',
       profile_pic_url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150'
     }
   },
@@ -35,6 +39,8 @@ export const DEMO_USERS = {
       role: 'viewer',
       username: 'cine_fan',
       tokens_balance: 2,
+      subscription_tier: 'free',
+      subscription_status: 'inactive',
       profile_pic_url: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150'
     }
   }
@@ -86,6 +92,8 @@ export const userStore = {
       role,
       username: cleanEmail.split('@')[0],
       tokens_balance: Number(tokens_balance),
+      subscription_tier: 'free',
+      subscription_status: 'inactive',
       profile_pic_url: `https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150`,
       created_at: new Date().toISOString()
     };
@@ -108,6 +116,23 @@ export const userStore = {
       const record = registeredUsersByEmail.get(user.email.toLowerCase());
       if (record) {
         record.user.tokens_balance = Number(newBalance);
+      }
+    }
+    return user;
+  },
+
+  subscribeUser(userId, tier = 'monthly') {
+    const user = registeredUsersById.get(userId);
+    if (user) {
+      user.subscription_tier = tier;
+      user.subscription_status = 'active';
+      // Grant VIP bonus tokens or unlimited pass
+      user.tokens_balance = (user.tokens_balance || 0) + (tier === 'yearly' ? 50 : 20);
+      const record = registeredUsersByEmail.get(user.email.toLowerCase());
+      if (record) {
+        record.user.subscription_tier = tier;
+        record.user.subscription_status = 'active';
+        record.user.tokens_balance = user.tokens_balance;
       }
     }
     return user;

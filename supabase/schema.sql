@@ -15,12 +15,21 @@ CREATE TABLE IF NOT EXISTS public.users (
     full_name VARCHAR(255) NOT NULL,
     role user_role NOT NULL DEFAULT 'viewer',
     tokens_balance INTEGER NOT NULL DEFAULT 2, -- Default 2 free tokens for viewing 2 short movies
+    subscription_tier VARCHAR(50) DEFAULT 'free', -- 'free', 'monthly', 'yearly'
+    subscription_status VARCHAR(50) DEFAULT 'inactive', -- 'inactive', 'active'
+    subscription_expires_at TIMESTAMP WITH TIME ZONE,
     profile_pic_url TEXT,
     username VARCHAR(100) UNIQUE,
     password_hash TEXT, -- For custom auth if needed, otherwise managed via Supabase Auth
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Idempotent column additions for existing installations
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS tokens_balance INTEGER NOT NULL DEFAULT 2;
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS subscription_tier VARCHAR(50) DEFAULT 'free';
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS subscription_status VARCHAR(50) DEFAULT 'inactive';
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS subscription_expires_at TIMESTAMP WITH TIME ZONE;
 
 -- 2. Movies Table
 CREATE TABLE IF NOT EXISTS public.movies (
@@ -66,7 +75,9 @@ CREATE INDEX idx_reviews_movie_id ON public.reviews(movie_id);
 -- 4. Payments Table
 CREATE TABLE IF NOT EXISTS public.payments (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES public.users(id) ON DELETE SET NULL,
     movie_id UUID REFERENCES public.movies(id) ON DELETE SET NULL,
+    package_type VARCHAR(50), -- 'monthly', 'yearly', 'submission'
     stripe_session_id VARCHAR(255) UNIQUE,
     stripe_payment_intent_id VARCHAR(255) UNIQUE,
     amount_cents INTEGER NOT NULL,

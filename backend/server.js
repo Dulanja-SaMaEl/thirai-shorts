@@ -11,6 +11,7 @@ import adminRoutes from './routes/admin.js';
 import judgeRoutes from './routes/judge.js';
 import voteRoutes from './routes/vote.js';
 import stripeRoutes from './routes/stripe.js';
+import packageRoutes from './routes/packages.js';
 
 dotenv.config();
 
@@ -51,6 +52,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/judge', judgeRoutes);
 app.use('/api/vote', voteRoutes);
 app.use('/api/stripe', stripeRoutes);
+app.use('/api/packages', packageRoutes);
 
 // Global Error Handler
 app.use((err, req, res, next) => {

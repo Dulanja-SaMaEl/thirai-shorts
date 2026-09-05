@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { Coins, Film, PlayCircle, Sparkles, User, Calendar, ExternalLink, AlertCircle, LogIn, ArrowRight } from 'lucide-react';
 import api from '../../lib/api';
 import VideoPlayerModal from '../../components/VideoPlayerModal';
+import PackagesSection from '../../components/PackagesSection';
 
 export default function UserDashboardPage() {
   const { user, loading: authLoading, refreshUser } = useAuth();
@@ -81,11 +82,20 @@ export default function UserDashboardPage() {
             className="w-16 h-16 rounded-2xl object-cover border-2 border-gold-400 shadow-gold-glow"
           />
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <h1 className="text-2xl font-extrabold text-white">{user.full_name}</h1>
               <span className="px-2.5 py-0.5 rounded-full bg-gold-500/20 text-gold-300 border border-gold-500/40 text-[10px] font-bold uppercase tracking-wider">
                 {user.role === 'admin' ? 'Admin' : (user.role === 'judge' ? 'Jury Judge' : 'Audience Member')}
               </span>
+              {user.subscription_status === 'active' ? (
+                <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-extrabold uppercase tracking-wider flex items-center gap-1 shadow-gold-glow">
+                  👑 {user.subscription_tier === 'yearly' ? 'Annual VIP Pass' : 'Monthly VIP Pass'}
+                </span>
+              ) : (
+                <span className="px-2.5 py-0.5 rounded-full bg-zinc-800 text-zinc-400 border border-zinc-700 text-[10px] font-semibold uppercase tracking-wider">
+                  Free Audience Tier
+                </span>
+              )}
             </div>
             <p className="text-xs text-zinc-400 mt-1 flex items-center gap-3">
               <span>{user.email}</span>
@@ -118,9 +128,16 @@ export default function UserDashboardPage() {
                 <span className="text-sm font-bold text-gold-300 uppercase tracking-wider">
                   {tokenCount === 1 ? 'Token Available' : 'Tokens Available'}
                 </span>
+                {user.subscription_status === 'active' && (
+                  <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-1 rounded-full">
+                    ✨ Unlimited VIP Streaming Active
+                  </span>
+                )}
               </div>
               <p className="text-xs text-zinc-300 max-w-md leading-relaxed pt-1">
-                Use 1 token to unlock any short film from the festival gallery. Once unlocked, you can re-watch it indefinitely with zero restrictions.
+                {user.subscription_status === 'active'
+                  ? 'Your VIP Pass gives you unlimited streaming on all short movies without consuming tokens.'
+                  : 'Use 1 token to unlock any short film from the festival gallery. Once unlocked, you can re-watch it indefinitely with zero restrictions.'}
               </p>
             </div>
 
@@ -136,7 +153,7 @@ export default function UserDashboardPage() {
 
           <div className="mt-6 pt-4 border-t border-zinc-800/80 flex items-center gap-2 text-[11px] text-zinc-400">
             <Sparkles className="w-4 h-4 text-gold-400 shrink-0" />
-            <span>Registration gift: 2 free tokens granted upon signup. No subscription fees required.</span>
+            <span>Registration gift: 2 free tokens granted upon signup. Monthly ($4.99) & Annual ($39.99) VIP passes available below.</span>
           </div>
         </div>
 
@@ -155,10 +172,13 @@ export default function UserDashboardPage() {
           </div>
 
           <div className="pt-4 border-t border-zinc-800/60 text-[11px] text-gold-400 font-semibold">
-            Permanent Library Access
+            {user.subscription_status === 'active' ? '👑 Unlimited VIP Access' : 'Permanent Library Access'}
           </div>
         </div>
       </div>
+
+      {/* 3. VIP Audience Packages & Passes */}
+      <PackagesSection onSubscribed={() => fetchUserDashboardData()} />
 
       {/* 3. My Unlocked Films Collection */}
       <section className="space-y-4">

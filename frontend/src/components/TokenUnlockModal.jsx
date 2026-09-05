@@ -100,8 +100,8 @@ export default function TokenUnlockModal({ movie, userTokens, onConfirmUnlock, o
           </div>
         )}
 
-        {/* Action Buttons */}
-        <div className="space-y-2">
+        {/* Action Buttons & Out-of-tokens Package Upgrade Teaser */}
+        <div className="space-y-3">
           {hasTokens ? (
             <button
               onClick={handleUnlockClick}
@@ -117,18 +117,42 @@ export default function TokenUnlockModal({ movie, userTokens, onConfirmUnlock, o
               )}
             </button>
           ) : (
-            <Link
-              href="/dashboard"
-              onClick={onClose}
-              className="w-full gold-btn py-3.5 rounded-xl text-xs font-extrabold uppercase tracking-wider flex items-center justify-center gap-2 shadow-gold-glow"
-            >
-              Go to User Dashboard <ArrowRight className="w-4 h-4" />
-            </Link>
+            <div className="space-y-3">
+              {/* VIP Packages Quick Option */}
+              <div className="p-3 rounded-2xl bg-gold-500/10 border border-gold-500/30 text-left space-y-2">
+                <div className="flex items-center justify-between text-xs font-bold text-white">
+                  <span className="flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-gold-400" /> Get Unlimited VIP Access
+                  </span>
+                  <span className="text-[10px] text-gold-400">1 USD ≈ 310 LKR</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="p-2 rounded-xl bg-black/60 border border-zinc-800">
+                    <span className="block text-[10px] text-zinc-400">Monthly VIP</span>
+                    <span className="block font-black text-white font-mono">$4.99</span>
+                    <span className="block text-[10px] text-gold-400 font-semibold font-mono">~Rs. 1,550 LKR</span>
+                  </div>
+                  <div className="p-2 rounded-xl bg-black/60 border border-gold-500/40">
+                    <span className="block text-[10px] text-gold-300 font-bold">Annual VIP</span>
+                    <span className="block font-black text-white font-mono">$39.99</span>
+                    <span className="block text-[10px] text-gold-400 font-semibold font-mono">~Rs. 12,400 LKR</span>
+                  </div>
+                </div>
+              </div>
+
+              <Link
+                href="/dashboard"
+                onClick={onClose}
+                className="w-full gold-btn py-3.5 rounded-xl text-xs font-extrabold uppercase tracking-wider flex items-center justify-center gap-2 shadow-gold-glow"
+              >
+                Upgrade to VIP in Dashboard <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
           )}
 
           <button
             onClick={onClose}
-            className="w-full py-2.5 rounded-xl text-xs font-semibold text-zinc-400 hover:text-white transition-colors"
+            className="w-full py-2 rounded-xl text-xs font-semibold text-zinc-400 hover:text-white transition-colors"
           >
             Cancel & Return
           </button>
