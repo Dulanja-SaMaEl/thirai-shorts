@@ -8,131 +8,124 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
--- 2. Sync directly to Supabase Native Auth (auth.users & auth.identities)
+-- 2. Safely Upsert into Supabase Native Auth (auth.users & auth.identities)
+-- Prevents "duplicate key value violates unique constraint users_email_partial_key"
 DO $$ 
+DECLARE
+    admin_uuid UUID;
+    judge_uuid UUID;
+    director_uuid UUID;
+    viewer_uuid UUID;
 BEGIN
     IF EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'auth' AND table_name = 'users') THEN
-        INSERT INTO auth.users (
-            instance_id,
-            id,
-            aud,
-            role,
-            email,
-            encrypted_password,
-            email_confirmed_at,
-            raw_app_meta_data,
-            raw_user_meta_data,
-            created_at,
-            updated_at
-        )
-        VALUES
-            (
-                '00000000-0000-0000-0000-000000000000',
-                'a0000000-0000-0000-0000-000000000001',
-                'authenticated',
-                'authenticated',
-                'admin@thiraiplus.com',
-                crypt('Admin@123456', gen_salt('bf')),
-                NOW(),
+        
+        -- Admin: update password if exists, else insert
+        SELECT id INTO admin_uuid FROM auth.users WHERE email = 'admin@thiraiplus.com';
+        IF admin_uuid IS NOT NULL THEN
+            UPDATE auth.users 
+            SET encrypted_password = crypt('Admin@123456', gen_salt('bf')),
+                email_confirmed_at = COALESCE(email_confirmed_at, NOW()),
+                raw_app_meta_data = '{"provider":"email","providers":["email"]}'::jsonb,
+                raw_user_meta_data = '{"full_name":"Executive Admin","role":"admin"}'::jsonb,
+                updated_at = NOW()
+            WHERE id = admin_uuid;
+        ELSE
+            admin_uuid := 'a0000000-0000-0000-0000-000000000001'::uuid;
+            INSERT INTO auth.users (
+                instance_id, id, aud, role, email, encrypted_password,
+                email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at
+            ) VALUES (
+                '00000000-0000-0000-0000-000000000000', admin_uuid,
+                'authenticated', 'authenticated', 'admin@thiraiplus.com',
+                crypt('Admin@123456', gen_salt('bf')), NOW(),
                 '{"provider":"email","providers":["email"]}'::jsonb,
-                '{"full_name":"Executive Admin","role":"admin"}'::jsonb,
-                NOW(),
-                NOW()
-            ),
-            (
-                '00000000-0000-0000-0000-000000000002',
-                'b0000000-0000-0000-0000-000000000002',
-                'authenticated',
-                'authenticated',
-                'judge@thiraiplus.com',
-                crypt('Judge@123456', gen_salt('bf')),
-                NOW(),
-                '{"provider":"email","providers":["email"]}'::jsonb,
-                '{"full_name":"Judge Steven Spielberg","role":"judge"}'::jsonb,
-                NOW(),
-                NOW()
-            ),
-            (
-                '00000000-0000-0000-0000-000000000000',
-                'c0000000-0000-0000-0000-000000000003',
-                'authenticated',
-                'authenticated',
-                'director@thiraiplus.com',
-                crypt('Director@123456', gen_salt('bf')),
-                NOW(),
-                '{"provider":"email","providers":["email"]}'::jsonb,
-                '{"full_name":"Mani Ratnam","role":"submitter"}'::jsonb,
-                NOW(),
-                NOW()
-            ),
-            (
-                '00000000-0000-0000-0000-000000000000',
-                'd0000000-0000-0000-0000-000000000004',
-                'authenticated',
-                'authenticated',
-                'viewer@thiraiplus.com',
-                crypt('Viewer@123456', gen_salt('bf')),
-                NOW(),
-                '{"provider":"email","providers":["email"]}'::jsonb,
-                '{"full_name":"Cinema Enthusiast","role":"viewer"}'::jsonb,
-                NOW(),
-                NOW()
-            )
-        ON CONFLICT (id) DO UPDATE SET
-            encrypted_password = EXCLUDED.encrypted_password,
-            raw_user_meta_data = EXCLUDED.raw_user_meta_data,
-            updated_at = NOW();
+                '{"full_name":"Executive Admin","role":"admin"}'::jsonb, NOW(), NOW()
+            );
+        END IF;
 
-        -- Ensure auth.identities exist for Supabase GoTrue Auth
+        -- Judge: update password if exists, else insert
+        SELECT id INTO judge_uuid FROM auth.users WHERE email = 'judge@thiraiplus.com';
+        IF judge_uuid IS NOT NULL THEN
+            UPDATE auth.users 
+            SET encrypted_password = crypt('Judge@123456', gen_salt('bf')),
+                email_confirmed_at = COALESCE(email_confirmed_at, NOW()),
+                raw_app_meta_data = '{"provider":"email","providers":["email"]}'::jsonb,
+                raw_user_meta_data = '{"full_name":"Judge Steven Spielberg","role":"judge"}'::jsonb,
+                updated_at = NOW()
+            WHERE id = judge_uuid;
+        ELSE
+            judge_uuid := 'b0000000-0000-0000-0000-000000000002'::uuid;
+            INSERT INTO auth.users (
+                instance_id, id, aud, role, email, encrypted_password,
+                email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at
+            ) VALUES (
+                '00000000-0000-0000-0000-000000000000', judge_uuid,
+                'authenticated', 'authenticated', 'judge@thiraiplus.com',
+                crypt('Judge@123456', gen_salt('bf')), NOW(),
+                '{"provider":"email","providers":["email"]}'::jsonb,
+                '{"full_name":"Judge Steven Spielberg","role":"judge"}'::jsonb, NOW(), NOW()
+            );
+        END IF;
+
+        -- Director: update password if exists, else insert
+        SELECT id INTO director_uuid FROM auth.users WHERE email = 'director@thiraiplus.com';
+        IF director_uuid IS NOT NULL THEN
+            UPDATE auth.users 
+            SET encrypted_password = crypt('Director@123456', gen_salt('bf')),
+                email_confirmed_at = COALESCE(email_confirmed_at, NOW()),
+                raw_app_meta_data = '{"provider":"email","providers":["email"]}'::jsonb,
+                raw_user_meta_data = '{"full_name":"Mani Ratnam","role":"submitter"}'::jsonb,
+                updated_at = NOW()
+            WHERE id = director_uuid;
+        ELSE
+            director_uuid := 'c0000000-0000-0000-0000-000000000003'::uuid;
+            INSERT INTO auth.users (
+                instance_id, id, aud, role, email, encrypted_password,
+                email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at
+            ) VALUES (
+                '00000000-0000-0000-0000-000000000000', director_uuid,
+                'authenticated', 'authenticated', 'director@thiraiplus.com',
+                crypt('Director@123456', gen_salt('bf')), NOW(),
+                '{"provider":"email","providers":["email"]}'::jsonb,
+                '{"full_name":"Mani Ratnam","role":"submitter"}'::jsonb, NOW(), NOW()
+            );
+        END IF;
+
+        -- Viewer: update password if exists, else insert
+        SELECT id INTO viewer_uuid FROM auth.users WHERE email = 'viewer@thiraiplus.com';
+        IF viewer_uuid IS NOT NULL THEN
+            UPDATE auth.users 
+            SET encrypted_password = crypt('Viewer@123456', gen_salt('bf')),
+                email_confirmed_at = COALESCE(email_confirmed_at, NOW()),
+                raw_app_meta_data = '{"provider":"email","providers":["email"]}'::jsonb,
+                raw_user_meta_data = '{"full_name":"Cinema Enthusiast","role":"viewer"}'::jsonb,
+                updated_at = NOW()
+            WHERE id = viewer_uuid;
+        ELSE
+            viewer_uuid := 'd0000000-0000-0000-0000-000000000004'::uuid;
+            INSERT INTO auth.users (
+                instance_id, id, aud, role, email, encrypted_password,
+                email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at
+            ) VALUES (
+                '00000000-0000-0000-0000-000000000000', viewer_uuid,
+                'authenticated', 'authenticated', 'viewer@thiraiplus.com',
+                crypt('Viewer@123456', gen_salt('bf')), NOW(),
+                '{"provider":"email","providers":["email"]}'::jsonb,
+                '{"full_name":"Cinema Enthusiast","role":"viewer"}'::jsonb, NOW(), NOW()
+            );
+        END IF;
+
+        -- Ensure identities table has matching rows
         IF EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'auth' AND table_name = 'identities') THEN
-            INSERT INTO auth.identities (
-                id,
-                user_id,
-                identity_data,
-                provider,
-                last_sign_in_at,
-                created_at,
-                updated_at
-            )
-            VALUES
-                (
-                    'a0000000-0000-0000-0000-000000000001',
-                    'a0000000-0000-0000-0000-000000000001',
-                    '{"sub":"a0000000-0000-0000-0000-000000000001","email":"admin@thiraiplus.com"}'::jsonb,
-                    'email',
-                    NOW(),
-                    NOW(),
-                    NOW()
-                ),
-                (
-                    'b0000000-0000-0000-0000-000000000002',
-                    'b0000000-0000-0000-0000-000000000002',
-                    '{"sub":"b0000000-0000-0000-0000-000000000002","email":"judge@thiraiplus.com"}'::jsonb,
-                    'email',
-                    NOW(),
-                    NOW(),
-                    NOW()
-                ),
-                (
-                    'c0000000-0000-0000-0000-000000000003',
-                    'c0000000-0000-0000-0000-000000000003',
-                    '{"sub":"c0000000-0000-0000-0000-000000000003","email":"director@thiraiplus.com"}'::jsonb,
-                    'email',
-                    NOW(),
-                    NOW(),
-                    NOW()
-                ),
-                (
-                    'd0000000-0000-0000-0000-000000000004',
-                    'd0000000-0000-0000-0000-000000000004',
-                    '{"sub":"d0000000-0000-0000-0000-000000000004","email":"viewer@thiraiplus.com"}'::jsonb,
-                    'email',
-                    NOW(),
-                    NOW(),
-                    NOW()
-                )
+            INSERT INTO auth.identities (id, user_id, identity_data, provider, last_sign_in_at, created_at, updated_at)
+            VALUES 
+                (admin_uuid::text, admin_uuid, json_build_object('sub', admin_uuid::text, 'email', 'admin@thiraiplus.com')::jsonb, 'email', NOW(), NOW(), NOW()),
+                (judge_uuid::text, judge_uuid, json_build_object('sub', judge_uuid::text, 'email', 'judge@thiraiplus.com')::jsonb, 'email', NOW(), NOW(), NOW()),
+                (director_uuid::text, director_uuid, json_build_object('sub', director_uuid::text, 'email', 'director@thiraiplus.com')::jsonb, 'email', NOW(), NOW(), NOW()),
+                (viewer_uuid::text, viewer_uuid, json_build_object('sub', viewer_uuid::text, 'email', 'viewer@thiraiplus.com')::jsonb, 'email', NOW(), NOW(), NOW())
             ON CONFLICT (provider, id) DO NOTHING;
         END IF;
+
     END IF;
 END $$;
 
@@ -151,7 +144,7 @@ INSERT INTO public.users (
 )
 VALUES 
     (
-        'a0000000-0000-0000-0000-000000000001',
+        COALESCE((SELECT id FROM auth.users WHERE email = 'admin@thiraiplus.com'), 'a0000000-0000-0000-0000-000000000001'::uuid),
         'admin@thiraiplus.com',
         'Executive Admin',
         'admin',
@@ -163,7 +156,7 @@ VALUES
         crypt('Admin@123456', gen_salt('bf'))
     ),
     (
-        'b0000000-0000-0000-0000-000000000002',
+        COALESCE((SELECT id FROM auth.users WHERE email = 'judge@thiraiplus.com'), 'b0000000-0000-0000-0000-000000000002'::uuid),
         'judge@thiraiplus.com',
         'Judge Steven Spielberg',
         'judge',
@@ -175,7 +168,7 @@ VALUES
         crypt('Judge@123456', gen_salt('bf'))
     ),
     (
-        'c0000000-0000-0000-0000-000000000003',
+        COALESCE((SELECT id FROM auth.users WHERE email = 'director@thiraiplus.com'), 'c0000000-0000-0000-0000-000000000003'::uuid),
         'director@thiraiplus.com',
         'Mani Ratnam',
         'submitter',
@@ -187,7 +180,7 @@ VALUES
         crypt('Director@123456', gen_salt('bf'))
     ),
     (
-        'd0000000-0000-0000-0000-000000000004',
+        COALESCE((SELECT id FROM auth.users WHERE email = 'viewer@thiraiplus.com'), 'd0000000-0000-0000-0000-000000000004'::uuid),
         'viewer@thiraiplus.com',
         'Cinema Enthusiast',
         'viewer',
@@ -367,7 +360,7 @@ ON CONFLICT (id) DO UPDATE SET
     winner_category = EXCLUDED.winner_category,
     payment_status = EXCLUDED.payment_status;
 
--- 6. Seed Judge Reviews (by Judge Steven Spielberg)
+-- 6. Seed Judge Reviews (linked via dynamic judge_id)
 INSERT INTO public.reviews (
     id,
     movie_id,
@@ -376,39 +369,77 @@ INSERT INTO public.reviews (
     comment,
     is_public
 )
-VALUES
-    (
-        'f0000000-0000-0000-0000-000000000001',
-        'e0000000-0000-0000-0000-000000000001',
-        'b0000000-0000-0000-0000-000000000002',
-        10,
-        'Masterpiece in atmospheric editing and subtle color grading. Exceptional timing, mood, and sound design!',
-        true
-    ),
-    (
-        'f0000000-0000-0000-0000-000000000002',
-        'e0000000-0000-0000-0000-000000000002',
-        'b0000000-0000-0000-0000-000000000002',
-        10,
-        'Heart-touching storytelling with stunning framing of coastal life. Truly deserving of the Golden Thira Award!',
-        true
-    ),
-    (
-        'f0000000-0000-0000-0000-000000000003',
-        'e0000000-0000-0000-0000-000000000003',
-        'b0000000-0000-0000-0000-000000000002',
-        8,
-        'Bold audio-visual experimentation. The neo-noir mood and neon reflections create a gripping sensory narrative.',
-        true
-    ),
-    (
-        'f0000000-0000-0000-0000-000000000004',
-        'e0000000-0000-0000-0000-000000000005',
-        'b0000000-0000-0000-0000-000000000002',
-        9,
-        'Terrific suspense building. The use of natural hill-country mist creates an eerie and captivating atmosphere.',
-        true
-    )
+SELECT
+    'f0000000-0000-0000-0000-000000000001'::uuid,
+    'e0000000-0000-0000-0000-000000000001'::uuid,
+    u.id,
+    10,
+    'Masterpiece in atmospheric editing and subtle color grading. Exceptional timing, mood, and sound design!',
+    true
+FROM public.users u WHERE u.email = 'judge@thiraiplus.com'
+ON CONFLICT (id) DO UPDATE SET
+    score = EXCLUDED.score,
+    comment = EXCLUDED.comment,
+    is_public = EXCLUDED.is_public;
+
+INSERT INTO public.reviews (
+    id,
+    movie_id,
+    judge_id,
+    score,
+    comment,
+    is_public
+)
+SELECT
+    'f0000000-0000-0000-0000-000000000002'::uuid,
+    'e0000000-0000-0000-0000-000000000002'::uuid,
+    u.id,
+    10,
+    'Heart-touching storytelling with stunning framing of coastal life. Truly deserving of the Golden Thira Award!',
+    true
+FROM public.users u WHERE u.email = 'judge@thiraiplus.com'
+ON CONFLICT (id) DO UPDATE SET
+    score = EXCLUDED.score,
+    comment = EXCLUDED.comment,
+    is_public = EXCLUDED.is_public;
+
+INSERT INTO public.reviews (
+    id,
+    movie_id,
+    judge_id,
+    score,
+    comment,
+    is_public
+)
+SELECT
+    'f0000000-0000-0000-0000-000000000003'::uuid,
+    'e0000000-0000-0000-0000-000000000003'::uuid,
+    u.id,
+    8,
+    'Bold audio-visual experimentation. The neo-noir mood and neon reflections create a gripping sensory narrative.',
+    true
+FROM public.users u WHERE u.email = 'judge@thiraiplus.com'
+ON CONFLICT (id) DO UPDATE SET
+    score = EXCLUDED.score,
+    comment = EXCLUDED.comment,
+    is_public = EXCLUDED.is_public;
+
+INSERT INTO public.reviews (
+    id,
+    movie_id,
+    judge_id,
+    score,
+    comment,
+    is_public
+)
+SELECT
+    'f0000000-0000-0000-0000-000000000004'::uuid,
+    'e0000000-0000-0000-0000-000000000005'::uuid,
+    u.id,
+    9,
+    'Terrific suspense building. The use of natural hill-country mist creates an eerie and captivating atmosphere.',
+    true
+FROM public.users u WHERE u.email = 'judge@thiraiplus.com'
 ON CONFLICT (id) DO UPDATE SET
     score = EXCLUDED.score,
     comment = EXCLUDED.comment,
@@ -443,10 +474,9 @@ INSERT INTO public.user_movie_unlocks (
     user_id,
     movie_id
 )
-VALUES
-    (
-        '20000000-0000-0000-0000-000000000001',
-        'd0000000-0000-0000-0000-000000000004',
-        'e0000000-0000-0000-0000-000000000001'
-    )
+SELECT
+    '20000000-0000-0000-0000-000000000001'::uuid,
+    u.id,
+    'e0000000-0000-0000-0000-000000000001'::uuid
+FROM public.users u WHERE u.email = 'viewer@thiraiplus.com'
 ON CONFLICT (user_id, movie_id) DO NOTHING;
