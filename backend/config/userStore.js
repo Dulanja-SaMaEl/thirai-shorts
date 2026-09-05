@@ -43,6 +43,20 @@ export const DEMO_USERS = {
       subscription_status: 'inactive',
       profile_pic_url: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150'
     }
+  },
+  'director@thiraiplus.com': {
+    password: 'Director@123456',
+    user: {
+      id: 'c0000000-0000-0000-0000-000000000003',
+      email: 'director@thiraiplus.com',
+      full_name: 'Mani Ratnam',
+      role: 'submitter',
+      username: 'mani_filmmaker',
+      tokens_balance: 5,
+      subscription_tier: 'monthly',
+      subscription_status: 'active',
+      profile_pic_url: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150'
+    }
   }
 };
 

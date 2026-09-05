@@ -1,9 +1,142 @@
 -- ====================================================================
 -- Thirai+ Seed Data Script for Supabase (PostgreSQL)
--- Safe to run multiple times: uses ON CONFLICT DO UPDATE / DO NOTHING
+-- Includes: Encrypted Bcrypt Passwords, Native Supabase Auth sync,
+--           Users, Movies, Reviews, Packages, and Unlocks.
 -- ====================================================================
 
--- 1. Seed Core Users (Admin, Judge, Submitter, Viewer)
+-- 1. Ensure extensions for password encryption
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
+-- 2. Sync directly to Supabase Native Auth (auth.users & auth.identities)
+DO $$ 
+BEGIN
+    IF EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'auth' AND table_name = 'users') THEN
+        INSERT INTO auth.users (
+            instance_id,
+            id,
+            aud,
+            role,
+            email,
+            encrypted_password,
+            email_confirmed_at,
+            raw_app_meta_data,
+            raw_user_meta_data,
+            created_at,
+            updated_at
+        )
+        VALUES
+            (
+                '00000000-0000-0000-0000-000000000000',
+                'a0000000-0000-0000-0000-000000000001',
+                'authenticated',
+                'authenticated',
+                'admin@thiraiplus.com',
+                crypt('Admin@123456', gen_salt('bf')),
+                NOW(),
+                '{"provider":"email","providers":["email"]}'::jsonb,
+                '{"full_name":"Executive Admin","role":"admin"}'::jsonb,
+                NOW(),
+                NOW()
+            ),
+            (
+                '00000000-0000-0000-0000-000000000002',
+                'b0000000-0000-0000-0000-000000000002',
+                'authenticated',
+                'authenticated',
+                'judge@thiraiplus.com',
+                crypt('Judge@123456', gen_salt('bf')),
+                NOW(),
+                '{"provider":"email","providers":["email"]}'::jsonb,
+                '{"full_name":"Judge Steven Spielberg","role":"judge"}'::jsonb,
+                NOW(),
+                NOW()
+            ),
+            (
+                '00000000-0000-0000-0000-000000000000',
+                'c0000000-0000-0000-0000-000000000003',
+                'authenticated',
+                'authenticated',
+                'director@thiraiplus.com',
+                crypt('Director@123456', gen_salt('bf')),
+                NOW(),
+                '{"provider":"email","providers":["email"]}'::jsonb,
+                '{"full_name":"Mani Ratnam","role":"submitter"}'::jsonb,
+                NOW(),
+                NOW()
+            ),
+            (
+                '00000000-0000-0000-0000-000000000000',
+                'd0000000-0000-0000-0000-000000000004',
+                'authenticated',
+                'authenticated',
+                'viewer@thiraiplus.com',
+                crypt('Viewer@123456', gen_salt('bf')),
+                NOW(),
+                '{"provider":"email","providers":["email"]}'::jsonb,
+                '{"full_name":"Cinema Enthusiast","role":"viewer"}'::jsonb,
+                NOW(),
+                NOW()
+            )
+        ON CONFLICT (id) DO UPDATE SET
+            encrypted_password = EXCLUDED.encrypted_password,
+            raw_user_meta_data = EXCLUDED.raw_user_meta_data,
+            updated_at = NOW();
+
+        -- Ensure auth.identities exist for Supabase GoTrue Auth
+        IF EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'auth' AND table_name = 'identities') THEN
+            INSERT INTO auth.identities (
+                id,
+                user_id,
+                identity_data,
+                provider,
+                last_sign_in_at,
+                created_at,
+                updated_at
+            )
+            VALUES
+                (
+                    'a0000000-0000-0000-0000-000000000001',
+                    'a0000000-0000-0000-0000-000000000001',
+                    '{"sub":"a0000000-0000-0000-0000-000000000001","email":"admin@thiraiplus.com"}'::jsonb,
+                    'email',
+                    NOW(),
+                    NOW(),
+                    NOW()
+                ),
+                (
+                    'b0000000-0000-0000-0000-000000000002',
+                    'b0000000-0000-0000-0000-000000000002',
+                    '{"sub":"b0000000-0000-0000-0000-000000000002","email":"judge@thiraiplus.com"}'::jsonb,
+                    'email',
+                    NOW(),
+                    NOW(),
+                    NOW()
+                ),
+                (
+                    'c0000000-0000-0000-0000-000000000003',
+                    'c0000000-0000-0000-0000-000000000003',
+                    '{"sub":"c0000000-0000-0000-0000-000000000003","email":"director@thiraiplus.com"}'::jsonb,
+                    'email',
+                    NOW(),
+                    NOW(),
+                    NOW()
+                ),
+                (
+                    'd0000000-0000-0000-0000-000000000004',
+                    'd0000000-0000-0000-0000-000000000004',
+                    '{"sub":"d0000000-0000-0000-0000-000000000004","email":"viewer@thiraiplus.com"}'::jsonb,
+                    'email',
+                    NOW(),
+                    NOW(),
+                    NOW()
+                )
+            ON CONFLICT (provider, id) DO NOTHING;
+        END IF;
+    END IF;
+END $$;
+
+-- 3. Seed Public Users Table (with Encrypted Bcrypt password_hash)
 INSERT INTO public.users (
     id,
     email,
@@ -13,7 +146,8 @@ INSERT INTO public.users (
     subscription_tier,
     subscription_status,
     username,
-    profile_pic_url
+    profile_pic_url,
+    password_hash
 )
 VALUES 
     (
@@ -25,7 +159,8 @@ VALUES
         'yearly',
         'active',
         'admin',
-        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150'
+        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+        crypt('Admin@123456', gen_salt('bf'))
     ),
     (
         'b0000000-0000-0000-0000-000000000002',
@@ -36,7 +171,8 @@ VALUES
         'yearly',
         'active',
         'judge_steven',
-        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150'
+        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
+        crypt('Judge@123456', gen_salt('bf'))
     ),
     (
         'c0000000-0000-0000-0000-000000000003',
@@ -47,7 +183,8 @@ VALUES
         'monthly',
         'active',
         'mani_filmmaker',
-        'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150'
+        'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150',
+        crypt('Director@123456', gen_salt('bf'))
     ),
     (
         'd0000000-0000-0000-0000-000000000004',
@@ -58,7 +195,8 @@ VALUES
         'free',
         'inactive',
         'cine_fan',
-        'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150'
+        'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
+        crypt('Viewer@123456', gen_salt('bf'))
     )
 ON CONFLICT (email) DO UPDATE SET
     role = EXCLUDED.role,
@@ -67,9 +205,10 @@ ON CONFLICT (email) DO UPDATE SET
     subscription_status = EXCLUDED.subscription_status,
     full_name = EXCLUDED.full_name,
     username = EXCLUDED.username,
-    profile_pic_url = EXCLUDED.profile_pic_url;
+    profile_pic_url = EXCLUDED.profile_pic_url,
+    password_hash = EXCLUDED.password_hash;
 
--- 2. Seed Subscription Packages ($4.99 & $39.99 with estimated LKR)
+-- 4. Seed Subscription Packages ($4.99 & $39.99 with estimated LKR)
 INSERT INTO public.packages (
     id,
     plan_id,
@@ -109,7 +248,7 @@ ON CONFLICT (plan_id) DO UPDATE SET
     features = EXCLUDED.features,
     is_active = EXCLUDED.is_active;
 
--- 3. Seed Featured Short Films
+-- 5. Seed Featured Short Films
 INSERT INTO public.movies (
     id,
     title,
@@ -228,7 +367,7 @@ ON CONFLICT (id) DO UPDATE SET
     winner_category = EXCLUDED.winner_category,
     payment_status = EXCLUDED.payment_status;
 
--- 4. Seed Judge Reviews (by Judge Steven Spielberg)
+-- 6. Seed Judge Reviews (by Judge Steven Spielberg)
 INSERT INTO public.reviews (
     id,
     movie_id,
@@ -275,7 +414,7 @@ ON CONFLICT (id) DO UPDATE SET
     comment = EXCLUDED.comment,
     is_public = EXCLUDED.is_public;
 
--- 5. Seed Community Verified Ratings
+-- 7. Seed Community Verified Ratings
 INSERT INTO public.community_votes (
     id,
     movie_id,
@@ -291,14 +430,14 @@ VALUES
     ('30000000-0000-0000-0000-000000000004', 'e0000000-0000-0000-0000-000000000005', 'audience4@gmail.com', 9, true, NOW())
 ON CONFLICT (movie_id, voter_email) DO NOTHING;
 
--- 6. Seed System Settings (Community Voting Event)
+-- 8. Seed System Settings (Community Voting Event)
 INSERT INTO public.system_settings (key, value)
 VALUES (
     'community_rating_event',
     '{"is_active": true, "end_time": "2026-10-31T23:59:59Z", "title": "Festival Choice Community Voting"}'::jsonb
 ) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;
 
--- 7. Seed Sample User Movie Unlock (Pre-unlock Film 1 for Demo Viewer)
+-- 9. Seed Sample User Movie Unlock (Pre-unlock Film 1 for Demo Viewer)
 INSERT INTO public.user_movie_unlocks (
     id,
     user_id,
