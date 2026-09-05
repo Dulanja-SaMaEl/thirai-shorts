@@ -4,7 +4,7 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Define Enums
-CREATE TYPE user_role AS ENUM ('admin', 'judge', 'submitter');
+CREATE TYPE user_role AS ENUM ('admin', 'judge', 'submitter', 'viewer');
 CREATE TYPE movie_status AS ENUM ('pending', 'approved', 'rejected');
 CREATE TYPE payment_status AS ENUM ('unpaid', 'paid', 'refunded');
 
@@ -13,10 +13,11 @@ CREATE TABLE IF NOT EXISTS public.users (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     email VARCHAR(255) UNIQUE NOT NULL,
     full_name VARCHAR(255) NOT NULL,
-    role user_role NOT NULL DEFAULT 'submitter',
+    role user_role NOT NULL DEFAULT 'viewer',
+    tokens_balance INTEGER NOT NULL DEFAULT 2, -- Default 2 free tokens for viewing 2 short movies
     profile_pic_url TEXT,
     username VARCHAR(100) UNIQUE,
-    password_hash TEXT, -- For custom judge auth if needed, otherwise managed via Supabase Auth
+    password_hash TEXT, -- For custom auth if needed, otherwise managed via Supabase Auth
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -105,6 +106,18 @@ VALUES (
     'community_rating_event',
     '{"is_active": false, "end_time": null, "title": "Festival Choice Community Voting"}'::jsonb
 ) ON CONFLICT (key) DO NOTHING;
+
+-- 7. User Movie Unlocks (Token-Gated Short Film Access)
+CREATE TABLE IF NOT EXISTS public.user_movie_unlocks (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+    movie_id UUID NOT NULL REFERENCES public.movies(id) ON DELETE CASCADE,
+    unlocked_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT unique_user_movie_unlock UNIQUE (user_id, movie_id)
+);
+
+CREATE INDEX idx_user_movie_unlocks_user ON public.user_movie_unlocks(user_id);
+CREATE INDEX idx_user_movie_unlocks_movie ON public.user_movie_unlocks(movie_id);
 
 -- Views & Helper Functions
 

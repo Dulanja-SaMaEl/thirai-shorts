@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from 'react';
-import { Eye, Star, Clock, MessageSquare, ExternalLink, ThumbsUp } from 'lucide-react';
+import { Eye, Star, Clock, MessageSquare, ExternalLink, ThumbsUp, Lock, Coins } from 'lucide-react';
 
-export default function MovieCard({ movie, onOpenVoteModal, onOpenPlayerModal }) {
+export default function MovieCard({ movie, isUnlocked = false, isGuest = true, onOpenVoteModal, onOpenPlayerModal }) {
   const [showReviewsModal, setShowReviewsModal] = useState(false);
 
   const isPending = movie.status === 'pending';
@@ -66,6 +66,23 @@ export default function MovieCard({ movie, onOpenVoteModal, onOpenPlayerModal })
               🏆 Winner
             </div>
           )}
+
+          {/* Token Unlock / Gate Badge */}
+          <div className="absolute bottom-3 right-3">
+            {isUnlocked ? (
+              <span className="px-2 py-0.5 rounded-md bg-emerald-500 text-black text-[10px] font-extrabold uppercase tracking-wider shadow-md flex items-center gap-1">
+                ✓ Unlocked
+              </span>
+            ) : isGuest ? (
+              <span className="px-2 py-0.5 rounded-md bg-black/80 backdrop-blur-md border border-gold-500/40 text-gold-300 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
+                <Lock className="w-2.5 h-2.5 text-gold-400" /> Sign In Req.
+              </span>
+            ) : (
+              <span className="px-2 py-0.5 rounded-md bg-black/80 backdrop-blur-md border border-gold-500/40 text-gold-300 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
+                <Coins className="w-2.5 h-2.5 text-gold-400" /> 1 Token
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Card Content */}
@@ -105,9 +122,27 @@ export default function MovieCard({ movie, onOpenVoteModal, onOpenPlayerModal })
             <div className="flex items-center gap-2">
               <button
                 onClick={() => onOpenPlayerModal && onOpenPlayerModal(movie)}
-                className="flex-1 py-2 px-3 rounded-lg bg-gold-gradient text-black font-extrabold text-xs text-center flex items-center justify-center gap-1.5 shadow-gold-glow hover:opacity-90 transition-opacity"
+                className={`flex-1 py-2 px-3 rounded-lg font-extrabold text-xs text-center flex items-center justify-center gap-1.5 shadow-gold-glow transition-all ${
+                  isUnlocked
+                    ? 'bg-gold-gradient text-black hover:opacity-90'
+                    : isGuest
+                      ? 'bg-zinc-900 border border-gold-500/40 text-gold-300 hover:bg-gold-500/20'
+                      : 'bg-gold-gradient text-black hover:opacity-90'
+                }`}
               >
-                <ExternalLink className="w-3.5 h-3.5" /> Watch Cinema Stream
+                {isUnlocked ? (
+                  <>
+                    <ExternalLink className="w-3.5 h-3.5" /> Watch Stream
+                  </>
+                ) : isGuest ? (
+                  <>
+                    <Lock className="w-3.5 h-3.5 text-gold-400" /> Sign In to Watch
+                  </>
+                ) : (
+                  <>
+                    <Coins className="w-3.5 h-3.5 text-black" /> Unlock & Watch (1 Token)
+                  </>
+                )}
               </button>
 
               {!isPending && (

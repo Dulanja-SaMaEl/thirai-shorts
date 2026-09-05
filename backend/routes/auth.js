@@ -1,33 +1,107 @@
 import express from 'express';
+import validator from 'validator';
 import { supabaseAdmin } from '../config/supabase.js';
+import { userStore, DEMO_USERS } from '../config/userStore.js';
 
 const router = express.Router();
 
-// Preset Demo User Configurations for guaranteed portal access
-const DEMO_USERS = {
-  'admin@thiraiplus.com': {
-    password: 'Admin@123456',
-    user: {
-      id: 'a0000000-0000-0000-0000-000000000001',
-      email: 'admin@thiraiplus.com',
-      full_name: 'Executive Admin',
-      role: 'admin',
-      username: 'admin',
-      profile_pic_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150'
+/**
+ * @route POST /api/auth/register
+ * @desc Register a new viewer account with 2 free short movie viewing tokens
+ */
+router.post('/register', async (req, res) => {
+  try {
+    const { full_name, email, password } = req.body;
+
+    if (!full_name || !email || !password) {
+      return res.status(400).json({ error: 'Full name, email, and password are required.' });
     }
-  },
-  'judge@thiraiplus.com': {
-    password: 'Judge@123456',
-    user: {
-      id: 'j0000000-0000-0000-0000-000000000002',
-      email: 'judge@thiraiplus.com',
-      full_name: 'Judge Steven Spielberg',
-      role: 'judge',
-      username: 'judge_steven',
-      profile_pic_url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150'
+
+    const cleanEmail = email.trim().toLowerCase();
+
+    if (!validator.isEmail(cleanEmail)) {
+      return res.status(400).json({ error: 'Please provide a valid email address format.' });
     }
+
+    if (password.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters long.' });
+    }
+
+    // Check if user already exists in userStore
+    const existingUser = userStore.getUserByEmail(cleanEmail);
+    if (existingUser) {
+      return res.status(400).json({ error: 'An account with this email already exists. Please log in.' });
+    }
+
+    let userId = `user-${Date.now()}`;
+    let authToken = `user-token-${userId}-${Date.now()}`;
+
+    // Attempt Supabase Auth creation if configured
+    try {
+      const { data: authData, error: authErr } = await supabaseAdmin.auth.signUp({
+        email: cleanEmail,
+        password,
+        options: {
+          data: {
+            full_name: full_name.trim(),
+            role: 'viewer',
+            tokens_balance: 2
+          }
+        }
+      });
+
+      if (!authErr && authData?.user) {
+        userId = authData.user.id;
+        if (authData.session?.access_token) {
+          authToken = authData.session.access_token;
+        }
+      }
+    } catch (e) {
+      console.warn('Supabase auth signup notice:', e.message);
+    }
+
+    // Sync with Supabase users table
+    const profileData = {
+      id: userId,
+      email: cleanEmail,
+      full_name: full_name.trim(),
+      role: 'viewer',
+      tokens_balance: 2, // Gift: 2 free tokens for viewing 2 short films
+      username: cleanEmail.split('@')[0],
+      profile_pic_url: `https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150`
+    };
+
+    try {
+      await supabaseAdmin.from('users').upsert(profileData, { onConflict: 'email' });
+    } catch (dbErr) {
+      console.warn('Supabase DB users upsert notice:', dbErr.message);
+    }
+
+    // Register user in userStore for instant session management
+    const registeredUser = userStore.registerUser({
+      email: cleanEmail,
+      password,
+      full_name: full_name.trim(),
+      role: 'viewer',
+      tokens_balance: 2
+    });
+    registeredUser.id = userId;
+
+    // Cache active session token
+    userStore.createSession(authToken, registeredUser);
+
+    return res.status(201).json({
+      success: true,
+      message: 'Registration successful! You have received 2 free movie viewing tokens.',
+      token: authToken,
+      user: registeredUser
+    });
+
+  } catch (error) {
+    console.error('Registration Endpoint Error:', error);
+    return res.status(500).json({ error: 'Registration failed due to server error.' });
   }
-};
+});
 
 /**
  * @route POST /api/auth/login
@@ -47,23 +121,26 @@ router.post('/login', async (req, res) => {
     if (!targetEmail.includes('@')) {
       if (targetEmail === 'admin') targetEmail = 'admin@thiraiplus.com';
       else if (targetEmail === 'judge_steven' || targetEmail === 'judge') targetEmail = 'judge@thiraiplus.com';
+      else if (targetEmail === 'cine_fan' || targetEmail === 'viewer') targetEmail = 'viewer@thiraiplus.com';
     }
 
-    const demoAccount = DEMO_USERS[targetEmail];
+    // Check userStore registered users & demo users
+    const record = userStore.getUserByEmail(targetEmail);
+    if (record && password === record.password) {
+      const token = `user-token-${record.user.id}-${Date.now()}`;
+      userStore.createSession(token, record.user);
 
-    // Check if password matches demo account
-    if (demoAccount && password === demoAccount.password) {
-      // Try to sync/upsert with Supabase DB silently if available
+      // Silently sync with Supabase DB if possible
       try {
-        await supabaseAdmin.from('users').upsert(demoAccount.user, { onConflict: 'email' });
+        await supabaseAdmin.from('users').upsert(record.user, { onConflict: 'email' });
       } catch (dbErr) {
         console.warn('Supabase DB sync warning:', dbErr.message);
       }
 
       return res.status(200).json({
         success: true,
-        token: `demo-token-${demoAccount.user.role}-${Date.now()}`,
-        user: demoAccount.user
+        token,
+        user: record.user
       });
     }
 
@@ -81,15 +158,20 @@ router.post('/login', async (req, res) => {
           .eq('id', authData.user.id)
           .single();
 
+        const userObj = profile || {
+          id: authData.user.id,
+          email: authData.user.email,
+          full_name: authData.user.email.split('@')[0],
+          role: targetEmail.includes('admin') ? 'admin' : (targetEmail.includes('judge') ? 'judge' : 'viewer'),
+          tokens_balance: 2
+        };
+
+        userStore.createSession(authData.session.access_token, userObj);
+
         return res.status(200).json({
           success: true,
           token: authData.session.access_token,
-          user: profile || {
-            id: authData.user.id,
-            email: authData.user.email,
-            full_name: authData.user.email.split('@')[0],
-            role: targetEmail.includes('admin') ? 'admin' : 'judge'
-          }
+          user: userObj
         });
       }
     } catch (sapaErr) {
@@ -119,11 +201,20 @@ router.get('/me', async (req, res) => {
 
     const token = authHeader.split(' ')[1];
 
+    // Check userStore cache
+    const cachedUser = userStore.getUserByToken(token);
+    if (cachedUser) {
+      return res.status(200).json({ success: true, user: cachedUser });
+    }
+
     if (token.startsWith('demo-token-admin')) {
       return res.status(200).json({ success: true, user: DEMO_USERS['admin@thiraiplus.com'].user });
     }
     if (token.startsWith('demo-token-judge')) {
       return res.status(200).json({ success: true, user: DEMO_USERS['judge@thiraiplus.com'].user });
+    }
+    if (token.startsWith('demo-token-viewer')) {
+      return res.status(200).json({ success: true, user: DEMO_USERS['viewer@thiraiplus.com'].user });
     }
 
     const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
@@ -140,7 +231,7 @@ router.get('/me', async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      user: profile || { email: user.email, role: 'submitter' }
+      user: profile || { email: user.email, role: 'viewer', tokens_balance: 2 }
     });
   } catch (error) {
     return res.status(500).json({ error: 'Failed to fetch user session.' });
@@ -148,3 +239,4 @@ router.get('/me', async (req, res) => {
 });
 
 export default router;
+

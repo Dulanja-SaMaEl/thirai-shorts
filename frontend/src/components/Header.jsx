@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '../context/AuthContext';
-import { Film, Shield, Award, Upload, PlayCircle, LogIn, LogOut, User } from 'lucide-react';
+import { Film, Shield, Award, Upload, PlayCircle, LogIn, LogOut, User, Coins, LayoutDashboard, Sparkles } from 'lucide-react';
 
 export default function Header() {
   const pathname = usePathname();
@@ -25,7 +25,7 @@ export default function Header() {
         </Link>
 
         {/* Navigation Links */}
-        <nav className="hidden md:flex items-center gap-8">
+        <nav className="hidden md:flex items-center gap-7">
           <Link
             href="/"
             className={`flex items-center gap-2 text-sm font-semibold transition-colors ${
@@ -34,6 +34,18 @@ export default function Header() {
           >
             <PlayCircle className="w-4 h-4" /> Gallery
           </Link>
+
+          {user && (
+            <Link
+              href="/dashboard"
+              className={`flex items-center gap-2 text-sm font-semibold transition-colors ${
+                isActive('/dashboard') ? 'text-gold-400 border-b-2 border-gold-400 pb-1' : 'text-zinc-300 hover:text-gold-300'
+              }`}
+            >
+              <LayoutDashboard className="w-4 h-4" /> Dashboard
+            </Link>
+          )}
+
           <Link
             href="/upload"
             className={`flex items-center gap-2 text-sm font-semibold transition-colors ${
@@ -42,6 +54,7 @@ export default function Header() {
           >
             <Upload className="w-4 h-4" /> Submit Film
           </Link>
+
           <Link
             href="/judge"
             className={`flex items-center gap-2 text-sm font-semibold transition-colors ${
@@ -50,6 +63,7 @@ export default function Header() {
           >
             <Award className="w-4 h-4" /> Judge Panel
           </Link>
+
           <Link
             href="/admin"
             className={`flex items-center gap-2 text-sm font-semibold transition-colors ${
@@ -61,10 +75,24 @@ export default function Header() {
         </nav>
 
         {/* User Auth Controls & Action Button */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           {user ? (
             <div className="flex items-center gap-3">
-              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-surface-card border border-gold-500/30">
+              {/* Token Balance Pill */}
+              <Link
+                href="/dashboard"
+                title="View your token wallet in Dashboard"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gold-500/10 hover:bg-gold-500/20 border border-gold-500/40 text-gold-300 text-xs font-bold transition-all shadow-gold-glow"
+              >
+                <Coins className="w-3.5 h-3.5 text-gold-400" />
+                <span>{user.tokens_balance ?? 2} {user.tokens_balance === 1 ? 'Token' : 'Tokens'}</span>
+              </Link>
+
+              {/* User Profile Info */}
+              <Link
+                href="/dashboard"
+                className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-surface-card border border-gold-500/30 hover:border-gold-400 transition-colors"
+              >
                 <img
                   src={user.profile_pic_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150'}
                   alt={user.full_name}
@@ -74,7 +102,7 @@ export default function Header() {
                   <span className="block text-xs font-bold text-white line-clamp-1">{user.full_name}</span>
                   <span className="block text-[9px] text-gold-400 uppercase font-semibold">{user.role}</span>
                 </div>
-              </div>
+              </Link>
 
               <button
                 onClick={logout}
@@ -86,19 +114,28 @@ export default function Header() {
               </button>
             </div>
           ) : (
-            <Link
-              href="/login"
-              className="px-4 py-2 rounded-xl bg-zinc-900 border border-gold-500/30 hover:border-gold-400 text-gold-300 text-xs font-bold flex items-center gap-1.5 transition-colors"
-            >
-              <LogIn className="w-4 h-4 text-gold-400" /> Portal Login
-            </Link>
+            <div className="flex items-center gap-2">
+              <Link
+                href="/register"
+                className="hidden sm:flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gold-500/10 border border-gold-500/40 text-gold-300 text-xs font-bold hover:bg-gold-500/20 transition-all shadow-gold-glow"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-gold-400" /> 2 Free Tokens
+              </Link>
+
+              <Link
+                href="/login"
+                className="px-3.5 py-2 rounded-xl bg-zinc-900 border border-zinc-700 hover:border-gold-400 text-zinc-300 hover:text-white text-xs font-bold flex items-center gap-1.5 transition-colors"
+              >
+                <LogIn className="w-3.5 h-3.5 text-gold-400" /> Sign In
+              </Link>
+            </div>
           )}
 
           <Link
             href="/upload"
             className="gold-btn px-4 py-2 rounded-xl text-xs tracking-wider uppercase flex items-center gap-1.5 shadow-gold-glow"
           >
-            <Upload className="w-4 h-4" /> Submit Entry
+            <Upload className="w-4 h-4" /> Submit
           </Link>
         </div>
       </div>

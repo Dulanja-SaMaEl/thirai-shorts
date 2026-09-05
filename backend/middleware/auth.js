@@ -1,4 +1,5 @@
 import { supabaseAdmin } from '../config/supabase.js';
+import { userStore, DEMO_USERS } from '../config/userStore.js';
 
 export const requireAuth = (roles = []) => {
   return async (req, res, next) => {
@@ -10,26 +11,29 @@ export const requireAuth = (roles = []) => {
 
       const token = authHeader.split(' ')[1];
 
-      // Handle Fail-Safe Demo Tokens for testing
+      // 1. Check userStore sessions first (fast fail-safe in-memory cache)
+      const cachedUser = userStore.getUserByToken(token);
+      if (cachedUser) {
+        if (roles.length > 0 && !roles.includes(cachedUser.role)) {
+          return res.status(403).json({ error: `Forbidden. Role '${cachedUser.role}' lacks permission.` });
+        }
+        req.user = cachedUser;
+        return next();
+      }
+
+      // 2. Handle Fail-Safe Demo Tokens for testing
       if (token.startsWith('demo-token-admin')) {
-        req.user = {
-          id: 'a0000000-0000-0000-0000-000000000001',
-          email: 'admin@thiraiplus.com',
-          full_name: 'Executive Admin',
-          role: 'admin',
-          username: 'admin'
-        };
+        req.user = DEMO_USERS['admin@thiraiplus.com'].user;
         return next();
       }
 
       if (token.startsWith('demo-token-judge')) {
-        req.user = {
-          id: 'j0000000-0000-0000-0000-000000000002',
-          email: 'judge@thiraiplus.com',
-          full_name: 'Judge Steven Spielberg',
-          role: 'judge',
-          username: 'judge_steven'
-        };
+        req.user = DEMO_USERS['judge@thiraiplus.com'].user;
+        return next();
+      }
+
+      if (token.startsWith('demo-token-viewer')) {
+        req.user = DEMO_USERS['viewer@thiraiplus.com'].user;
         return next();
       }
 

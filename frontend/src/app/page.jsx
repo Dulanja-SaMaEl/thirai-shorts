@@ -7,20 +7,48 @@ import CommunityTimer from '../components/CommunityTimer';
 import ContactForm from '../components/ContactForm';
 import VotingModal from '../components/VotingModal';
 import VideoPlayerModal from '../components/VideoPlayerModal';
-import { Film, TrendingUp, AlertCircle } from 'lucide-react';
+import AuthWatchModal from '../components/AuthWatchModal';
+import TokenUnlockModal from '../components/TokenUnlockModal';
+import { Film, TrendingUp, AlertCircle, Coins, Sparkles } from 'lucide-react';
 import api from '../lib/api';
+import { useAuth } from '../context/AuthContext';
 
 export default function HomePage() {
+  const { user, updateTokens } = useAuth();
+
   const [movies, setMovies] = useState([]);
   const [winners, setWinners] = useState([]);
+  const [unlockedMovieIds, setUnlockedMovieIds] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterSort, setFilterSort] = useState('newest');
+  
   const [selectedVotingMovie, setSelectedVotingMovie] = useState(null);
   const [selectedPlayingMovie, setSelectedPlayingMovie] = useState(null);
+  const [selectedAuthPromptMovie, setSelectedAuthPromptMovie] = useState(null);
+  const [selectedUnlockMovie, setSelectedUnlockMovie] = useState(null);
 
   useEffect(() => {
     fetchGalleryData();
   }, [filterSort]);
+
+  useEffect(() => {
+    if (user) {
+      fetchUnlockedMovies();
+    } else {
+      setUnlockedMovieIds([]);
+    }
+  }, [user?.id]);
+
+  const fetchUnlockedMovies = async () => {
+    try {
+      const res = await api.get('/movies/my/unlocked');
+      if (res.data.success && res.data.unlocked_ids) {
+        setUnlockedMovieIds(res.data.unlocked_ids);
+      }
+    } catch (e) {
+      console.warn('Notice loading user unlocked movies:', e);
+    }
+  };
 
   const fetchGalleryData = async () => {
     setLoading(true);
@@ -40,6 +68,33 @@ export default function HomePage() {
       console.error('Error fetching gallery movies:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Central Gatekeeper for Watching Films
+  const handleWatchMovie = (movie) => {
+    // 1. Guest: Cannot watch without logging in!
+    if (!user) {
+      setSelectedAuthPromptMovie(movie);
+      return;
+    }
+
+    // 2. Admins & Judges have bypass, or already unlocked movies can be watched freely
+    if (user.role === 'admin' || user.role === 'judge' || unlockedMovieIds.includes(movie.id)) {
+      setSelectedPlayingMovie(movie);
+      return;
+    }
+
+    // 3. Logged-in Viewer must unlock with 1 token
+    setSelectedUnlockMovie(movie);
+  };
+
+  const handleConfirmUnlock = (newBalance) => {
+    if (selectedUnlockMovie) {
+      setUnlockedMovieIds(prev => [...prev, selectedUnlockMovie.id]);
+      updateTokens(newBalance);
+      setSelectedPlayingMovie(selectedUnlockMovie);
+      setSelectedUnlockMovie(null);
     }
   };
 
@@ -93,8 +148,10 @@ export default function HomePage() {
               <MovieCard
                 key={movie.id}
                 movie={movie}
+                isUnlocked={user?.role === 'admin' || user?.role === 'judge' || unlockedMovieIds.includes(movie.id)}
+                isGuest={!user}
                 onOpenVoteModal={(m) => setSelectedVotingMovie(m)}
-                onOpenPlayerModal={(m) => setSelectedPlayingMovie(m)}
+                onOpenPlayerModal={(m) => handleWatchMovie(m)}
               />
             ))}
           </div>
@@ -107,7 +164,7 @@ export default function HomePage() {
       {/* 3. Annual Thirai+ Festival Winners (Now Down Below Gallery) */}
       <WinnerShowcase
         winners={winners}
-        onOpenPlayerModal={(m) => setSelectedPlayingMovie(m)}
+        onOpenPlayerModal={(m) => handleWatchMovie(m)}
       />
 
       {/* 4. Contact Us Section */}
@@ -119,6 +176,24 @@ export default function HomePage() {
           movie={selectedPlayingMovie}
           onClose={() => setSelectedPlayingMovie(null)}
           onOpenVoteModal={(m) => setSelectedVotingMovie(m)}
+        />
+      )}
+
+      {/* Guest Sign In / Register Prompt Modal */}
+      {selectedAuthPromptMovie && (
+        <AuthWatchModal
+          movie={selectedAuthPromptMovie}
+          onClose={() => setSelectedAuthPromptMovie(null)}
+        />
+      )}
+
+      {/* Viewer Token Deduction Confirmation Modal */}
+      {selectedUnlockMovie && (
+        <TokenUnlockModal
+          movie={selectedUnlockMovie}
+          userTokens={user?.tokens_balance ?? 0}
+          onConfirmUnlock={handleConfirmUnlock}
+          onClose={() => setSelectedUnlockMovie(null)}
         />
       )}
 

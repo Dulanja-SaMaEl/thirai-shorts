@@ -1,5 +1,7 @@
 import express from 'express';
 import { supabaseAdmin } from '../config/supabase.js';
+import { requireAuth } from '../middleware/auth.js';
+import { userStore } from '../config/userStore.js';
 
 const router = express.Router();
 
@@ -139,6 +141,123 @@ router.post('/:id/view', async (req, res) => {
     return res.status(200).json({ success: true, view_count: newCount });
   } catch (error) {
     return res.status(200).json({ success: true, view_count: 1421 });
+  }
+});
+
+/**
+ * @route GET /api/movies/my/unlocked
+ * @desc Get list of movie IDs unlocked by the authenticated user
+ */
+router.get('/my/unlocked', requireAuth(), async (req, res) => {
+  try {
+    const userId = req.user.id;
+    let unlockedIds = userStore.getUnlockedMovieIds(userId);
+
+    try {
+      const { data: dbUnlocks, error } = await supabaseAdmin
+        .from('user_movie_unlocks')
+        .select('movie_id')
+        .eq('user_id', userId);
+
+      if (!error && dbUnlocks) {
+        const set = new Set([...unlockedIds, ...dbUnlocks.map(u => u.movie_id)]);
+        unlockedIds = Array.from(set);
+      }
+    } catch (e) {
+      console.warn('Supabase DB fetch user unlocks note:', e.message);
+    }
+
+    return res.status(200).json({
+      success: true,
+      unlocked_ids: unlockedIds,
+      tokens_balance: req.user.tokens_balance ?? 2
+    });
+  } catch (error) {
+    console.error('Error fetching unlocked movies:', error);
+    return res.status(500).json({ error: 'Failed to retrieve unlocked movies.' });
+  }
+});
+
+/**
+ * @route POST /api/movies/:id/unlock
+ * @desc Unlock movie using 1 viewing token
+ */
+router.post('/:id/unlock', requireAuth(), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    // 1. Check if already unlocked in userStore
+    if (userStore.isMovieUnlocked(userId, id)) {
+      return res.status(200).json({
+        success: true,
+        already_unlocked: true,
+        tokens_balance: req.user.tokens_balance ?? 2,
+        message: 'Film is already in your unlocked collection.'
+      });
+    }
+
+    // 2. Check Supabase DB for unlock record
+    try {
+      const { data: existingUnlock } = await supabaseAdmin
+        .from('user_movie_unlocks')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('movie_id', id)
+        .maybeSingle();
+
+      if (existingUnlock) {
+        userStore.unlockMovie(userId, id);
+        return res.status(200).json({
+          success: true,
+          already_unlocked: true,
+          tokens_balance: req.user.tokens_balance ?? 2,
+          message: 'Film is already in your unlocked collection.'
+        });
+      }
+    } catch (e) {
+      console.warn('Supabase DB check unlock notice:', e.message);
+    }
+
+    // 3. Check token balance (must have at least 1 token)
+    const currentTokens = Number(req.user.tokens_balance ?? 0);
+    if (currentTokens < 1) {
+      return res.status(403).json({
+        error: 'Insufficient tokens. You have 0 tokens remaining. Please top up tokens to view this short film.',
+        tokens_balance: 0
+      });
+    }
+
+    // 4. Deduct 1 token
+    const newTokens = currentTokens - 1;
+    userStore.updateUserTokens(userId, newTokens);
+    userStore.unlockMovie(userId, id);
+    req.user.tokens_balance = newTokens;
+
+    // 5. Persist to Supabase DB if possible
+    try {
+      await supabaseAdmin
+        .from('users')
+        .update({ tokens_balance: newTokens })
+        .eq('id', userId);
+
+      await supabaseAdmin
+        .from('user_movie_unlocks')
+        .insert({ user_id: userId, movie_id: id });
+    } catch (dbErr) {
+      console.warn('Supabase DB token deduction notice:', dbErr.message);
+    }
+
+    return res.status(200).json({
+      success: true,
+      unlocked: true,
+      tokens_balance: newTokens,
+      message: 'Movie unlocked! 1 token was consumed.'
+    });
+
+  } catch (error) {
+    console.error('Error unlocking movie:', error);
+    return res.status(500).json({ error: 'Failed to process movie unlock.' });
   }
 });
 
