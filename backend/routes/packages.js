@@ -1,7 +1,7 @@
 import express from 'express';
 import { requireAuth } from '../middleware/auth.js';
 import { userStore } from '../config/userStore.js';
-import { supabaseAdmin } from '../config/supabase.js';
+import { supabaseAdmin, isSupabaseConfigured } from '../config/supabase.js';
 
 const router = express.Router();
 
@@ -44,10 +44,35 @@ export const PACKAGES = [
  * @route GET /api/packages
  * @desc Get available subscription and token packages with USD & estimated LKR pricing
  */
-router.get('/', (req, res) => {
+router.get('/', async (req, res) => {
+  let packagesList = PACKAGES;
+
+  if (isSupabaseConfigured) {
+    try {
+      const { data: dbPackages, error } = await supabaseAdmin
+        .from('packages')
+        .select('*')
+        .eq('is_active', true);
+
+      if (!error && dbPackages && dbPackages.length > 0) {
+        packagesList = dbPackages.map(p => ({
+          id: p.plan_id,
+          name: p.name,
+          price_usd: Number(p.price_usd),
+          price_lkr_estimate: Number(p.estimated_price_lkr),
+          billing_period: p.billing_cycle,
+          badge: p.plan_id === 'yearly' ? 'Best Value • Save 33%' : 'Popular',
+          features: Array.isArray(p.features) ? p.features : []
+        }));
+      }
+    } catch (e) {
+      console.warn('Supabase packages fetch notice:', e.message);
+    }
+  }
+
   return res.status(200).json({
     success: true,
-    packages: PACKAGES,
+    packages: packagesList,
     exchange_rate: {
       base: 'USD',
       target: 'LKR',
@@ -74,28 +99,30 @@ router.post('/subscribe', requireAuth(), async (req, res) => {
     const updatedUser = userStore.subscribeUser(userId, package_id);
 
     // Sync with Supabase DB if available
-    try {
-      const expiresAt = new Date();
-      if (package_id === 'yearly') expiresAt.setFullYear(expiresAt.getFullYear() + 1);
-      else expiresAt.setMonth(expiresAt.getMonth() + 1);
+    if (isSupabaseConfigured) {
+      try {
+        const expiresAt = new Date();
+        if (package_id === 'yearly') expiresAt.setFullYear(expiresAt.getFullYear() + 1);
+        else expiresAt.setMonth(expiresAt.getMonth() + 1);
 
-      await supabaseAdmin.from('users').update({
-        subscription_tier: package_id,
-        subscription_status: 'active',
-        subscription_expires_at: expiresAt.toISOString(),
-        tokens_balance: updatedUser.tokens_balance
-      }).eq('id', userId);
+        await supabaseAdmin.from('users').update({
+          subscription_tier: package_id,
+          subscription_status: 'active',
+          subscription_expires_at: expiresAt.toISOString(),
+          tokens_balance: updatedUser.tokens_balance
+        }).eq('id', userId);
 
-      await supabaseAdmin.from('payments').insert({
-        user_id: userId,
-        package_type: package_id,
-        amount_cents: Math.round(selectedPkg.price_usd * 100),
-        currency: 'usd',
-        status: 'paid',
-        payer_email: req.user.email
-      });
-    } catch (e) {
-      console.warn('Supabase DB subscription update note:', e.message);
+        await supabaseAdmin.from('payments').insert({
+          user_id: userId,
+          package_type: package_id,
+          amount_cents: Math.round(selectedPkg.price_usd * 100),
+          currency: 'usd',
+          status: 'paid',
+          payer_email: req.user.email
+        });
+      } catch (e) {
+        console.warn('Supabase DB subscription update note:', e.message);
+      }
     }
 
     return res.status(200).json({

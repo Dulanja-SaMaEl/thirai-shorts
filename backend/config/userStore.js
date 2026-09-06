@@ -1,9 +1,11 @@
 import crypto from 'crypto';
+import bcrypt from 'bcryptjs';
 
-// Preset Demo User Configurations
+// Preset Demo User Configurations with bcrypt-hashed credentials
 export const DEMO_USERS = {
   'admin@thiraiplus.com': {
     password: 'Admin@123456',
+    password_hash: bcrypt.hashSync('Admin@123456', 10),
     user: {
       id: 'a0000000-0000-0000-0000-000000000001',
       email: 'admin@thiraiplus.com',
@@ -18,6 +20,7 @@ export const DEMO_USERS = {
   },
   'judge@thiraiplus.com': {
     password: 'Judge@123456',
+    password_hash: bcrypt.hashSync('Judge@123456', 10),
     user: {
       id: 'b0000000-0000-0000-0000-000000000002',
       email: 'judge@thiraiplus.com',
@@ -32,6 +35,7 @@ export const DEMO_USERS = {
   },
   'viewer@thiraiplus.com': {
     password: 'Viewer@123456',
+    password_hash: bcrypt.hashSync('Viewer@123456', 10),
     user: {
       id: 'd0000000-0000-0000-0000-000000000004',
       email: 'viewer@thiraiplus.com',
@@ -46,6 +50,7 @@ export const DEMO_USERS = {
   },
   'director@thiraiplus.com': {
     password: 'Director@123456',
+    password_hash: bcrypt.hashSync('Director@123456', 10),
     user: {
       id: 'c0000000-0000-0000-0000-000000000003',
       email: 'director@thiraiplus.com',
@@ -60,7 +65,7 @@ export const DEMO_USERS = {
   }
 };
 
-// In-Memory User Store (for development/fail-safe caching alongside Supabase DB)
+// In-Memory User Store (for fail-safe runtime caching alongside Supabase DB)
 const registeredUsersByEmail = new Map();
 const registeredUsersById = new Map();
 const sessionsByToken = new Map();
@@ -96,14 +101,37 @@ export const userStore = {
     return registeredUsersById.get(id) || null;
   },
 
+  /**
+   * Cryptographically verify password against stored record
+   */
+  async verifyPassword(email, inputPassword) {
+    if (!email || !inputPassword) return false;
+    const cleanEmail = email.trim().toLowerCase();
+    const record = registeredUsersByEmail.get(cleanEmail);
+    if (!record) return false;
+
+    if (record.password_hash) {
+      return await bcrypt.compare(inputPassword, record.password_hash);
+    }
+    if (record.password) {
+      return inputPassword === record.password;
+    }
+    return false;
+  },
+
   registerUser({ email, password, full_name, role = 'viewer', tokens_balance = 2 }) {
     const cleanEmail = email.trim().toLowerCase();
     const id = `user-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
+    const password_hash = bcrypt.hashSync(password, 10);
+    
+    // Strict role safety: register can NEVER create an admin or judge
+    const safeRole = (role === 'submitter') ? 'submitter' : 'viewer';
+
     const user = {
       id,
       email: cleanEmail,
       full_name,
-      role,
+      role: safeRole,
       username: cleanEmail.split('@')[0],
       tokens_balance: Number(tokens_balance),
       subscription_tier: 'free',
@@ -112,7 +140,7 @@ export const userStore = {
       created_at: new Date().toISOString()
     };
 
-    const record = { password, user };
+    const record = { password, password_hash, user };
     registeredUsersByEmail.set(cleanEmail, record);
     registeredUsersById.set(id, user);
     if (!movieUnlocksByUser.has(id)) {
@@ -126,7 +154,6 @@ export const userStore = {
     const user = registeredUsersById.get(userId);
     if (user) {
       user.tokens_balance = Number(newBalance);
-      // Also update in record map
       const record = registeredUsersByEmail.get(user.email.toLowerCase());
       if (record) {
         record.user.tokens_balance = Number(newBalance);
@@ -140,7 +167,6 @@ export const userStore = {
     if (user) {
       user.subscription_tier = tier;
       user.subscription_status = 'active';
-      // Grant VIP bonus tokens or unlimited pass
       user.tokens_balance = (user.tokens_balance || 0) + (tier === 'yearly' ? 50 : 20);
       const record = registeredUsersByEmail.get(user.email.toLowerCase());
       if (record) {

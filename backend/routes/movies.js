@@ -1,5 +1,5 @@
 import express from 'express';
-import { supabaseAdmin } from '../config/supabase.js';
+import { supabaseAdmin, isSupabaseConfigured } from '../config/supabase.js';
 import { requireAuth } from '../middleware/auth.js';
 import { userStore } from '../config/userStore.js';
 
@@ -219,23 +219,50 @@ router.post('/:id/unlock', requireAuth(), async (req, res) => {
       console.warn('Supabase DB check unlock notice:', e.message);
     }
 
-    // 2.5 Check if user has active VIP Subscription Pass (Unlimited Streaming)
-    if (req.user.subscription_status === 'active') {
-      userStore.unlockMovie(userId, id);
+    // 2.5 Fetch latest balance & subscription status from DB if available
+    let currentTokens = Number(req.user.tokens_balance ?? 0);
+    let isVip = req.user.subscription_status === 'active';
+
+    if (isSupabaseConfigured) {
       try {
-        await supabaseAdmin.from('user_movie_unlocks').upsert({ user_id: userId, movie_id: id });
-      } catch (e) {}
+        const { data: dbUser } = await supabaseAdmin
+          .from('users')
+          .select('tokens_balance, subscription_status')
+          .eq('id', userId)
+          .maybeSingle();
+        if (dbUser) {
+          if (dbUser.tokens_balance !== undefined && dbUser.tokens_balance !== null) {
+            currentTokens = Number(dbUser.tokens_balance);
+          }
+          if (dbUser.subscription_status) {
+            isVip = dbUser.subscription_status === 'active';
+          }
+        }
+      } catch (e) {
+        console.warn('Supabase DB fetch user status before unlock notice:', e.message);
+      }
+    }
+
+    if (isVip) {
+      userStore.unlockMovie(userId, id);
+      if (isSupabaseConfigured) {
+        try {
+          await supabaseAdmin.from('user_movie_unlocks').upsert(
+            { user_id: userId, movie_id: id },
+            { onConflict: 'user_id,movie_id' }
+          );
+        } catch (e) {}
+      }
       return res.status(200).json({
         success: true,
         unlocked: true,
         is_vip: true,
-        tokens_balance: req.user.tokens_balance ?? 2,
+        tokens_balance: currentTokens,
         message: 'VIP Pass Active! Unlocked with unlimited streaming.'
       });
     }
 
     // 3. Check token balance (must have at least 1 token)
-    const currentTokens = Number(req.user.tokens_balance ?? 0);
     if (currentTokens < 1) {
       return res.status(403).json({
         error: 'Insufficient tokens. You have 0 tokens remaining. Please top up tokens to view this short film.',
@@ -249,18 +276,23 @@ router.post('/:id/unlock', requireAuth(), async (req, res) => {
     userStore.unlockMovie(userId, id);
     req.user.tokens_balance = newTokens;
 
-    // 5. Persist to Supabase DB if possible
-    try {
-      await supabaseAdmin
-        .from('users')
-        .update({ tokens_balance: newTokens })
-        .eq('id', userId);
+    // 5. Persist to Supabase DB atomically
+    if (isSupabaseConfigured) {
+      try {
+        await supabaseAdmin
+          .from('users')
+          .update({ tokens_balance: newTokens })
+          .eq('id', userId);
 
-      await supabaseAdmin
-        .from('user_movie_unlocks')
-        .insert({ user_id: userId, movie_id: id });
-    } catch (dbErr) {
-      console.warn('Supabase DB token deduction notice:', dbErr.message);
+        await supabaseAdmin
+          .from('user_movie_unlocks')
+          .upsert(
+            { user_id: userId, movie_id: id },
+            { onConflict: 'user_id,movie_id' }
+          );
+      } catch (dbErr) {
+        console.warn('Supabase DB token deduction notice:', dbErr.message);
+      }
     }
 
     return res.status(200).json({
