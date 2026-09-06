@@ -35,16 +35,12 @@ export default function Header() {
             <PlayCircle className="w-4 h-4" /> Gallery
           </Link>
 
-          {user && (
-            <Link
-              href="/dashboard"
-              className={`flex items-center gap-2 text-sm font-semibold transition-colors ${
-                isActive('/dashboard') ? 'text-gold-400 border-b-2 border-gold-400 pb-1' : 'text-zinc-300 hover:text-gold-300'
-              }`}
-            >
-              <LayoutDashboard className="w-4 h-4" /> Dashboard
-            </Link>
-          )}
+          <a
+            href="/#packages"
+            className="flex items-center gap-2 text-sm font-semibold text-zinc-300 hover:text-gold-300 transition-colors"
+          >
+            <Sparkles className="w-4 h-4 text-gold-400" /> VIP Passes
+          </a>
 
           <Link
             href="/upload"
@@ -55,23 +51,39 @@ export default function Header() {
             <Upload className="w-4 h-4" /> Submit Film
           </Link>
 
-          <Link
-            href="/judge"
-            className={`flex items-center gap-2 text-sm font-semibold transition-colors ${
-              isActive('/judge') ? 'text-gold-400 border-b-2 border-gold-400 pb-1' : 'text-zinc-300 hover:text-gold-300'
-            }`}
-          >
-            <Award className="w-4 h-4" /> Judge Panel
-          </Link>
+          {/* Role-Gated Navigation Links: Shown ONLY to authenticated judges/admins/viewers */}
+          {user && user.role === 'viewer' && (
+            <Link
+              href="/dashboard"
+              className={`flex items-center gap-2 text-sm font-semibold transition-colors ${
+                isActive('/dashboard') ? 'text-gold-400 border-b-2 border-gold-400 pb-1' : 'text-zinc-300 hover:text-gold-300'
+              }`}
+            >
+              <LayoutDashboard className="w-4 h-4" /> Dashboard
+            </Link>
+          )}
 
-          <Link
-            href="/admin"
-            className={`flex items-center gap-2 text-sm font-semibold transition-colors ${
-              isActive('/admin') ? 'text-gold-400 border-b-2 border-gold-400 pb-1' : 'text-zinc-300 hover:text-gold-300'
-            }`}
-          >
-            <Shield className="w-4 h-4" /> Admin Portal
-          </Link>
+          {user && (user.role === 'judge' || user.email?.includes('judge')) && (
+            <Link
+              href="/judge"
+              className={`flex items-center gap-2 text-sm font-semibold transition-colors ${
+                isActive('/judge') ? 'text-gold-400 border-b-2 border-gold-400 pb-1' : 'text-gold-300 hover:text-white'
+              }`}
+            >
+              <Award className="w-4 h-4 text-gold-400" /> Judge Panel
+            </Link>
+          )}
+
+          {user && (user.role === 'admin' || user.email?.includes('admin')) && (
+            <Link
+              href="/admin"
+              className={`flex items-center gap-2 text-sm font-semibold transition-colors ${
+                isActive('/admin') ? 'text-gold-400 border-b-2 border-gold-400 pb-1' : 'text-gold-300 hover:text-white'
+              }`}
+            >
+              <Shield className="w-4 h-4 text-gold-400" /> Admin Portal
+            </Link>
+          )}
         </nav>
 
         {/* User Auth Controls & Action Button */}

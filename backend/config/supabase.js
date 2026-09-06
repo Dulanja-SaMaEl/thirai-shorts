@@ -5,6 +5,13 @@ dotenv.config();
 const supabaseUrl = process.env.SUPABASE_URL || 'https://xyz.supabase.co';
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'your-service-role-key';
 
+export const isSupabaseConfigured = Boolean(
+  process.env.SUPABASE_URL &&
+  !process.env.SUPABASE_URL.includes('xyz.supabase.co') &&
+  process.env.SUPABASE_SERVICE_ROLE_KEY &&
+  process.env.SUPABASE_SERVICE_ROLE_KEY !== 'your-service-role-key'
+);
+
 export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
   auth: {
     autoRefreshToken: false,

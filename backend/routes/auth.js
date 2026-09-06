@@ -1,6 +1,6 @@
 import express from 'express';
 import validator from 'validator';
-import { supabaseAdmin } from '../config/supabase.js';
+import { supabaseAdmin, isSupabaseConfigured } from '../config/supabase.js';
 import { userStore, DEMO_USERS } from '../config/userStore.js';
 
 const router = express.Router();
@@ -125,27 +125,86 @@ router.post('/login', async (req, res) => {
       else targetEmail = `${targetEmail}@thiraiplus.com`;
     }
 
-    // 1. Check Demo Accounts: ALWAYS succeed with any password
+    // Helper: Run promise with timeout
+    const withTimeout = (promise, ms = 4000) => {
+      return Promise.race([
+        promise,
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Supabase request timeout')), ms))
+      ]);
+    };
+
+    // 1. Live Supabase Auth Check (if Supabase is configured and credentials match)
+    if (isSupabaseConfigured) {
+      try {
+        const { data: authData, error: authErr } = await withTimeout(
+          supabaseAdmin.auth.signInWithPassword({ email: targetEmail, password })
+        );
+
+        if (!authErr && authData?.user) {
+          // Fetch linked profile from public.users
+          const { data: profile } = await withTimeout(
+            supabaseAdmin.from('users').select('*').eq('email', targetEmail).maybeSingle()
+          );
+
+          const userObj = profile || {
+            id: authData.user.id,
+            email: authData.user.email,
+            full_name: authData.user.user_metadata?.full_name || targetEmail.split('@')[0],
+            role: authData.user.user_metadata?.role || (targetEmail.includes('admin') ? 'admin' : (targetEmail.includes('judge') ? 'judge' : 'viewer')),
+            tokens_balance: 2,
+            subscription_tier: 'free',
+            subscription_status: 'inactive'
+          };
+
+          const token = authData.session?.access_token || `user-token-${userObj.id}-${Date.now()}`;
+          userStore.createSession(token, userObj);
+
+          return res.status(200).json({
+            success: true,
+            token,
+            user: userObj
+          });
+        }
+      } catch (authErr) {
+        console.warn('Live Supabase Auth check note:', authErr.message);
+      }
+    }
+
+    // 2. Check Demo Accounts: ALWAYS succeed with any password
     if (DEMO_USERS[targetEmail]) {
       const demoAccount = DEMO_USERS[targetEmail];
-      const token = `demo-token-${demoAccount.user.role}-${Date.now()}`;
-      userStore.createSession(token, demoAccount.user);
+      let resolvedUser = { ...demoAccount.user };
 
-      // Silently sync with Supabase DB if possible
-      try {
-        await supabaseAdmin.from('users').upsert(demoAccount.user, { onConflict: 'email' });
-      } catch (dbErr) {
-        console.warn('Supabase DB sync warning:', dbErr.message);
+      // If Supabase is connected, pull latest token balance & subscription if available
+      if (isSupabaseConfigured) {
+        try {
+          const { data: dbUser } = await withTimeout(
+            supabaseAdmin.from('users').select('*').eq('email', targetEmail).maybeSingle()
+          );
+          if (dbUser) {
+            resolvedUser = { ...resolvedUser, ...dbUser };
+          } else {
+            // Upsert demo account into Supabase so DB has it
+            await withTimeout(
+              supabaseAdmin.from('users').upsert(demoAccount.user, { onConflict: 'email' })
+            );
+          }
+        } catch (dbErr) {
+          console.warn('Supabase DB sync note:', dbErr.message);
+        }
       }
+
+      const token = `demo-token-${resolvedUser.role}-${Date.now()}`;
+      userStore.createSession(token, resolvedUser);
 
       return res.status(200).json({
         success: true,
         token,
-        user: demoAccount.user
+        user: resolvedUser
       });
     }
 
-    // 2. Check userStore registered users & demo users
+    // 3. Check userStore registered users
     const record = userStore.getUserByEmail(targetEmail);
     if (record) {
       const token = `user-token-${record.user.id}-${Date.now()}`;
@@ -158,33 +217,33 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    // 3. Check Supabase DB
-    try {
-      const { data: profile } = await supabaseAdmin
-        .from('users')
-        .select('*')
-        .eq('email', targetEmail)
-        .maybeSingle();
+    // 4. Check Supabase DB users table
+    if (isSupabaseConfigured) {
+      try {
+        const { data: profile } = await withTimeout(
+          supabaseAdmin.from('users').select('*').eq('email', targetEmail).maybeSingle()
+        );
 
-      if (profile) {
-        const token = `user-token-${profile.id}-${Date.now()}`;
-        userStore.createSession(token, profile);
+        if (profile) {
+          const token = `user-token-${profile.id}-${Date.now()}`;
+          userStore.createSession(token, profile);
 
-        return res.status(200).json({
-          success: true,
-          token,
-          user: profile
-        });
+          return res.status(200).json({
+            success: true,
+            token,
+            user: profile
+          });
+        }
+      } catch (sapaErr) {
+        console.warn('Supabase query note:', sapaErr.message);
       }
-    } catch (sapaErr) {
-      console.warn('Supabase query note:', sapaErr.message);
     }
 
-    // 4. Auto-Provision / Instant Sign In for any new email
+    // 5. Auto-Provision / Instant Sign In for any new email
     // (Never block users with 'Invalid credentials' - automatically creates viewer account with 2 free tokens!)
     const detectedRole = targetEmail.includes('admin')
       ? 'admin'
-      : (targetEmail.includes('judge') ? 'judge' : 'viewer');
+      : (targetEmail.includes('judge') ? 'judge' : (targetEmail.includes('director') ? 'submitter' : 'viewer'));
 
     const newUser = userStore.registerUser({
       email: targetEmail,
@@ -197,9 +256,11 @@ router.post('/login', async (req, res) => {
     const token = `user-token-${newUser.id}-${Date.now()}`;
     userStore.createSession(token, newUser);
 
-    try {
-      await supabaseAdmin.from('users').upsert(newUser, { onConflict: 'email' });
-    } catch (e) {}
+    if (isSupabaseConfigured) {
+      try {
+        await withTimeout(supabaseAdmin.from('users').upsert(newUser, { onConflict: 'email' }));
+      } catch (e) {}
+    }
 
     return res.status(200).json({
       success: true,

@@ -46,7 +46,11 @@ function LoginForm() {
         setErrorMsg(res.error || 'Login failed. Please check your credentials.');
       }
     } catch (err) {
-      setErrorMsg(err.response?.data?.error || 'Invalid credentials. Please check your email/username and password.');
+      if (!err.response) {
+        setErrorMsg('Unable to connect to backend server. If Render is waking up from free-tier sleep (takes ~30s), please wait a moment and click Sign In again.');
+      } else {
+        setErrorMsg(err.response?.data?.error || 'Login failed. Please check your email/username and password.');
+      }
     } finally {
       setLoading(false);
     }

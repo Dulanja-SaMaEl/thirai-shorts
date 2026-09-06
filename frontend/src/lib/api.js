@@ -1,9 +1,15 @@
 import axios from 'axios';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+// Normalize API URL: strip trailing slash, ensure it ends with /api
+let rawUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api').trim();
+rawUrl = rawUrl.replace(/\/+$/, '');
+if (!rawUrl.endsWith('/api')) {
+  rawUrl = `${rawUrl}/api`;
+}
 
 const api = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: rawUrl,
+  timeout: 35000, // 35s to account for Render free tier spindown wake-ups
   headers: {
     'Content-Type': 'application/json',
   },

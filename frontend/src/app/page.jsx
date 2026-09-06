@@ -1,6 +1,9 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import HeroCarousel from '../components/HeroCarousel';
+import TokenBanner from '../components/TokenBanner';
+import PackagesSection from '../components/PackagesSection';
 import WinnerShowcase from '../components/WinnerShowcase';
 import MovieCard from '../components/MovieCard';
 import CommunityTimer from '../components/CommunityTimer';
@@ -9,7 +12,7 @@ import VotingModal from '../components/VotingModal';
 import VideoPlayerModal from '../components/VideoPlayerModal';
 import AuthWatchModal from '../components/AuthWatchModal';
 import TokenUnlockModal from '../components/TokenUnlockModal';
-import { Film, TrendingUp, AlertCircle, Coins, Sparkles } from 'lucide-react';
+import { Film, TrendingUp, AlertCircle, Sparkles } from 'lucide-react';
 import api from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 
@@ -79,8 +82,13 @@ export default function HomePage() {
       return;
     }
 
-    // 2. Admins & Judges have bypass, or already unlocked movies can be watched freely
-    if (user.role === 'admin' || user.role === 'judge' || unlockedMovieIds.includes(movie.id)) {
+    // 2. Admins & Judges have bypass, VIP subscribers bypass, or already unlocked movies can be watched freely
+    if (
+      user.role === 'admin' ||
+      user.role === 'judge' ||
+      user.subscription_status === 'active' ||
+      unlockedMovieIds.includes(movie.id)
+    ) {
       setSelectedPlayingMovie(movie);
       return;
     }
@@ -99,9 +107,21 @@ export default function HomePage() {
   };
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-14">
       
-      {/* 1. Film Festival Gallery Section (Now on Top) */}
+      {/* 1. Viewer Token Balance Notification Banner */}
+      <TokenBanner />
+
+      {/* 2. Big Netflix-Style Hero Carousel (Top 5 Approved Movies) */}
+      <section aria-label="Featured Festival Movies">
+        <HeroCarousel
+          movies={movies}
+          onWatchMovie={handleWatchMovie}
+          onOpenVoteModal={(m) => setSelectedVotingMovie(m)}
+        />
+      </section>
+
+      {/* 3. Film Festival Gallery Section */}
       <section className="space-y-6">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-gold-500/20 pb-4">
           <div>
@@ -110,11 +130,11 @@ export default function HomePage() {
               <h2 className="text-2xl font-extrabold text-white">Film Festival Gallery</h2>
             </div>
             <p className="text-xs text-zinc-400 mt-1">
-              Browse official selections and newly submitted short film entries.
+              Browse official selections, award contenders, and newly submitted short film entries.
             </p>
           </div>
 
-          {/* Sort Control Only (State Dropdown Removed) */}
+          {/* Sort Filter */}
           <div className="flex items-center gap-2 bg-surface-card border border-zinc-800 rounded-xl px-3.5 py-2 text-xs text-zinc-300">
             <TrendingUp className="w-4 h-4 text-gold-400" />
             <span className="font-semibold text-zinc-400">Sort:</span>
@@ -148,7 +168,12 @@ export default function HomePage() {
               <MovieCard
                 key={movie.id}
                 movie={movie}
-                isUnlocked={user?.role === 'admin' || user?.role === 'judge' || unlockedMovieIds.includes(movie.id)}
+                isUnlocked={
+                  user?.role === 'admin' ||
+                  user?.role === 'judge' ||
+                  user?.subscription_status === 'active' ||
+                  unlockedMovieIds.includes(movie.id)
+                }
                 isGuest={!user}
                 onOpenVoteModal={(m) => setSelectedVotingMovie(m)}
                 onOpenPlayerModal={(m) => handleWatchMovie(m)}
@@ -158,16 +183,19 @@ export default function HomePage() {
         )}
       </section>
 
-      {/* 2. Community Rating Timer Banner */}
+      {/* 4. VIP Audience Packages Section (with 50% Early Bird Offer) */}
+      <PackagesSection onSubscribed={() => fetchUnlockedMovies()} />
+
+      {/* 5. Community Rating Timer Banner */}
       <CommunityTimer />
 
-      {/* 3. Annual Thirai+ Festival Winners (Now Down Below Gallery) */}
+      {/* 6. Annual Thirai+ Festival Winners Showcase */}
       <WinnerShowcase
         winners={winners}
         onOpenPlayerModal={(m) => handleWatchMovie(m)}
       />
 
-      {/* 4. Contact Us Section */}
+      {/* 7. Contact Us Section */}
       <ContactForm />
 
       {/* Interactive Cinema Video Player Modal */}
