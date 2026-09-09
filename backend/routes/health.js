@@ -17,6 +17,7 @@ const withTimeout = (promise, ms = 2000) => {
  * @desc Production Diagnostics (Express Server, Supabase DB, Storage, Uptime)
  */
 router.get('/', async (req, res) => {
+  const startTime = Date.now();
   const uptime = Math.floor(process.uptime());
   const diagnostics = {
     status: 'online',

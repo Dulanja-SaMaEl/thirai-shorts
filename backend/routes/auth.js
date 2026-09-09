@@ -14,6 +14,7 @@ const authLimiter = rateLimit({
   max: 30, // Limit each IP to 30 requests per window
   standardHeaders: true,
   legacyHeaders: false,
+  validate: { xForwardedForHeader: false, default: false },
   message: { error: 'Too many login or registration attempts. Please try again in 15 minutes.' }
 });
 

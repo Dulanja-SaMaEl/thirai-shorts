@@ -17,9 +17,14 @@ export default function SystemStatusWidget() {
       setLastCheck(new Date().toLocaleTimeString());
     } catch (err) {
       setStatusData({
-        server: { status: 'offline', message: err.code === 'ECONNABORTED' ? 'Server warming up...' : 'Express Server unreachable' },
-        database: { status: 'offline', message: 'Connecting...' },
-        cloudflareR2: { status: 'offline', message: 'Connecting...' },
+        server: {
+          status: 'offline',
+          message: err.code === 'ECONNABORTED'
+            ? 'Server warming up...'
+            : (err.response?.data?.message || (err.response ? `HTTP ${err.response.status}` : 'Express Server unreachable'))
+        },
+        database: { status: 'offline', message: 'Offline or connecting...' },
+        cloudflareR2: { status: 'offline', message: 'Offline or connecting...' },
         overall: 'offline'
       });
       setLastCheck(new Date().toLocaleTimeString() + ' (Retrying)');
