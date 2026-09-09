@@ -208,7 +208,6 @@ VALUES
     )
 ON CONFLICT (email) DO UPDATE SET
     role = EXCLUDED.role,
-    tokens_balance = EXCLUDED.tokens_balance,
     subscription_tier = EXCLUDED.subscription_tier,
     subscription_status = EXCLUDED.subscription_status,
     full_name = EXCLUDED.full_name,
@@ -780,20 +779,7 @@ VALUES (
     '{"is_active": true, "end_time": "2026-10-31T23:59:59Z", "title": "Festival Choice Community Voting"}'::jsonb
 ) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;
 
--- 9. Seed Sample User Movie Unlock (Pre-unlock Film 1 for Demo Viewer)
-INSERT INTO public.user_movie_unlocks (
-    id,
-    user_id,
-    movie_id
-)
-SELECT
-    '20000000-0000-0000-0000-000000000001'::uuid,
-    u.id,
-    'e0000000-0000-0000-0000-000000000001'::uuid
-FROM public.users u WHERE u.email = 'viewer@thiraiplus.com'
-ON CONFLICT (id) DO NOTHING;
-
--- 10. Seed Official Festival Awards (22 Award Categories Sample Allocations)
+-- 9. Seed Official Festival Awards (22 Award Categories Sample Allocations)
 CREATE TABLE IF NOT EXISTS public.festival_awards (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     category VARCHAR(150) NOT NULL,
