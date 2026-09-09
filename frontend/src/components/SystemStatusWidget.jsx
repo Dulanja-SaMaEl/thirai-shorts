@@ -84,10 +84,12 @@ export default function SystemStatusWidget() {
             </div>
             <div>
               <span className="block text-xs font-bold text-white">Render Express</span>
-              <span className="block text-[9px] text-zinc-400 line-clamp-1">{statusData?.server?.message || 'API Node'}</span>
+              <span className="block text-[9px] text-zinc-400 line-clamp-1">
+                {statusData?.server?.message || (statusData?.status === 'online' ? 'API Node Active' : 'API Node')}
+              </span>
             </div>
           </div>
-          {getStatusBadge(statusData?.server?.status)}
+          {getStatusBadge(statusData?.server?.status || (statusData?.status === 'online' ? 'online' : 'offline'))}
         </div>
 
         {/* Supabase PostgreSQL DB */}

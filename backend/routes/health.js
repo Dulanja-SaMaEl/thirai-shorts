@@ -17,12 +17,16 @@ const withTimeout = (promise, ms = 2000) => {
  * @desc Production Diagnostics (Express Server, Supabase DB, Storage, Uptime)
  */
 router.get('/', async (req, res) => {
-  const startTime = Date.now();
+  const uptime = Math.floor(process.uptime());
   const diagnostics = {
     status: 'online',
+    server: {
+      status: 'online',
+      message: `API Node Active (Uptime: ${uptime}s)`
+    },
     version: '1.2.0',
     environment: process.env.NODE_ENV || 'production',
-    uptimeSeconds: Math.floor(process.uptime()),
+    uptimeSeconds: uptime,
     timestamp: new Date().toISOString(),
     database: { status: 'checking', message: '' },
     cloudflareR2: { status: 'checking', message: '' },
