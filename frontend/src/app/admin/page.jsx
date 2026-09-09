@@ -6,7 +6,7 @@ import Link from 'next/link';
 import {
   Shield, Eye, Star, DollarSign, Film, UserPlus, Clock, CheckCircle2,
   XCircle, AlertTriangle, BarChart3, Trophy, LogIn, Play, FileText,
-  Users, Globe, X, Camera, ShieldCheck, PenTool, Calendar
+  Users, Globe, X, Camera, ShieldCheck, PenTool, Calendar, Sparkles, RefreshCw, Zap
 } from 'lucide-react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import api from '../../lib/api';
@@ -42,10 +42,16 @@ export default function AdminPanelPage() {
   });
   const [judgeMsg, setJudgeMsg] = useState({ type: '', text: '' });
 
-  // Community Timer state
+  // Community Event Scheduling State
   const [timerActive, setTimerActive] = useState(false);
+  const [eventTitle, setEventTitle] = useState('Festival Choice Community Voting');
+  const [scheduleMode, setScheduleMode] = useState('quick'); // 'quick' | 'custom'
   const [durationHours, setDurationHours] = useState('24');
+  const [customStartTime, setCustomStartTime] = useState('');
+  const [customEndTime, setCustomEndTime] = useState('');
+  const [timerSetting, setTimerSetting] = useState(null);
   const [timerMsg, setTimerMsg] = useState('');
+  const [timerLoading, setTimerLoading] = useState(false);
 
   // Festival Awards Management State (22 Categories)
   const [awardsList, setAwardsList] = useState([]);
@@ -110,10 +116,31 @@ export default function AdminPanelPage() {
         setMoviesList(moviesRes.data.movies || []);
       }
 
-      // 3. Fetch Timer Status
-      const timerRes = await api.get('/vote/timer-status');
-      if (timerRes.data.success && timerRes.data.setting) {
-        setTimerActive(timerRes.data.setting.is_active);
+      // 3. Fetch Community Event Timer Schedule
+      try {
+        const timerRes = await api.get('/admin/community-rating-timer');
+        if (timerRes.data.success && timerRes.data.setting) {
+          const s = timerRes.data.setting;
+          setTimerSetting(s);
+          setTimerActive(Boolean(s.is_active));
+          if (s.title) setEventTitle(s.title);
+          if (s.duration_hours) setDurationHours(String(s.duration_hours));
+          const pad = (n) => String(n).padStart(2, '0');
+          if (s.start_time) {
+            try {
+              const d = new Date(s.start_time);
+              setCustomStartTime(`${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`);
+            } catch (e) {}
+          }
+          if (s.end_time) {
+            try {
+              const d = new Date(s.end_time);
+              setCustomEndTime(`${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`);
+            } catch (e) {}
+          }
+        }
+      } catch (tErr) {
+        console.warn('Admin timer status fetch note:', tErr);
       }
     } catch (err) {
       console.error('Error loading admin data:', err);
@@ -239,26 +266,92 @@ export default function AdminPanelPage() {
     }
   };
 
-  const handleToggleCommunityTimer = async (e, forceStatus = null) => {
+  const handleScheduleEvent = async (e, forceStatus = null) => {
     if (e) e.preventDefault();
     setTimerMsg('');
+    setTimerLoading(true);
 
-    const targetStatus = forceStatus !== null ? forceStatus : timerActive;
+    const targetStatus = forceStatus !== null ? forceStatus : true;
 
     try {
-      const res = await api.post('/admin/community-rating-timer', {
+      let payload = {
         is_active: targetStatus,
-        duration_hours: durationHours
-      });
+        title: (eventTitle || 'Festival Choice Community Voting').trim()
+      };
 
-      if (res.data.success) {
-        setTimerActive(targetStatus);
-        setTimerMsg(`Community rating event is now: ${targetStatus ? 'ACTIVE' : 'DEACTIVATED / CANCELED'}`);
+      if (targetStatus) {
+        if (scheduleMode === 'custom') {
+          if (!customEndTime) {
+            setTimerMsg('Please specify an End Date & Time for the scheduled event.');
+            setTimerLoading(false);
+            return;
+          }
+          if (customStartTime && new Date(customStartTime) >= new Date(customEndTime)) {
+            setTimerMsg('End Date & Time must be after the Start Date & Time.');
+            setTimerLoading(false);
+            return;
+          }
+          payload.start_time = customStartTime ? new Date(customStartTime).toISOString() : null;
+          payload.end_time = new Date(customEndTime).toISOString();
+        } else {
+          payload.duration_hours = parseInt(durationHours, 10) || 24;
+          payload.start_time = null; // Starts immediately
+        }
+      }
+
+      const res = await api.post('/admin/community-rating-timer', payload);
+
+      if (res.data.success && res.data.setting) {
+        const s = res.data.setting;
+        setTimerSetting(s);
+        setTimerActive(Boolean(s.is_active));
+        const statusText = s.event_status === 'upcoming' 
+          ? 'SCHEDULED (Will open at start time)' 
+          : s.event_status === 'live' 
+          ? 'ACTIVE & LIVE NOW' 
+          : s.event_status === 'ended' 
+          ? 'CONCLUDED' 
+          : 'DEACTIVATED / CANCELED';
+        setTimerMsg(`Community voting event is now: ${statusText}`);
       }
     } catch (err) {
-      setTimerMsg('Failed to update timer status.');
+      setTimerMsg(err.response?.data?.error || 'Failed to update community rating event schedule.');
+    } finally {
+      setTimerLoading(false);
     }
   };
+
+  const handleExtend24Hours = async () => {
+    setTimerMsg('');
+    setTimerLoading(true);
+    try {
+      const currentEnd = timerSetting?.end_time ? new Date(timerSetting.end_time) : new Date();
+      const base = currentEnd > new Date() ? currentEnd : new Date();
+      base.setHours(base.getHours() + 24);
+
+      const res = await api.post('/admin/community-rating-timer', {
+        is_active: true,
+        title: eventTitle,
+        start_time: timerSetting?.start_time || null,
+        end_time: base.toISOString()
+      });
+
+      if (res.data.success && res.data.setting) {
+        const s = res.data.setting;
+        setTimerSetting(s);
+        setTimerActive(true);
+        const pad = (n) => String(n).padStart(2, '0');
+        setCustomEndTime(`${base.getFullYear()}-${pad(base.getMonth() + 1)}-${pad(base.getDate())}T${pad(base.getHours())}:${pad(base.getMinutes())}`);
+        setTimerMsg(`Event extended by +24 Hours! Voting now closes on ${base.toLocaleString()}.`);
+      }
+    } catch (err) {
+      setTimerMsg('Failed to extend event.');
+    } finally {
+      setTimerLoading(false);
+    }
+  };
+
+  const handleToggleCommunityTimer = handleScheduleEvent;
 
   return (
     <div className="space-y-8 py-4">
@@ -1117,68 +1210,233 @@ export default function AdminPanelPage() {
         </div>
       )}
 
-      {/* Tab Content 4: Community Timer Control */}
+      {/* Tab Content 4: Community Event Scheduling Console */}
       {activeTab === 'timer' && (
-        <div className="max-w-2xl mx-auto bg-surface-card border border-gold-500/30 rounded-3xl p-6 md:p-8 space-y-6 glass-panel shadow-gold-glow">
-          <h2 className="text-xl font-bold text-white flex items-center gap-2">
-            <Clock className="w-5 h-5 text-gold-400" /> Community Choice Rating Timer Controls
-          </h2>
-          <p className="text-xs text-zinc-400">
-            Control the live voting countdown timer displayed on the Home Page. Anti-spam email verification is automatically enforced for voters.
-          </p>
-
-          {timerMsg && (
-            <div className="p-4 rounded-xl bg-gold-500/20 border border-gold-500/40 text-gold-300 text-xs font-bold">
-              {timerMsg}
-            </div>
-          )}
-
-          <form onSubmit={handleToggleCommunityTimer} className="space-y-6">
-            <div className="flex items-center justify-between p-4 rounded-2xl bg-black border border-zinc-800">
-              <div>
-                <h4 className="text-sm font-bold text-white">Event Operational Status</h4>
-                <p className="text-xs text-zinc-400 mt-0.5">
-                  Currently: <strong className={timerActive ? "text-emerald-400 font-extrabold" : "text-rose-400 font-extrabold"}>
-                    {timerActive ? "ACTIVE (Public Voting Live)" : "INACTIVE / CANCELED"}
-                  </strong>
-                </p>
-              </div>
-              <span className={`px-3 py-1 rounded-full text-xs font-bold font-mono ${timerActive ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40" : "bg-zinc-800 text-zinc-400"}`}>
-                {timerActive ? "● EVENT LIVE" : "○ EVENT STOPPED"}
+        <div className="max-w-3xl mx-auto space-y-8">
+          
+          {/* Header Card */}
+          <div className="bg-surface-card border border-gold-500/30 rounded-3xl p-6 md:p-8 space-y-3 glass-panel shadow-gold-glow">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold text-white flex items-center gap-2.5">
+                <Clock className="w-5 h-5 text-gold-400" /> Community Voting Event Scheduling Console
+              </h2>
+              <span className="text-[11px] px-3 py-1 rounded-full bg-gold-500/10 text-gold-300 border border-gold-500/30 font-bold uppercase tracking-wider">
+                Festival Choice
               </span>
             </div>
+            <p className="text-xs text-zinc-400 leading-relaxed">
+              Schedule festival community voting events in advance with exact start and end dates, or launch real-time voting countdowns. Anti-spam email verification is automatically enforced for all votes.
+            </p>
 
-            <div>
-              <label className="block text-xs font-semibold text-zinc-300 mb-1.5">Event Duration (Hours)</label>
-              <select
-                value={durationHours}
-                onChange={(e) => setDurationHours(e.target.value)}
-                className="w-full bg-black border border-zinc-800 rounded-xl py-2.5 px-4 text-xs text-gold-400 font-bold focus:outline-none focus:border-gold-500"
-              >
-                <option value="6">6 Hours</option>
-                <option value="12">12 Hours</option>
-                <option value="24">24 Hours (1 Day)</option>
-                <option value="48">48 Hours (2 Days)</option>
-                <option value="72">72 Hours (3 Days)</option>
-                <option value="168">168 Hours (1 Week)</option>
-              </select>
+            {timerMsg && (
+              <div className="p-4 rounded-xl bg-gold-500/20 border border-gold-500/40 text-gold-300 text-xs font-bold animate-fade-in flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-gold-400 shrink-0" />
+                <span>{timerMsg}</span>
+              </div>
+            )}
+          </div>
+
+          {/* Current Operational State Card */}
+          <div className="bg-surface-card border border-zinc-800 rounded-3xl p-6 space-y-5">
+            <h3 className="text-sm font-extrabold text-white uppercase tracking-wider flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-gold-400" /> Current Event Schedule Status
+            </h3>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Operational Badge */}
+              <div className="p-4 rounded-2xl bg-black/60 border border-zinc-800 space-y-1">
+                <span className="text-[10px] uppercase tracking-wider text-zinc-400 font-bold">Event Status</span>
+                <div>
+                  <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black font-mono ${
+                    timerSetting?.event_status === 'live'
+                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 animate-pulse'
+                      : timerSetting?.event_status === 'upcoming'
+                      ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/40'
+                      : timerSetting?.event_status === 'ended'
+                      ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40'
+                      : 'bg-zinc-800 text-zinc-400 border border-zinc-700'
+                  }`}>
+                    {timerSetting?.event_status === 'live' && '● LIVE NOW'}
+                    {timerSetting?.event_status === 'upcoming' && '● SCHEDULED / UPCOMING'}
+                    {timerSetting?.event_status === 'ended' && '○ VOTING CONCLUDED'}
+                    {(!timerSetting?.event_status || timerSetting?.event_status === 'inactive') && '○ DEACTIVATED'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Start Date */}
+              <div className="p-4 rounded-2xl bg-black/60 border border-zinc-800 space-y-1">
+                <span className="text-[10px] uppercase tracking-wider text-zinc-400 font-bold">Starts</span>
+                <p className="text-xs font-extrabold text-white font-mono truncate">
+                  {timerSetting?.start_time ? new Date(timerSetting.start_time).toLocaleString() : (timerActive ? 'Immediate (Started)' : 'Not Scheduled')}
+                </p>
+              </div>
+
+              {/* End Date */}
+              <div className="p-4 rounded-2xl bg-black/60 border border-zinc-800 space-y-1">
+                <span className="text-[10px] uppercase tracking-wider text-zinc-400 font-bold">Voting Closes</span>
+                <p className="text-xs font-extrabold text-gold-300 font-mono truncate">
+                  {timerSetting?.end_time ? new Date(timerSetting.end_time).toLocaleString() : 'No Expiry Set'}
+                </p>
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {timerActive && (
+              <div className="flex items-center justify-between p-3.5 rounded-xl bg-gold-500/10 border border-gold-500/20">
+                <span className="text-xs font-bold text-gold-400 flex items-center gap-1.5">
+                  <Zap className="w-3.5 h-3.5" /> Need more time for audience votes?
+                </span>
+                <button
+                  type="button"
+                  disabled={timerLoading}
+                  onClick={handleExtend24Hours}
+                  className="px-3 py-1.5 rounded-lg bg-gold-gradient text-black text-[11px] font-extrabold uppercase tracking-wider shadow-gold-glow hover:opacity-90 disabled:opacity-50"
+                >
+                  + Extend 24 Hours
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Interactive Scheduling Form */}
+          <form onSubmit={(e) => handleScheduleEvent(e, true)} className="bg-surface-card border border-gold-500/30 rounded-3xl p-6 md:p-8 space-y-6 glass-panel shadow-gold-glow">
+            <h3 className="text-base font-bold text-white flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-gold-400" /> Configure & Schedule Event
+            </h3>
+
+            {/* Event Name / Title */}
+            <div>
+              <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
+                Event Title / Festival Award Name
+              </label>
+              <input
+                type="text"
+                required
+                value={eventTitle}
+                onChange={(e) => setEventTitle(e.target.value)}
+                placeholder="e.g. Festival Choice Community Voting 2026"
+                className="w-full bg-black border border-zinc-800 rounded-xl py-2.5 px-4 text-xs text-white focus:outline-none focus:border-gold-500 font-medium"
+              />
+            </div>
+
+            {/* Scheduling Mode Selection Tabs */}
+            <div className="space-y-2">
+              <label className="block text-xs font-semibold text-zinc-300">
+                Scheduling Mode
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setScheduleMode('quick')}
+                  className={`py-3 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 border ${
+                    scheduleMode === 'quick'
+                      ? 'bg-gold-gradient text-black border-transparent shadow-gold-glow'
+                      : 'bg-black/60 text-zinc-400 border-zinc-800 hover:text-white'
+                  }`}
+                >
+                  <Zap className="w-4 h-4" /> Quick Launch (Duration)
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setScheduleMode('custom')}
+                  className={`py-3 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 border ${
+                    scheduleMode === 'custom'
+                      ? 'bg-gold-gradient text-black border-transparent shadow-gold-glow'
+                      : 'bg-black/60 text-zinc-400 border-zinc-800 hover:text-white'
+                  }`}
+                >
+                  <Calendar className="w-4 h-4" /> Custom Date Schedule
+                </button>
+              </div>
+            </div>
+
+            {/* Mode A: Quick Launch Selection */}
+            {scheduleMode === 'quick' && (
+              <div className="p-5 rounded-2xl bg-black/60 border border-zinc-800 space-y-3">
+                <label className="block text-xs font-semibold text-zinc-300">
+                  Event Duration from Launch (Starts Immediately)
+                </label>
+                <select
+                  value={durationHours}
+                  onChange={(e) => setDurationHours(e.target.value)}
+                  className="w-full bg-black border border-zinc-700 rounded-xl py-2.5 px-4 text-xs text-gold-400 font-extrabold focus:outline-none focus:border-gold-500"
+                >
+                  <option value="6">6 Hours</option>
+                  <option value="12">12 Hours</option>
+                  <option value="24">24 Hours (1 Day)</option>
+                  <option value="48">48 Hours (2 Days)</option>
+                  <option value="72">72 Hours (3 Days)</option>
+                  <option value="168">168 Hours (1 Week)</option>
+                  <option value="336">336 Hours (2 Weeks)</option>
+                  <option value="720">720 Hours (1 Month)</option>
+                </select>
+                <p className="text-[11px] text-zinc-500">
+                  Voting will begin immediately upon activation and run for the selected duration.
+                </p>
+              </div>
+            )}
+
+            {/* Mode B: Custom Date/Time Range Schedule */}
+            {scheduleMode === 'custom' && (
+              <div className="p-5 rounded-2xl bg-black/60 border border-zinc-800 space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
+                      Start Date & Time (Optional for future schedule)
+                    </label>
+                    <input
+                      type="datetime-local"
+                      value={customStartTime}
+                      onChange={(e) => setCustomStartTime(e.target.value)}
+                      className="w-full bg-black border border-zinc-700 rounded-xl py-2 px-3 text-xs text-white focus:outline-none focus:border-gold-500 font-mono"
+                    />
+                    <span className="text-[10px] text-zinc-500 mt-1 block">
+                      Leave empty to start immediately.
+                    </span>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
+                      End Date & Time (Voting Deadline) *
+                    </label>
+                    <input
+                      type="datetime-local"
+                      required={scheduleMode === 'custom'}
+                      value={customEndTime}
+                      onChange={(e) => setCustomEndTime(e.target.value)}
+                      className="w-full bg-black border border-zinc-700 rounded-xl py-2 px-3 text-xs text-white focus:outline-none focus:border-gold-500 font-mono"
+                    />
+                    <span className="text-[10px] text-zinc-500 mt-1 block">
+                      When community voting concludes.
+                    </span>
+                  </div>
+                </div>
+
+                <p className="text-[11px] text-indigo-300/80 bg-indigo-950/20 border border-indigo-900/40 p-3 rounded-xl">
+                  💡 If you pick a future Start Date, the homepage banner will display in <strong>Upcoming Mode</strong> with a countdown until the event opens.
+                </p>
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
               <button
-                type="button"
-                onClick={(e) => handleToggleCommunityTimer(e, true)}
-                className="gold-btn py-3 rounded-xl text-xs font-bold uppercase tracking-wider shadow-gold-glow flex items-center justify-center gap-2"
+                type="submit"
+                disabled={timerLoading}
+                className="gold-btn py-3.5 rounded-xl text-xs font-extrabold uppercase tracking-wider shadow-gold-glow flex items-center justify-center gap-2 disabled:opacity-50"
               >
-                <Clock className="w-4 h-4" /> Activate / Start Event
+                <Clock className="w-4 h-4" />
+                {timerLoading ? 'Saving Schedule...' : 'Schedule & Activate Event'}
               </button>
 
               <button
                 type="button"
-                onClick={(e) => handleToggleCommunityTimer(e, false)}
-                className="py-3 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/50 text-rose-300 text-xs font-extrabold uppercase tracking-wider flex items-center justify-center gap-2 transition-colors"
+                disabled={timerLoading}
+                onClick={(e) => handleScheduleEvent(e, false)}
+                className="py-3.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/50 text-rose-300 text-xs font-extrabold uppercase tracking-wider flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
               >
-                <XCircle className="w-4 h-4" /> Cancel / Deactivate Event
+                <XCircle className="w-4 h-4" /> Stop / Deactivate Event
               </button>
             </div>
           </form>

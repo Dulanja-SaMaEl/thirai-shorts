@@ -73,6 +73,21 @@ const sessionsByToken = new Map();
 // In-Memory Movie Unlocks Store: Map<userId, Set<movieId>>
 const movieUnlocksByUser = new Map();
 
+// In-Memory System Settings Store (e.g., Community Rating Event scheduling)
+const systemSettingsMap = new Map([
+  ['community_rating_event', {
+    is_active: true,
+    title: 'Festival Choice Community Voting',
+    start_time: null,
+    end_time: '2026-10-31T23:59:59Z',
+    duration_hours: 24,
+    updated_at: new Date().toISOString()
+  }]
+]);
+
+// In-Memory Community Votes Store: Map<`${movieId}_${cleanEmail}`, voteRecord>
+const communityVotesMap = new Map();
+
 // Initialize with Demo Users
 for (const key of Object.keys(DEMO_USERS)) {
   const item = DEMO_USERS[key];
@@ -193,5 +208,42 @@ export const userStore = {
   getUnlockedMovieIds(userId) {
     const set = movieUnlocksByUser.get(userId);
     return set ? Array.from(set) : [];
+  },
+
+  // System Settings Management
+  getSetting(key) {
+    return systemSettingsMap.get(key) || null;
+  },
+
+  setSetting(key, value) {
+    systemSettingsMap.set(key, value);
+    return value;
+  },
+
+  // Community Votes Management
+  getVote(movieId, email) {
+    if (!movieId || !email) return null;
+    const voteKey = `${movieId}_${email.trim().toLowerCase()}`;
+    return communityVotesMap.get(voteKey) || null;
+  },
+
+  setVote(movieId, email, voteData) {
+    if (!movieId || !email) return null;
+    const voteKey = `${movieId}_${email.trim().toLowerCase()}`;
+    communityVotesMap.set(voteKey, voteData);
+    return voteData;
+  },
+
+  verifyVote(movieId, email) {
+    if (!movieId || !email) return null;
+    const voteKey = `${movieId}_${email.trim().toLowerCase()}`;
+    const vote = communityVotesMap.get(voteKey);
+    if (vote) {
+      vote.is_verified = true;
+      vote.verified_at = new Date().toISOString();
+      vote.otp_code = null;
+      communityVotesMap.set(voteKey, vote);
+    }
+    return vote;
   }
 };

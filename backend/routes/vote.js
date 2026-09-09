@@ -1,5 +1,6 @@
 import express from 'express';
-import { supabaseAdmin } from '../config/supabase.js';
+import { supabaseAdmin, isSupabaseConfigured } from '../config/supabase.js';
+import { userStore } from '../config/userStore.js';
 import { antiSpamVoterCheck } from '../middleware/antiSpam.js';
 import crypto from 'crypto';
 
@@ -7,26 +8,60 @@ const router = express.Router();
 
 /**
  * @route GET /api/vote/timer-status
- * @desc Get current Community Rating Timer status for public homepage
+ * @desc Get current Community Rating Event status for public homepage & banners
  */
 router.get('/timer-status', async (req, res) => {
   try {
-    const { data, error } = await supabaseAdmin
-      .from('system_settings')
-      .select('value')
-      .eq('key', 'community_rating_event')
-      .single();
+    let setting = userStore.getSetting('community_rating_event') || {
+      is_active: false,
+      title: 'Festival Choice Community Voting',
+      start_time: null,
+      end_time: null,
+      duration_hours: 24,
+      updated_at: new Date().toISOString()
+    };
 
-    if (error || !data) {
-      return res.status(200).json({
-        success: true,
-        setting: { is_active: false, end_time: null }
-      });
+    if (isSupabaseConfigured) {
+      try {
+        const { data, error } = await supabaseAdmin
+          .from('system_settings')
+          .select('value')
+          .eq('key', 'community_rating_event')
+          .maybeSingle();
+
+        if (!error && data && data.value) {
+          setting = { ...setting, ...data.value };
+          userStore.setSetting('community_rating_event', setting);
+        }
+      } catch (dbErr) {
+        console.warn('DB fetch timer status note:', dbErr.message);
+      }
+    }
+
+    const now = new Date();
+    const startTime = setting.start_time ? new Date(setting.start_time) : null;
+    const endTime = setting.end_time ? new Date(setting.end_time) : null;
+
+    let eventStatus = 'inactive';
+    if (setting.is_active) {
+      if (startTime && now < startTime) {
+        eventStatus = 'upcoming';
+      } else if (endTime && now >= endTime) {
+        eventStatus = 'ended';
+      } else {
+        eventStatus = 'live';
+      }
     }
 
     return res.status(200).json({
       success: true,
-      setting: data.value
+      setting: {
+        ...setting,
+        event_status: eventStatus,
+        is_live: eventStatus === 'live',
+        is_upcoming: eventStatus === 'upcoming',
+        is_ended: eventStatus === 'ended'
+      }
     });
   } catch (error) {
     console.error('Error fetching timer status:', error);
@@ -52,61 +87,105 @@ router.post('/request-otp', antiSpamVoterCheck, async (req, res) => {
       return res.status(400).json({ error: 'Rating must be between 1 and 10.' });
     }
 
-    // Check if Community Rating Event is active
-    const { data: timerSetting } = await supabaseAdmin
-      .from('system_settings')
-      .select('value')
-      .eq('key', 'community_rating_event')
-      .single();
+    // 1. Check if Community Rating Event is active & live
+    let timerSetting = userStore.getSetting('community_rating_event');
+    if (isSupabaseConfigured) {
+      try {
+        const { data } = await supabaseAdmin
+          .from('system_settings')
+          .select('value')
+          .eq('key', 'community_rating_event')
+          .maybeSingle();
+        if (data && data.value) {
+          timerSetting = { ...timerSetting, ...data.value };
+        }
+      } catch (e) {}
+    }
 
-    if (!timerSetting || !timerSetting.value?.is_active) {
+    if (!timerSetting || !timerSetting.is_active) {
       return res.status(403).json({ error: 'Community rating event is currently closed.' });
     }
 
-    if (timerSetting.value?.end_time && new Date(timerSetting.value.end_time) < new Date()) {
-      return res.status(403).json({ error: 'Community rating event has ended.' });
-    }
-
-    // 1. Anti-Spam Check: Check if email has already voted for this movie
-    const { data: existingVote, error: checkErr } = await supabaseAdmin
-      .from('community_votes')
-      .select('id, is_verified')
-      .eq('movie_id', movie_id)
-      .eq('voter_email', voter_email)
-      .single();
-
-    if (existingVote && existingVote.is_verified) {
-      return res.status(400).json({ 
-        error: 'You have already submitted a verified vote for this movie. Only one vote per email address is allowed.' 
+    const now = new Date();
+    if (timerSetting.start_time && new Date(timerSetting.start_time) > now) {
+      return res.status(403).json({
+        error: `Voting for "${timerSetting.title || 'Festival Choice'}" is scheduled to start on ${new Date(timerSetting.start_time).toLocaleString()}. Voting is not open yet.`
       });
     }
 
-    // Generate 6-digit numeric OTP code
+    if (timerSetting.end_time && new Date(timerSetting.end_time) <= now) {
+      return res.status(403).json({
+        error: `Voting for "${timerSetting.title || 'Festival Choice'}" has ended. Public rating is now closed.`
+      });
+    }
+
+    // 2. Anti-Spam Check: Check duplicate verified vote
+    const memVote = userStore.getVote(movie_id, voter_email);
+    if (memVote && memVote.is_verified) {
+      return res.status(400).json({
+        error: 'You have already submitted a verified vote for this movie. Only one vote per email address is allowed.'
+      });
+    }
+
+    if (isSupabaseConfigured) {
+      try {
+        const { data: existingVote } = await supabaseAdmin
+          .from('community_votes')
+          .select('id, is_verified')
+          .eq('movie_id', movie_id)
+          .eq('voter_email', voter_email)
+          .maybeSingle();
+
+        if (existingVote && existingVote.is_verified) {
+          return res.status(400).json({ 
+            error: 'You have already submitted a verified vote for this movie. Only one vote per email address is allowed.' 
+          });
+        }
+      } catch (dbErr) {
+        console.warn('Supabase DB vote check note:', dbErr.message);
+      }
+    }
+
+    // 3. Generate 6-digit numeric OTP code
     const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
     const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
 
-    // Upsert vote record with unverified state and OTP
-    const { error: voteErr } = await supabaseAdmin
-      .from('community_votes')
-      .upsert({
-        movie_id,
-        voter_email,
-        rating: numRating,
-        otp_code: otpCode,
-        is_verified: false,
-        ip_address: clientIp,
-        created_at: new Date().toISOString()
-      }, { onConflict: 'movie_id,voter_email' });
+    // Cache unverified vote in userStore
+    const voteRecord = {
+      movie_id,
+      voter_email,
+      rating: numRating,
+      otp_code: otpCode,
+      is_verified: false,
+      ip_address: clientIp,
+      created_at: new Date().toISOString()
+    };
+    userStore.setVote(movie_id, voter_email, voteRecord);
 
-    if (voteErr) throw voteErr;
+    // Upsert to Supabase if configured
+    if (isSupabaseConfigured) {
+      try {
+        await supabaseAdmin
+          .from('community_votes')
+          .upsert({
+            movie_id,
+            voter_email,
+            rating: numRating,
+            otp_code: otpCode,
+            is_verified: false,
+            ip_address: clientIp,
+            created_at: new Date().toISOString()
+          }, { onConflict: 'movie_id,voter_email' });
+      } catch (dbErr) {
+        console.warn('Supabase DB vote upsert note:', dbErr.message);
+      }
+    }
 
-    // Simulate / Log OTP dispatch (In production: send via Nodemailer, SendGrid, or Resend)
     console.log(`[ANTI-SPAM OTP DISPATCH] Sent OTP [${otpCode}] to ${voter_email} for movie ${movie_id}`);
 
     return res.status(200).json({
       success: true,
       message: `OTP verification code sent to ${voter_email}. Please enter the 6-digit OTP to confirm your rating.`,
-      // For demo testing ease, we return otp_code in response header/data if process.env.NODE_ENV !== 'production'
       dev_otp: process.env.NODE_ENV !== 'production' ? otpCode : undefined
     });
 
@@ -129,45 +208,59 @@ router.post('/verify-otp', async (req, res) => {
     }
 
     const cleanEmail = voter_email.trim().toLowerCase();
+    const cleanOtp = otp_code.toString().trim();
+    let verified = false;
 
-    // Query unverified vote record
-    const { data: vote, error } = await supabaseAdmin
-      .from('community_votes')
-      .select('*')
-      .eq('movie_id', movie_id)
-      .eq('voter_email', cleanEmail)
-      .single();
-
-    if (error || !vote) {
-      return res.status(404).json({ error: 'No pending vote found for this email address.' });
+    // 1. Check in-memory vote record
+    const memVote = userStore.getVote(movie_id, cleanEmail);
+    if (memVote) {
+      if (memVote.is_verified) {
+        return res.status(400).json({ error: 'This vote has already been verified.' });
+      }
+      if (memVote.otp_code === cleanOtp) {
+        userStore.verifyVote(movie_id, cleanEmail);
+        verified = true;
+      }
     }
 
-    if (vote.is_verified) {
-      return res.status(400).json({ error: 'This vote has already been verified.' });
+    // 2. Check Supabase DB vote record
+    if (isSupabaseConfigured) {
+      try {
+        const { data: dbVote } = await supabaseAdmin
+          .from('community_votes')
+          .select('*')
+          .eq('movie_id', movie_id)
+          .eq('voter_email', cleanEmail)
+          .maybeSingle();
+
+        if (dbVote) {
+          if (dbVote.is_verified && !verified) {
+            return res.status(400).json({ error: 'This vote has already been verified.' });
+          }
+          if (dbVote.otp_code === cleanOtp || verified) {
+            await supabaseAdmin
+              .from('community_votes')
+              .update({
+                is_verified: true,
+                verified_at: new Date().toISOString(),
+                otp_code: null
+              })
+              .eq('id', dbVote.id);
+            verified = true;
+          }
+        }
+      } catch (dbErr) {
+        console.warn('Supabase DB vote verify note:', dbErr.message);
+      }
     }
 
-    if (vote.otp_code !== otp_code.trim()) {
+    if (!verified) {
       return res.status(400).json({ error: 'Invalid OTP verification code. Please try again.' });
     }
 
-    // Confirm vote verification
-    const { data: verifiedVote, error: updateErr } = await supabaseAdmin
-      .from('community_votes')
-      .update({
-        is_verified: true,
-        verified_at: new Date().toISOString(),
-        otp_code: null
-      })
-      .eq('id', vote.id)
-      .select()
-      .single();
-
-    if (updateErr) throw updateErr;
-
     return res.status(200).json({
       success: true,
-      message: 'Vote verified successfully! Thank you for participating in the festival rating.',
-      vote: verifiedVote
+      message: 'Vote verified successfully! Thank you for participating in the festival rating.'
     });
 
   } catch (error) {
