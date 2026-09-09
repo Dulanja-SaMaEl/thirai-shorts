@@ -64,7 +64,6 @@ export default function AdminPanelPage() {
   useEffect(() => {
     if (user && user.role === 'admin') {
       fetchAdminData();
-      fetchAwardsData();
     }
   }, [user]);
 
@@ -104,44 +103,51 @@ export default function AdminPanelPage() {
   const fetchAdminData = async () => {
     setLoading(true);
     try {
-      // 1. Fetch Analytics
-      const analyticsRes = await api.get('/admin/dashboard');
-      if (analyticsRes.data.success) {
-        setAnalytics(analyticsRes.data.analytics);
+      // Fetch all admin resources concurrently in parallel
+      const [analyticsRes, moviesRes, timerRes, awardsRes] = await Promise.allSettled([
+        api.get('/admin/dashboard'),
+        api.get('/movies?status=all'),
+        api.get('/admin/community-rating-timer'),
+        api.get('/awards')
+      ]);
+
+      // 1. Process Analytics
+      if (analyticsRes.status === 'fulfilled' && analyticsRes.value?.data?.success) {
+        setAnalytics(analyticsRes.value.data.analytics);
       }
 
-      // 2. Fetch Movies for Moderation (all statuses)
-      const moviesRes = await api.get('/movies?status=all');
-      if (moviesRes.data.success) {
-        setMoviesList(moviesRes.data.movies || []);
+      // 2. Process Movies
+      if (moviesRes.status === 'fulfilled' && moviesRes.value?.data?.success) {
+        setMoviesList(moviesRes.value.data.movies || []);
       }
 
-      // 3. Fetch Community Event Timer Schedule
-      try {
-        const timerRes = await api.get('/admin/community-rating-timer');
-        if (timerRes.data.success && timerRes.data.setting) {
-          const s = timerRes.data.setting;
-          setTimerSetting(s);
-          setTimerActive(Boolean(s.is_active));
-          if (s.title) setEventTitle(s.title);
-          if (s.duration_hours) setDurationHours(String(s.duration_hours));
-          const pad = (n) => String(n).padStart(2, '0');
-          if (s.start_time) {
-            try {
-              const d = new Date(s.start_time);
-              setCustomStartTime(`${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`);
-            } catch (e) {}
-          }
-          if (s.end_time) {
-            try {
-              const d = new Date(s.end_time);
-              setCustomEndTime(`${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`);
-            } catch (e) {}
-          }
+      // 3. Process Timer / Event Schedule
+      if (timerRes.status === 'fulfilled' && timerRes.value?.data?.success && timerRes.value.data.setting) {
+        const s = timerRes.value.data.setting;
+        setTimerSetting(s);
+        setTimerActive(Boolean(s.is_active));
+        if (s.title) setEventTitle(s.title);
+        if (s.duration_hours) setDurationHours(String(s.duration_hours));
+        const pad = (n) => String(n).padStart(2, '0');
+        if (s.start_time) {
+          try {
+            const d = new Date(s.start_time);
+            setCustomStartTime(`${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`);
+          } catch (e) {}
         }
-      } catch (tErr) {
-        console.warn('Admin timer status fetch note:', tErr);
+        if (s.end_time) {
+          try {
+            const d = new Date(s.end_time);
+            setCustomEndTime(`${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`);
+          } catch (e) {}
+        }
       }
+
+      // 4. Process Awards
+      if (awardsRes.status === 'fulfilled' && awardsRes.value?.data?.success) {
+        setAwardsList(awardsRes.value.data.awards || []);
+      }
+
     } catch (err) {
       console.error('Error loading admin data:', err);
     } finally {

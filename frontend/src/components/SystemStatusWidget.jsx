@@ -9,7 +9,7 @@ export default function SystemStatusWidget() {
   const [loading, setLoading] = useState(true);
   const [lastCheck, setLastCheck] = useState('');
 
-  const checkHealth = async () => {
+  const checkHealth = async (isRetry = false) => {
     setLoading(true);
     try {
       const res = await api.get('/health');
@@ -17,11 +17,16 @@ export default function SystemStatusWidget() {
       setLastCheck(new Date().toLocaleTimeString());
     } catch (err) {
       setStatusData({
-        server: { status: 'offline', message: 'Express Server unreachable' },
-        database: { status: 'offline', message: 'Unable to reach backend' },
-        cloudflareR2: { status: 'offline', message: 'Unable to reach backend' },
+        server: { status: 'offline', message: err.code === 'ECONNABORTED' ? 'Server warming up...' : 'Express Server unreachable' },
+        database: { status: 'offline', message: 'Connecting...' },
+        cloudflareR2: { status: 'offline', message: 'Connecting...' },
         overall: 'offline'
       });
+      setLastCheck(new Date().toLocaleTimeString() + ' (Retrying)');
+      // If failed on initial check, auto-retry once after 5s to catch cold start recovery
+      if (!isRetry) {
+        setTimeout(() => checkHealth(true), 5000);
+      }
     } finally {
       setLoading(false);
     }
@@ -29,7 +34,7 @@ export default function SystemStatusWidget() {
 
   useEffect(() => {
     checkHealth();
-    const interval = setInterval(checkHealth, 30000); // refresh every 30 seconds
+    const interval = setInterval(() => checkHealth(false), 30000); // refresh every 30 seconds
     return () => clearInterval(interval);
   }, []);
 

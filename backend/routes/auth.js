@@ -181,8 +181,30 @@ router.post('/login', authLimiter, async (req, res) => {
 
     let authenticatedUser = null;
 
-    // 1. Live Supabase Native Auth Check (if Supabase is configured)
+    // 1. Direct Database Password Hash Check (via public.users table in Supabase) - FAST PATH
     if (isSupabaseConfigured) {
+      try {
+        const { data: dbUser } = await withTimeout(
+          supabaseAdmin.from('users').select('*').eq('email', targetEmail).maybeSingle(),
+          3000
+        );
+
+        if (dbUser && dbUser.password_hash) {
+          const isMatch = await bcrypt.compare(password, dbUser.password_hash);
+          if (isMatch) {
+            authenticatedUser = dbUser;
+          } else {
+            // Explicit password mismatch in DB -> Reject immediately without waiting for slow GoTrue timeout
+            return res.status(401).json({ error: 'Invalid email/username or password.' });
+          }
+        }
+      } catch (dbErr) {
+        console.warn('Supabase DB password check notice:', dbErr.message);
+      }
+    }
+
+    // 2. Supabase GoTrue Auth Check (for users created natively via Supabase GoTrue Auth)
+    if (!authenticatedUser && isSupabaseConfigured) {
       try {
         const { data: authData, error: authErr } = await withTimeout(
           supabaseAdmin.auth.signInWithPassword({ email: targetEmail, password }),
@@ -208,28 +230,6 @@ router.post('/login', authLimiter, async (req, res) => {
         }
       } catch (authErr) {
         console.warn('Live Supabase Auth check note:', authErr.message);
-      }
-    }
-
-    // 2. Database Password Hash Check (via public.users table in Supabase)
-    if (!authenticatedUser && isSupabaseConfigured) {
-      try {
-        const { data: dbUser } = await withTimeout(
-          supabaseAdmin.from('users').select('*').eq('email', targetEmail).maybeSingle(),
-          3000
-        );
-
-        if (dbUser && dbUser.password_hash) {
-          const isMatch = await bcrypt.compare(password, dbUser.password_hash);
-          if (isMatch) {
-            authenticatedUser = dbUser;
-          } else {
-            // Explicit password mismatch in DB -> Reject immediately
-            return res.status(401).json({ error: 'Invalid email/username or password.' });
-          }
-        }
-      } catch (dbErr) {
-        console.warn('Supabase DB password check notice:', dbErr.message);
       }
     }
 
