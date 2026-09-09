@@ -3,7 +3,10 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import Link from 'next/link';
-import { Award, Star, MessageSquare, CheckCircle, ShieldAlert, Film, Play, LogIn } from 'lucide-react';
+import {
+  Award, Star, MessageSquare, CheckCircle, ShieldAlert, Film,
+  Play, LogIn, Users, Clapperboard, Globe
+} from 'lucide-react';
 import api from '../../lib/api';
 
 export default function JudgePanelPage() {
@@ -220,6 +223,59 @@ export default function JudgePanelPage() {
                       </div>
                     </a>
                   </div>
+                </div>
+
+                {/* Film Craft Credits & Narrative Summary */}
+                <div className="mt-4 p-4 rounded-2xl bg-black/60 border border-zinc-800 space-y-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    {selectedMovie.genre && (
+                      <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-gold-500/10 border border-gold-500/30 text-gold-300 font-bold">
+                        {selectedMovie.genre}
+                      </span>
+                    )}
+                    {selectedMovie.running_time && (
+                      <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-zinc-800 text-zinc-300 font-mono font-semibold">
+                        ⏱ {selectedMovie.running_time}
+                      </span>
+                    )}
+                    {selectedMovie.premiere_status && (
+                      <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-purple-500/10 border border-purple-500/30 text-purple-300 font-bold">
+                        {selectedMovie.premiere_status}
+                      </span>
+                    )}
+                    {selectedMovie.film_type && (
+                      <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-300 font-bold">
+                        {selectedMovie.film_type}
+                      </span>
+                    )}
+                    <span className="text-[10px] text-zinc-500 font-mono ml-auto">
+                      Lang: {selectedMovie.original_language || 'Tamil'}
+                    </span>
+                  </div>
+
+                  <p className="text-xs text-zinc-300 leading-relaxed font-light">
+                    {selectedMovie.description}
+                  </p>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-[11px] pt-2 border-t border-zinc-800/80">
+                    <div><span className="text-gold-400 font-bold">Director:</span> <span className="text-white ml-1">{selectedMovie.director_name || 'N/A'}</span></div>
+                    <div><span className="text-zinc-400 font-bold">Screenplay:</span> <span className="text-white ml-1">{selectedMovie.writer_name || 'N/A'}</span></div>
+                    <div><span className="text-gold-400/90 font-bold">Cinematography:</span> <span className="text-white ml-1">{selectedMovie.cinematographer_name || 'N/A'}</span></div>
+                    <div><span className="text-zinc-400 font-bold">Sound Design:</span> <span className="text-white ml-1">{selectedMovie.sound_designer_name || 'N/A'}</span></div>
+                    <div><span className="text-zinc-400 font-bold">Music Score:</span> <span className="text-white ml-1">{selectedMovie.music_composer_name || 'N/A'}</span></div>
+                    <div><span className="text-zinc-400 font-bold">Editing:</span> <span className="text-white ml-1">{selectedMovie.editor_name || 'N/A'}</span></div>
+                  </div>
+
+                  {selectedMovie.lead_casts && Array.isArray(selectedMovie.lead_casts) && selectedMovie.lead_casts.length > 0 && (
+                    <div className="pt-2 border-t border-zinc-800/60 flex flex-wrap items-center gap-1.5 text-[11px]">
+                      <span className="text-zinc-500 font-bold uppercase text-[10px] mr-1">Cast:</span>
+                      {selectedMovie.lead_casts.map((cast, idx) => (
+                        <span key={idx} className="px-2 py-0.5 bg-zinc-900 border border-zinc-800 rounded-md text-zinc-300">
+                          <strong>{cast.actor}</strong> {cast.character && <span className="text-gold-400">({cast.character})</span>}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 

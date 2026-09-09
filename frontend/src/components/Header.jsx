@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '../context/AuthContext';
-import { Film, Shield, Award, Upload, PlayCircle, LogIn, LogOut, User, Coins, LayoutDashboard, Sparkles } from 'lucide-react';
+import { Film, Shield, Award, Upload, PlayCircle, LogIn, LogOut, User, Coins, LayoutDashboard, Sparkles, Trophy } from 'lucide-react';
 
 export default function Header() {
   const pathname = usePathname();
@@ -33,6 +33,15 @@ export default function Header() {
             }`}
           >
             <PlayCircle className="w-4 h-4" /> Gallery
+          </Link>
+
+          <Link
+            href="/awards"
+            className={`flex items-center gap-2 text-sm font-semibold transition-colors ${
+              isActive('/awards') ? 'text-gold-400 border-b-2 border-gold-400 pb-1' : 'text-zinc-300 hover:text-gold-300'
+            }`}
+          >
+            <Trophy className="w-4 h-4 text-gold-400" /> Awards
           </Link>
 
           <a

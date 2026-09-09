@@ -62,8 +62,8 @@ export default function MovieCard({ movie, isUnlocked = false, isGuest = true, o
 
           {/* Winner Ribbon if applicable */}
           {movie.is_winner && (
-            <div className="absolute bottom-3 left-3 bg-gold-gradient text-black font-extrabold text-[10px] uppercase tracking-wider px-2.5 py-1 rounded-md shadow-gold-glow">
-              🏆 Winner
+            <div className="absolute bottom-3 left-3 bg-gold-gradient text-black font-extrabold text-[10px] uppercase tracking-wider px-2.5 py-1 rounded-md shadow-gold-glow truncate max-w-[180px]">
+              🏆 {movie.winner_category ? movie.winner_category.replace(' - Main Award', '') : 'Winner'}
             </div>
           )}
 
@@ -88,13 +88,30 @@ export default function MovieCard({ movie, isUnlocked = false, isGuest = true, o
         {/* Card Content */}
         <div className="p-5 flex flex-col justify-between h-[210px]">
           <div>
+            {(movie.genre || movie.running_time || movie.director_name) && (
+              <div className="flex items-center gap-1.5 mb-1 text-[11px] text-gold-400 font-semibold truncate">
+                {movie.genre && <span>{movie.genre}</span>}
+                {movie.running_time && (
+                  <>
+                    <span className="text-zinc-600">•</span>
+                    <span className="text-zinc-400 font-mono">{movie.running_time}</span>
+                  </>
+                )}
+                {movie.director_name && (
+                  <>
+                    <span className="text-zinc-600">•</span>
+                    <span className="text-zinc-400 truncate max-w-[110px]">Dir. {movie.director_name}</span>
+                  </>
+                )}
+              </div>
+            )}
             <h3
               onClick={() => onOpenPlayerModal && onOpenPlayerModal(movie)}
               className="text-lg font-bold text-white group-hover:text-gold-400 transition-colors line-clamp-1 cursor-pointer"
             >
               {movie.title}
             </h3>
-            <p className="text-zinc-400 text-xs mt-1.5 line-clamp-2 font-light">
+            <p className="text-zinc-400 text-xs mt-1 line-clamp-2 font-light">
               {movie.description}
             </p>
           </div>

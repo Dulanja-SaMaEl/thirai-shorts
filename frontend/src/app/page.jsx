@@ -5,6 +5,7 @@ import HeroCarousel from '../components/HeroCarousel';
 import TokenBanner from '../components/TokenBanner';
 import PackagesSection from '../components/PackagesSection';
 import WinnerShowcase from '../components/WinnerShowcase';
+import AwardShowcase from '../components/AwardShowcase';
 import MovieCard from '../components/MovieCard';
 import CommunityTimer from '../components/CommunityTimer';
 import ContactForm from '../components/ContactForm';
@@ -189,9 +190,8 @@ export default function HomePage() {
       {/* 5. Community Rating Timer Banner */}
       <CommunityTimer />
 
-      {/* 6. Annual Thirai+ Festival Winners Showcase */}
-      <WinnerShowcase
-        winners={winners}
+      {/* 6. Annual Thirai+ Festival 22 Award Showcase & Laurels */}
+      <AwardShowcase
         onOpenPlayerModal={(m) => handleWatchMovie(m)}
       />
 

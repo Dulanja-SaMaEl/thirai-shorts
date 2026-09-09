@@ -1,7 +1,11 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { X, Play, Star, Download, ThumbsUp, Film, Calendar, Mail, Trophy, AlertTriangle, RefreshCw, Volume2 } from 'lucide-react';
+import {
+  X, Play, Star, Download, ThumbsUp, Film, Calendar, Mail,
+  Trophy, AlertTriangle, RefreshCw, Volume2, Users, Clapperboard,
+  Camera, Globe, Award
+} from 'lucide-react';
 import api from '../lib/api';
 
 export default function VideoPlayerModal({ movie, onClose, onOpenVoteModal }) {
@@ -151,21 +155,41 @@ export default function VideoPlayerModal({ movie, onClose, onOpenVoteModal }) {
                     <Trophy className="w-3.5 h-3.5 fill-black" /> Winner: {movie.winner_category || 'Golden Thira Winner'}
                   </span>
                 )}
+                {movie.genre && (
+                  <span className="text-xs bg-gold-500/10 border border-gold-500/30 text-gold-300 px-2.5 py-0.5 rounded-md font-bold">
+                    {movie.genre}
+                  </span>
+                )}
+                {movie.running_time && (
+                  <span className="text-xs bg-zinc-800 text-zinc-300 px-2.5 py-0.5 rounded-md font-mono font-bold">
+                    ⏱ {movie.running_time}
+                  </span>
+                )}
+                {movie.premiere_status && (
+                  <span className="text-xs bg-purple-500/10 border border-purple-500/30 text-purple-300 px-2.5 py-0.5 rounded-md font-bold">
+                    {movie.premiere_status}
+                  </span>
+                )}
+                {movie.film_type && (
+                  <span className="text-xs bg-blue-500/10 border border-blue-500/30 text-blue-300 px-2.5 py-0.5 rounded-md font-bold">
+                    {movie.film_type}
+                  </span>
+                )}
                 <span className="text-xs bg-zinc-800 text-zinc-300 px-2.5 py-0.5 rounded-md font-mono font-bold">
                   {viewCount} Views
-                </span>
-                <span className="text-xs bg-gold-500/10 border border-gold-500/30 text-gold-300 px-2.5 py-0.5 rounded-md font-bold">
-                  ⭐ 9.8 / 10 Rating
                 </span>
               </div>
 
               <h2 className="text-2xl md:text-3xl font-black text-white">{movie.title}</h2>
-              <div className="text-xs text-zinc-400 mt-1 flex flex-wrap items-center gap-4">
+              <div className="text-xs text-zinc-400 mt-1.5 flex flex-wrap items-center gap-4">
                 <span className="flex items-center gap-1 text-zinc-300">
-                  <Mail className="w-3.5 h-3.5 text-gold-400" /> {movie.uploader_email || 'director@thiraiplus.com'}
+                  <Globe className="w-3.5 h-3.5 text-gold-400" /> {movie.original_language || 'Tamil'} {movie.subtitle_language ? `(Subtitles: ${movie.subtitle_language})` : ''}
+                </span>
+                <span className="flex items-center gap-1 text-zinc-300">
+                  <Mail className="w-3.5 h-3.5 text-gold-400" /> {movie.director_email || movie.uploader_email || 'director@thiraiplus.com'}
                 </span>
                 <span className="flex items-center gap-1 text-zinc-400">
-                  <Calendar className="w-3.5 h-3.5 text-gold-400" /> {new Date(movie.created_at || Date.now()).toLocaleDateString()}
+                  <Calendar className="w-3.5 h-3.5 text-gold-400" /> {movie.year_of_production || new Date(movie.created_at || Date.now()).getFullYear()}
                 </span>
               </div>
             </div>
@@ -186,9 +210,102 @@ export default function VideoPlayerModal({ movie, onClose, onOpenVoteModal }) {
           {/* Description / Synopsis */}
           <div className="bg-black/60 border border-zinc-800 rounded-2xl p-5 text-xs text-zinc-300 leading-relaxed space-y-1.5">
             <h4 className="text-[11px] font-bold text-gold-400 uppercase tracking-widest flex items-center gap-1.5">
-              <Film className="w-3.5 h-3.5" /> Synopsis & Director Statement
+              <Film className="w-3.5 h-3.5" /> Synopsis & Narrative Overview
             </h4>
-            <p className="text-zinc-300 text-xs sm:text-sm">{movie.description}</p>
+            <p className="text-zinc-300 text-xs sm:text-sm font-light leading-relaxed">{movie.description}</p>
+          </div>
+
+          {/* Cast & Crew Credits Section */}
+          <div className="bg-black/60 border border-gold-500/20 rounded-2xl p-5 space-y-4">
+            <h4 className="text-xs font-bold text-gold-400 uppercase tracking-widest flex items-center gap-2">
+              <Users className="w-4 h-4 text-gold-400" /> Film Credits & Cast
+            </h4>
+
+            {/* Crew Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 text-xs">
+              {movie.director_name && (
+                <div className="bg-zinc-950 p-2.5 rounded-xl border border-zinc-800/80 flex items-center gap-2.5">
+                  {movie.director_photo_url && (
+                    <img
+                      src={movie.director_photo_url}
+                      alt={movie.director_name}
+                      className="w-8 h-8 rounded-full object-cover border border-gold-500/40 shrink-0 shadow-gold-glow"
+                    />
+                  )}
+                  <div className="min-w-0">
+                    <span className="text-[10px] uppercase font-bold text-gold-400 block">Director</span>
+                    <span className="font-semibold text-white truncate block">{movie.director_name}</span>
+                  </div>
+                </div>
+              )}
+              {movie.producer_name && (
+                <div className="bg-zinc-950 p-2.5 rounded-xl border border-zinc-800/80">
+                  <span className="text-[10px] uppercase font-bold text-zinc-400 block">Producer</span>
+                  <span className="font-semibold text-white">{movie.producer_name}</span>
+                </div>
+              )}
+              {movie.writer_name && (
+                <div className="bg-zinc-950 p-2.5 rounded-xl border border-zinc-800/80">
+                  <span className="text-[10px] uppercase font-bold text-zinc-400 block">Screenwriter</span>
+                  <span className="font-semibold text-white">{movie.writer_name}</span>
+                </div>
+              )}
+              {movie.cinematographer_name && (
+                <div className="bg-zinc-950 p-2.5 rounded-xl border border-zinc-800/80">
+                  <span className="text-[10px] uppercase font-bold text-gold-400/80 block">Cinematographer (DOP)</span>
+                  <span className="font-semibold text-white">{movie.cinematographer_name}</span>
+                </div>
+              )}
+              {movie.editor_name && (
+                <div className="bg-zinc-950 p-2.5 rounded-xl border border-zinc-800/80">
+                  <span className="text-[10px] uppercase font-bold text-zinc-400 block">Editor</span>
+                  <span className="font-semibold text-white">{movie.editor_name}</span>
+                </div>
+              )}
+              {movie.sound_designer_name && (
+                <div className="bg-zinc-950 p-2.5 rounded-xl border border-zinc-800/80">
+                  <span className="text-[10px] uppercase font-bold text-zinc-400 block">Sound Designer</span>
+                  <span className="font-semibold text-white">{movie.sound_designer_name}</span>
+                </div>
+              )}
+              {movie.music_composer_name && (
+                <div className="bg-zinc-950 p-2.5 rounded-xl border border-zinc-800/80">
+                  <span className="text-[10px] uppercase font-bold text-zinc-400 block">Music Composer</span>
+                  <span className="font-semibold text-white">{movie.music_composer_name}</span>
+                </div>
+              )}
+              {movie.shooting_format && (
+                <div className="bg-zinc-950 p-2.5 rounded-xl border border-zinc-800/80">
+                  <span className="text-[10px] uppercase font-bold text-zinc-400 block">Shooting Format</span>
+                  <span className="font-semibold text-zinc-300">{movie.shooting_format}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Lead Casts */}
+            {movie.lead_casts && Array.isArray(movie.lead_casts) && movie.lead_casts.length > 0 && (
+              <div className="pt-2 border-t border-zinc-800/60">
+                <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider block mb-2">
+                  Lead Cast
+                </span>
+                <div className="flex flex-wrap gap-2">
+                  {movie.lead_casts.map((cast, i) => (
+                    <div
+                      key={i}
+                      className="px-3 py-1.5 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-zinc-200 flex items-center gap-1.5"
+                    >
+                      <span className="font-bold text-white">{cast.actor || 'Actor'}</span>
+                      {cast.character && (
+                        <>
+                          <span className="text-zinc-500 font-serif italic text-[11px]">as</span>
+                          <span className="text-gold-400 font-medium">{cast.character}</span>
+                        </>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Film Attachments & Press Kit */}

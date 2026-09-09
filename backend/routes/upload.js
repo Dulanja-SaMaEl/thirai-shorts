@@ -29,8 +29,8 @@ router.post('/presigned-url', async (req, res) => {
       }
     }
 
-    // Enforce thumbnail format
-    if (fileCategory === 'thumbnail') {
+    // Enforce image formats (thumbnails and director photos)
+    if (fileCategory === 'thumbnail' || fileCategory === 'director_photo') {
       const allowedImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
       if (!allowedImageTypes.includes(fileType.toLowerCase())) {
         return res.status(400).json({ 

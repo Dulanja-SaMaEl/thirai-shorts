@@ -9,13 +9,13 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_mock_key');
 
 /**
  * @route POST /api/stripe/create-checkout-session
- * @desc Create Stripe payment session for movie submission fee ($25.00)
+ * @desc Create Stripe payment session for movie submission fee ($4.99)
  */
 router.post('/create-checkout-session', async (req, res) => {
   try {
     const { movie_title, uploader_email } = req.body;
 
-    const submissionFeeCents = parseInt(process.env.SUBMISSION_FEE_CENTS || '2500', 10); // $25.00 USD
+    const submissionFeeCents = parseInt(process.env.SUBMISSION_FEE_CENTS || '499', 10); // $4.99 USD
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],

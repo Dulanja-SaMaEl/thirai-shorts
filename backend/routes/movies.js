@@ -17,6 +17,47 @@ const DEMO_MOVIES = [
       { name: 'Official Poster HD.png', url: '/images/logo-icon.png' }
     ],
     uploader_email: 'director@thiraiplus.com',
+    uploader_phone: '+94 77 123 4567',
+    original_language: 'Tamil',
+    subtitle_language: 'English',
+    genre: 'Experimental Visual',
+    running_time: '14 mins',
+    year_of_production: '2026',
+    country_of_production: 'Sri Lanka',
+    director_name: 'Mani Ratnam',
+    director_email: 'director@thiraiplus.com',
+    director_phone: '+94 77 123 4567',
+    producer_name: 'Madras Talkies',
+    producer_email: 'producer@thiraiplus.com',
+    producer_phone: '+94 77 111 2233',
+    writer_name: 'Mani Ratnam',
+    cinematographer_name: 'P. C. Sreeram',
+    editor_name: 'A. Sreekar Prasad',
+    sound_designer_name: 'Resul Pookutty',
+    music_composer_name: 'A. R. Rahman',
+    lead_casts: [
+      { actor: 'Arvind Swami', character: 'The Traveler' },
+      { actor: 'Revathi', character: 'The Narrator' }
+    ],
+    production_company: 'Thirai Visual Labs',
+    budget_range: '$5,000 - $10,000',
+    shooting_format: 'Arri Alexa Mini',
+    editing_software: 'DaVinci Resolve Studio',
+    premiere_status: 'National Premiere',
+    production_date: '2026-01-15',
+    applied_festivals: 'Cannes Short Film Corner, IFFI Goa',
+    film_type: 'Independent Film',
+    contact_name: 'Mani Ratnam',
+    contact_email: 'director@thiraiplus.com',
+    contact_phone: '+94 77 123 4567',
+    social_media_links: 'https://instagram.com/thiraiplus',
+    director_photo_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300',
+    declaration_content_permission: true,
+    declaration_copyright_compliant: true,
+    declaration_screening_allowed: true,
+    declaration_confirmed: true,
+    digital_signature: 'Mani Ratnam',
+    signature_date: '2026-01-20',
     status: 'approved',
     view_count: 1420,
     is_winner: false,
@@ -31,6 +72,64 @@ const DEMO_MOVIES = [
         users: { full_name: 'Steven Spielberg', profile_pic_url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150' }
       }
     ]
+  },
+  {
+    id: 'e0000000-0000-0000-0000-000000000002',
+    title: 'The Whispering Palms',
+    description: 'A poignant drama set along the sun-drenched shores of Jaffna, following an aging fisherman preserving timeless coastal folklore against modern tides.',
+    thumbnail_url: 'https://images.unsplash.com/photo-1518173946687-a4c8a383392e?w=800',
+    video_url: '/videos/demo-film.mp4',
+    attachments: [
+      { name: 'Production Notes.pdf', url: '/videos/demo-film.mp4' }
+    ],
+    uploader_email: 'vetri@grassroot.com',
+    uploader_phone: '+94 77 987 6543',
+    original_language: 'Tamil',
+    subtitle_language: 'English, French',
+    genre: 'Coastal Drama',
+    running_time: '22 mins',
+    year_of_production: '2025',
+    country_of_production: 'Sri Lanka',
+    director_name: 'Vetrimaaran',
+    director_email: 'vetri@grassroot.com',
+    director_phone: '+94 77 987 6543',
+    producer_name: 'Grass Root Film Company',
+    producer_email: 'producer@grassroot.com',
+    producer_phone: '+94 77 987 6544',
+    writer_name: 'Vetrimaaran',
+    cinematographer_name: 'Velraj',
+    editor_name: 'R. Ramar',
+    sound_designer_name: 'Tapass Nayak',
+    music_composer_name: 'Santhosh Narayanan',
+    lead_casts: [
+      { actor: 'Dhanush', character: 'Anbu' },
+      { actor: 'Kishore', character: 'Elder Murugan' }
+    ],
+    production_company: 'Northern Cinema Collective',
+    budget_range: '$10,000 - $20,000',
+    shooting_format: 'RED Komodo 6K',
+    editing_software: 'Final Cut Pro X',
+    premiere_status: 'World Premiere',
+    production_date: '2025-11-20',
+    applied_festivals: 'Rotterdam Film Festival',
+    film_type: 'Independent Film',
+    contact_name: 'Vetrimaaran',
+    contact_email: 'vetri@grassroot.com',
+    contact_phone: '+94 77 987 6543',
+    social_media_links: 'https://twitter.com/grassrootfilms',
+    director_photo_url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300',
+    declaration_content_permission: true,
+    declaration_copyright_compliant: true,
+    declaration_screening_allowed: true,
+    declaration_confirmed: true,
+    digital_signature: 'Vetrimaaran',
+    signature_date: '2025-11-25',
+    status: 'approved',
+    view_count: 2850,
+    is_winner: true,
+    winner_category: 'Golden Thira Award - Best Short Film',
+    created_at: new Date(Date.now() - 86400000).toISOString(),
+    reviews: []
   }
 ];
 
@@ -45,18 +144,7 @@ router.get('/', async (req, res) => {
     let query = supabaseAdmin
       .from('movies')
       .select(`
-        id,
-        title,
-        description,
-        thumbnail_url,
-        video_url,
-        attachments,
-        uploader_email,
-        status,
-        view_count,
-        is_winner,
-        winner_category,
-        created_at,
+        *,
         reviews (
           id,
           score,
@@ -69,9 +157,9 @@ router.get('/', async (req, res) => {
         )
       `);
 
-    if (status) {
+    if (status && status !== 'all') {
       query = query.eq('status', status);
-    } else {
+    } else if (!status) {
       query = query.in('status', ['approved', 'pending']);
     }
 
@@ -351,48 +439,207 @@ router.get('/:id', async (req, res) => {
 
 /**
  * @route POST /api/movies
- * @desc Create new short movie submission
+ * @desc Create new short movie submission with full festival metadata
  */
 router.post('/', async (req, res) => {
   try {
     const {
       title,
       description,
+      synopsis,
       thumbnail_url,
       video_url,
       attachments,
+      
+      // Film Information
+      original_language,
+      subtitle_language,
+      genre,
+      running_time,
+      year_of_production,
+      country_of_production,
+
+      // Cast & Crew Credits
+      director_name,
+      director_email,
+      director_phone,
+      producer_name,
+      producer_email,
+      producer_phone,
+      writer_name,
+      cinematographer_name,
+      editor_name,
+      sound_designer_name,
+      music_composer_name,
+      lead_casts,
+
+      // Production Details
+      production_company,
+      budget_range,
+      shooting_format,
+      editing_software,
+
+      // Festival-Specific Questions
+      premiere_status,
+      production_date,
+      applied_festivals,
+      film_type,
+
+      // Primary Contact Person
+      contact_name,
+      contact_email,
+      contact_phone,
+      social_media_links,
+
+      // Director Photograph & Legal Declaration
+      director_photo_url,
+      declaration_content_permission,
+      declaration_copyright_compliant,
+      declaration_screening_allowed,
+      declaration_confirmed,
+      digital_signature,
+      signature_date,
+
+      // Backward compatibility fields
       uploader_email,
       uploader_phone,
-      payment_intent_id
+      payment_intent_id,
+      submission_metadata
     } = req.body;
 
-    if (!title || !description || !thumbnail_url || !video_url || !uploader_email || !uploader_phone) {
-      return res.status(400).json({ error: 'Please provide all mandatory fields.' });
+    const finalDescription = (description || synopsis || '').trim();
+    const finalDirectorName = director_name || contact_name || 'Anonymous Director';
+    const finalDirectorEmail = director_email || contact_email || uploader_email;
+    const finalDirectorPhone = director_phone || contact_phone || uploader_phone;
+
+    if (!title || !thumbnail_url || !video_url || !finalDirectorEmail || !finalDirectorPhone) {
+      return res.status(400).json({
+        error: 'Please provide all mandatory fields: Film Title, Thumbnail, Video, and Contact Information.'
+      });
     }
 
-    const { data: newMovie, error } = await supabaseAdmin
-      .from('movies')
-      .insert([{
-        title,
-        description,
-        thumbnail_url,
-        video_url,
-        attachments: attachments || [],
-        uploader_email,
-        uploader_phone,
-        status: 'pending',
-        payment_status: payment_intent_id ? 'paid' : 'unpaid',
-        stripe_payment_intent_id: payment_intent_id || null
-      }])
-      .select()
-      .single();
+    const movieRecord = {
+      id: `mov-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+      title: title.trim(),
+      description: finalDescription,
+      thumbnail_url,
+      video_url,
+      attachments: Array.isArray(attachments) ? attachments : [],
+      
+      // Contact & Identification
+      uploader_email: finalDirectorEmail,
+      uploader_phone: finalDirectorPhone,
 
-    if (error) throw error;
+      // Film Information
+      original_language: original_language || 'Tamil',
+      subtitle_language: subtitle_language || 'English',
+      genre: genre || 'Drama',
+      running_time: running_time || '',
+      year_of_production: year_of_production || new Date().getFullYear().toString(),
+      country_of_production: country_of_production || 'Sri Lanka',
+
+      // Cast & Crew Credits
+      director_name: finalDirectorName,
+      director_email: finalDirectorEmail,
+      director_phone: finalDirectorPhone,
+      producer_name: producer_name || '',
+      producer_email: producer_email || '',
+      producer_phone: producer_phone || '',
+      writer_name: writer_name || '',
+      cinematographer_name: cinematographer_name || '',
+      editor_name: editor_name || '',
+      sound_designer_name: sound_designer_name || '',
+      music_composer_name: music_composer_name || '',
+      lead_casts: Array.isArray(lead_casts) ? lead_casts : [],
+
+      // Production Details
+      production_company: production_company || '',
+      budget_range: budget_range || '',
+      shooting_format: shooting_format || '',
+      editing_software: editing_software || '',
+
+      // Festival-Specific Questions
+      premiere_status: premiere_status || 'Not Premiered',
+      production_date: production_date || '',
+      applied_festivals: applied_festivals || '',
+      film_type: film_type || 'Independent Film',
+
+      // Primary Contact Person
+      contact_name: contact_name || finalDirectorName,
+      contact_email: contact_email || finalDirectorEmail,
+      contact_phone: contact_phone || finalDirectorPhone,
+      social_media_links: social_media_links || '',
+
+      // Director Photograph & Legal Declaration
+      director_photo_url: director_photo_url || null,
+      declaration_content_permission: Boolean(declaration_content_permission),
+      declaration_copyright_compliant: Boolean(declaration_copyright_compliant),
+      declaration_screening_allowed: Boolean(declaration_screening_allowed),
+      declaration_confirmed: Boolean(declaration_confirmed ?? (declaration_content_permission && declaration_copyright_compliant && declaration_screening_allowed)),
+      digital_signature: digital_signature || '',
+      signature_date: signature_date || new Date().toISOString().split('T')[0],
+      submission_metadata: submission_metadata || {},
+
+      // Moderation & Status
+      status: 'pending',
+      rejection_reason: null,
+      view_count: 0,
+      is_winner: false,
+      winner_category: null,
+      payment_status: payment_intent_id ? 'paid' : 'unpaid',
+      stripe_payment_intent_id: payment_intent_id || null,
+      created_at: new Date().toISOString()
+    };
+
+    let createdMovie = movieRecord;
+
+    if (isSupabaseConfigured) {
+      try {
+        const { data: dbMovie, error } = await supabaseAdmin
+          .from('movies')
+          .insert([movieRecord])
+          .select()
+          .single();
+
+        if (error) {
+          console.warn('Supabase insert note, falling back to in-memory store:', error.message);
+          // Retry with baseline columns if custom columns not yet migrated
+          const baselineRecord = {
+            title: movieRecord.title,
+            description: movieRecord.description,
+            thumbnail_url: movieRecord.thumbnail_url,
+            video_url: movieRecord.video_url,
+            attachments: movieRecord.attachments,
+            uploader_email: movieRecord.uploader_email,
+            uploader_phone: movieRecord.uploader_phone,
+            status: movieRecord.status,
+            payment_status: movieRecord.payment_status,
+            stripe_payment_intent_id: movieRecord.stripe_payment_intent_id
+          };
+          const { data: fallbackDbMovie } = await supabaseAdmin
+            .from('movies')
+            .insert([baselineRecord])
+            .select()
+            .single();
+
+          if (fallbackDbMovie) {
+            createdMovie = { ...movieRecord, ...fallbackDbMovie };
+          }
+        } else if (dbMovie) {
+          createdMovie = dbMovie;
+        }
+      } catch (dbErr) {
+        console.warn('Supabase DB error during submission:', dbErr.message);
+      }
+    }
+
+    // Always maintain in-memory fallback list
+    DEMO_MOVIES.unshift(createdMovie);
 
     return res.status(201).json({
       success: true,
       message: 'Movie submitted successfully! Awaiting Admin review.',
-      movie: newMovie
+      movie: createdMovie
     });
   } catch (error) {
     console.error('Error submitting movie:', error);

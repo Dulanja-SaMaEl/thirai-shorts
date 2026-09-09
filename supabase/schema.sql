@@ -92,6 +92,58 @@ CREATE TABLE IF NOT EXISTS public.movies (
     attachments JSONB DEFAULT '[]'::jsonb,
     uploader_email VARCHAR(255) NOT NULL,
     uploader_phone VARCHAR(50) NOT NULL,
+    
+    -- Film Information
+    original_language VARCHAR(100) DEFAULT 'Tamil',
+    subtitle_language VARCHAR(100) DEFAULT 'English',
+    genre VARCHAR(100),
+    running_time VARCHAR(50),
+    year_of_production VARCHAR(20),
+    country_of_production VARCHAR(100) DEFAULT 'Sri Lanka',
+    
+    -- Key Cast & Crew Credits
+    director_name VARCHAR(255),
+    director_email VARCHAR(255),
+    director_phone VARCHAR(50),
+    producer_name VARCHAR(255),
+    producer_email VARCHAR(255),
+    producer_phone VARCHAR(50),
+    writer_name VARCHAR(255),
+    cinematographer_name VARCHAR(255),
+    editor_name VARCHAR(255),
+    sound_designer_name VARCHAR(255),
+    music_composer_name VARCHAR(255),
+    lead_casts JSONB DEFAULT '[]'::jsonb,
+    
+    -- Production Details
+    production_company VARCHAR(255),
+    budget_range VARCHAR(100),
+    shooting_format VARCHAR(100),
+    editing_software VARCHAR(100),
+    
+    -- Festival-Specific Questions
+    premiere_status VARCHAR(100) DEFAULT 'Not Premiered',
+    production_date VARCHAR(50),
+    applied_festivals TEXT,
+    film_type VARCHAR(50) DEFAULT 'Independent Film',
+    
+    -- Primary Contact Person
+    contact_name VARCHAR(255),
+    contact_email VARCHAR(255),
+    contact_phone VARCHAR(50),
+    social_media_links TEXT,
+
+    -- Director Photograph & Legal Declaration
+    director_photo_url TEXT,
+    declaration_content_permission BOOLEAN DEFAULT FALSE,
+    declaration_copyright_compliant BOOLEAN DEFAULT FALSE,
+    declaration_screening_allowed BOOLEAN DEFAULT FALSE,
+    declaration_confirmed BOOLEAN DEFAULT FALSE,
+    digital_signature VARCHAR(255),
+    signature_date VARCHAR(50),
+
+    submission_metadata JSONB DEFAULT '{}'::jsonb,
+
     status movie_status NOT NULL DEFAULT 'pending',
     rejection_reason TEXT,
     view_count BIGINT DEFAULT 0,
@@ -102,6 +154,46 @@ CREATE TABLE IF NOT EXISTS public.movies (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Idempotent column additions for existing movies tables
+ALTER TABLE public.movies ADD COLUMN IF NOT EXISTS original_language VARCHAR(100) DEFAULT 'Tamil';
+ALTER TABLE public.movies ADD COLUMN IF NOT EXISTS subtitle_language VARCHAR(100) DEFAULT 'English';
+ALTER TABLE public.movies ADD COLUMN IF NOT EXISTS genre VARCHAR(100);
+ALTER TABLE public.movies ADD COLUMN IF NOT EXISTS running_time VARCHAR(50);
+ALTER TABLE public.movies ADD COLUMN IF NOT EXISTS year_of_production VARCHAR(20);
+ALTER TABLE public.movies ADD COLUMN IF NOT EXISTS country_of_production VARCHAR(100) DEFAULT 'Sri Lanka';
+ALTER TABLE public.movies ADD COLUMN IF NOT EXISTS director_name VARCHAR(255);
+ALTER TABLE public.movies ADD COLUMN IF NOT EXISTS director_email VARCHAR(255);
+ALTER TABLE public.movies ADD COLUMN IF NOT EXISTS director_phone VARCHAR(50);
+ALTER TABLE public.movies ADD COLUMN IF NOT EXISTS producer_name VARCHAR(255);
+ALTER TABLE public.movies ADD COLUMN IF NOT EXISTS producer_email VARCHAR(255);
+ALTER TABLE public.movies ADD COLUMN IF NOT EXISTS producer_phone VARCHAR(50);
+ALTER TABLE public.movies ADD COLUMN IF NOT EXISTS writer_name VARCHAR(255);
+ALTER TABLE public.movies ADD COLUMN IF NOT EXISTS cinematographer_name VARCHAR(255);
+ALTER TABLE public.movies ADD COLUMN IF NOT EXISTS editor_name VARCHAR(255);
+ALTER TABLE public.movies ADD COLUMN IF NOT EXISTS sound_designer_name VARCHAR(255);
+ALTER TABLE public.movies ADD COLUMN IF NOT EXISTS music_composer_name VARCHAR(255);
+ALTER TABLE public.movies ADD COLUMN IF NOT EXISTS lead_casts JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE public.movies ADD COLUMN IF NOT EXISTS production_company VARCHAR(255);
+ALTER TABLE public.movies ADD COLUMN IF NOT EXISTS budget_range VARCHAR(100);
+ALTER TABLE public.movies ADD COLUMN IF NOT EXISTS shooting_format VARCHAR(100);
+ALTER TABLE public.movies ADD COLUMN IF NOT EXISTS editing_software VARCHAR(100);
+ALTER TABLE public.movies ADD COLUMN IF NOT EXISTS premiere_status VARCHAR(100) DEFAULT 'Not Premiered';
+ALTER TABLE public.movies ADD COLUMN IF NOT EXISTS production_date VARCHAR(50);
+ALTER TABLE public.movies ADD COLUMN IF NOT EXISTS applied_festivals TEXT;
+ALTER TABLE public.movies ADD COLUMN IF NOT EXISTS film_type VARCHAR(50) DEFAULT 'Independent Film';
+ALTER TABLE public.movies ADD COLUMN IF NOT EXISTS contact_name VARCHAR(255);
+ALTER TABLE public.movies ADD COLUMN IF NOT EXISTS contact_email VARCHAR(255);
+ALTER TABLE public.movies ADD COLUMN IF NOT EXISTS contact_phone VARCHAR(50);
+ALTER TABLE public.movies ADD COLUMN IF NOT EXISTS social_media_links TEXT;
+ALTER TABLE public.movies ADD COLUMN IF NOT EXISTS director_photo_url TEXT;
+ALTER TABLE public.movies ADD COLUMN IF NOT EXISTS declaration_content_permission BOOLEAN DEFAULT FALSE;
+ALTER TABLE public.movies ADD COLUMN IF NOT EXISTS declaration_copyright_compliant BOOLEAN DEFAULT FALSE;
+ALTER TABLE public.movies ADD COLUMN IF NOT EXISTS declaration_screening_allowed BOOLEAN DEFAULT FALSE;
+ALTER TABLE public.movies ADD COLUMN IF NOT EXISTS declaration_confirmed BOOLEAN DEFAULT FALSE;
+ALTER TABLE public.movies ADD COLUMN IF NOT EXISTS digital_signature VARCHAR(255);
+ALTER TABLE public.movies ADD COLUMN IF NOT EXISTS signature_date VARCHAR(50);
+ALTER TABLE public.movies ADD COLUMN IF NOT EXISTS submission_metadata JSONB DEFAULT '{}'::jsonb;
 
 CREATE INDEX IF NOT EXISTS idx_movies_status ON public.movies(status);
 CREATE INDEX IF NOT EXISTS idx_movies_created_at ON public.movies(created_at DESC);
@@ -172,6 +264,21 @@ CREATE TABLE IF NOT EXISTS public.user_movie_unlocks (
 
 CREATE INDEX IF NOT EXISTS idx_user_movie_unlocks_user ON public.user_movie_unlocks(user_id);
 CREATE INDEX IF NOT EXISTS idx_user_movie_unlocks_movie ON public.user_movie_unlocks(movie_id);
+
+-- 9. Official Festival Awards Table (22 Craft & Festival Award Categories)
+CREATE TABLE IF NOT EXISTS public.festival_awards (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    category VARCHAR(150) NOT NULL UNIQUE,
+    movie_id UUID REFERENCES public.movies(id) ON DELETE CASCADE,
+    recipient_name VARCHAR(255),
+    citation TEXT,
+    year VARCHAR(10) DEFAULT '2026',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_festival_awards_category ON public.festival_awards(category);
+CREATE INDEX IF NOT EXISTS idx_festival_awards_movie ON public.festival_awards(movie_id);
 
 -- --------------------------------------------------------------------
 -- STEP 4: Views & Functions
@@ -725,7 +832,7 @@ VALUES
     ('30000000-0000-0000-0000-000000000002', 'e0000000-0000-0000-0000-000000000002', 'audience2@gmail.com', 10, true, NOW()),
     ('30000000-0000-0000-0000-000000000003', 'e0000000-0000-0000-0000-000000000003', 'audience3@gmail.com', 8, true, NOW()),
     ('30000000-0000-0000-0000-000000000004', 'e0000000-0000-0000-0000-000000000005', 'audience4@gmail.com', 9, true, NOW())
-ON CONFLICT (movie_id, voter_email) DO NOTHING;
+ON CONFLICT (id) DO NOTHING;
 
 -- 7. Seed System Settings (Community Voting Event)
 INSERT INTO public.system_settings (key, value)
@@ -745,4 +852,82 @@ SELECT
     u.id,
     'e0000000-0000-0000-0000-000000000001'::uuid
 FROM public.users u WHERE u.email = 'viewer@thiraiplus.com'
-ON CONFLICT (user_id, movie_id) DO NOTHING;
+ON CONFLICT (id) DO NOTHING;
+
+-- 9. Seed Official Festival Awards (22 Award Categories Sample Allocations)
+CREATE TABLE IF NOT EXISTS public.festival_awards (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    category VARCHAR(150) NOT NULL,
+    movie_id UUID REFERENCES public.movies(id) ON DELETE CASCADE,
+    recipient_name VARCHAR(255),
+    citation TEXT,
+    year VARCHAR(10) DEFAULT '2026',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_festival_awards_category_unique ON public.festival_awards(category);
+
+INSERT INTO public.festival_awards (
+    id,
+    category,
+    movie_id,
+    recipient_name,
+    citation,
+    year
+)
+VALUES
+    (
+        '40000000-0000-0000-0000-000000000001',
+        'Best Film of Entire Festival - Main Award',
+        'e0000000-0000-0000-0000-000000000002',
+        'Vetrimaaran (Director) & Grass Root Film Company',
+        'Awarded for superlative poetic storytelling and unforgettable portrayal of coastal heritage.',
+        '2026'
+    ),
+    (
+        '40000000-0000-0000-0000-000000000002',
+        'Best Director',
+        'e0000000-0000-0000-0000-000000000001',
+        'Mani Ratnam',
+        'Awarded for masterful visual rhythm, aesthetic restraint, and atmospheric direction.',
+        '2026'
+    ),
+    (
+        '40000000-0000-0000-0000-000000000003',
+        'Best Cinematography',
+        'e0000000-0000-0000-0000-000000000002',
+        'Velraj',
+        'Awarded for breathtaking ocean vistas and exquisite natural light photography.',
+        '2026'
+    ),
+    (
+        '40000000-0000-0000-0000-000000000004',
+        'Best Actor',
+        'e0000000-0000-0000-0000-000000000002',
+        'Dhanush as Anbu',
+        'Awarded for an emotionally nuanced, grounded, and mesmerizing lead performance.',
+        '2026'
+    ),
+    (
+        '40000000-0000-0000-0000-000000000005',
+        'Best Sound Design',
+        'e0000000-0000-0000-0000-000000000001',
+        'Resul Pookutty',
+        'Awarded for rich acoustic textures and pristine spatial audio design.',
+        '2026'
+    ),
+    (
+        '40000000-0000-0000-0000-000000000006',
+        'Audience Choice Award',
+        'e0000000-0000-0000-0000-000000000005',
+        'Prasanna Vithanage',
+        'Crowned by popular audience votes across festival community screenings.',
+        '2026'
+    )
+ON CONFLICT (id) DO UPDATE SET
+    category = EXCLUDED.category,
+    movie_id = EXCLUDED.movie_id,
+    recipient_name = EXCLUDED.recipient_name,
+    citation = EXCLUDED.citation,
+    year = EXCLUDED.year;
