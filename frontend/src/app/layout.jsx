@@ -23,6 +23,7 @@ export default function RootLayout({ children }) {
               <span>© 2026 Thirai+ Short Film Festival. All Rights Reserved.</span>
             </div>
             <div className="flex flex-wrap items-center justify-center gap-6 text-zinc-400">
+              <Link href="/faq" className="hover:text-gold-400 transition-colors">FAQ</Link>
               <Link href="/privacy" className="hover:text-gold-400 transition-colors">Privacy Policy</Link>
               <Link href="/terms" className="hover:text-gold-400 transition-colors">Terms of Submission</Link>
               <Link href="/jury-guidelines" className="hover:text-gold-400 transition-colors">Jury Guidelines</Link>

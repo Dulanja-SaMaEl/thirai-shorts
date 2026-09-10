@@ -316,7 +316,11 @@ router.get('/', async (req, res) => {
       success: true,
       total_categories: FESTIVAL_AWARD_CATEGORIES.length,
       total_awarded: totalAwarded,
-      awards: fullCategoriesList
+      awards: fullCategoriesList,
+      nominations: fullCategoriesList,
+      unveil_date: '2027-01-01T00:00:00Z',
+      is_unveiled: new Date() >= new Date('2027-01-01T00:00:00Z'),
+      nominees_per_category: 3
     });
 
   } catch (error) {

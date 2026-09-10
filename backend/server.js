@@ -87,6 +87,7 @@ app.use('/api/vote', voteRoutes);
 app.use('/api/stripe', stripeRoutes);
 app.use('/api/packages', packageRoutes);
 app.use('/api/awards', awardRoutes);
+app.use('/api/nominations', awardRoutes);
 
 // Global Production Error Handler (prevents stack-trace leaks)
 app.use((err, req, res, next) => {

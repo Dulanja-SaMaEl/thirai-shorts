@@ -36,12 +36,12 @@ export default function Header() {
           </Link>
 
           <Link
-            href="/awards"
+            href="/nominations"
             className={`flex items-center gap-2 text-sm font-semibold transition-colors ${
-              isActive('/awards') ? 'text-gold-400 border-b-2 border-gold-400 pb-1' : 'text-zinc-300 hover:text-gold-300'
+              isActive('/nominations') || isActive('/awards') ? 'text-gold-400 border-b-2 border-gold-400 pb-1' : 'text-zinc-300 hover:text-gold-300'
             }`}
           >
-            <Trophy className="w-4 h-4 text-gold-400" /> Awards
+            <Trophy className="w-4 h-4 text-gold-400" /> Nominations
           </Link>
 
           <a
@@ -50,15 +50,6 @@ export default function Header() {
           >
             <Sparkles className="w-4 h-4 text-gold-400" /> VIP Passes
           </a>
-
-          <Link
-            href="/upload"
-            className={`flex items-center gap-2 text-sm font-semibold transition-colors ${
-              isActive('/upload') ? 'text-gold-400 border-b-2 border-gold-400 pb-1' : 'text-zinc-300 hover:text-gold-300'
-            }`}
-          >
-            <Upload className="w-4 h-4" /> Submit Film
-          </Link>
 
           {/* Role-Gated Navigation Links: Shown ONLY to authenticated judges/admins/viewers */}
           {user && user.role === 'viewer' && (

@@ -6,7 +6,7 @@ import Link from 'next/link';
 import AwardShowcase from '../../components/AwardShowcase';
 import VideoPlayerModal from '../../components/VideoPlayerModal';
 
-export default function AwardsPage() {
+export default function NominationsPage() {
   const [selectedPlayingMovie, setSelectedPlayingMovie] = useState(null);
 
   return (
@@ -25,7 +25,7 @@ export default function AwardsPage() {
         </div>
       </div>
 
-      {/* Main Award Showcase */}
+      {/* Main Nominations Showcase */}
       <AwardShowcase onOpenPlayerModal={(m) => setSelectedPlayingMovie(m)} />
 
       {/* Interactive Cinema Video Player Modal */}
