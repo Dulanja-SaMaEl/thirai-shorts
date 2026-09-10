@@ -334,7 +334,10 @@ export default function PackagesSection({ onSubscribed }) {
                     <span className="text-base text-zinc-500 line-through font-mono">
                       ${pkg.originalUsd}
                     </span>
-                    <span className="text-4xl sm:text-5xl font-black text-white font-mono drop-shadow-[0_2px_12px_rgba(250,204,21,0.4)]">
+                    <span
+                      style={{ color: '#FACC15', textShadow: '0 0 20px rgba(250,204,21,0.5)' }}
+                      className="text-4xl sm:text-5xl font-black font-mono text-gold-400"
+                    >
                       ${pkg.usdPrice}
                     </span>
                     <span className="text-xs text-zinc-400 font-semibold">{pkg.period}</span>

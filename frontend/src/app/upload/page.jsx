@@ -17,7 +17,7 @@ export default function UploadPage() {
   const [title, setTitle] = useState('');
   const [originalLanguage, setOriginalLanguage] = useState('Tamil');
   const [subtitleLanguage, setSubtitleLanguage] = useState('English');
-  const [genre, setGenre] = useState('Drama');
+  const [genre, setGenre] = useState('Action');
   const [runningTime, setRunningTime] = useState('');
   const [yearOfProduction, setYearOfProduction] = useState(new Date().getFullYear().toString());
   const [countryOfProduction, setCountryOfProduction] = useState('Sri Lanka');
@@ -519,9 +519,11 @@ export default function UploadPage() {
                   </div>
                 </div>
 
-                <div className="pt-2 border-t border-zinc-850/80 flex flex-wrap items-center justify-between text-[11px] text-zinc-400">
+                <div className="pt-2.5 border-t border-zinc-850/80 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 text-[11px] text-zinc-400">
                   <span>Official Submission Fee: <strong className="text-gold-400 font-bold">$4.99 USD</strong></span>
-                  <span>Viewer Membership (after 2 free films): <strong className="text-zinc-200 font-semibold">$4.99 USD</strong></span>
+                  <span>Submissions Close: <strong className="text-amber-400 font-bold">November 30th, 2026</strong></span>
+                  <span>Festival Date: <strong className="text-gold-300 font-bold">January 16th, 2027</strong></span>
+                  <span>Viewer Pass: <strong className="text-zinc-200 font-semibold">$4.99 USD</strong></span>
                 </div>
               </div>
 
@@ -629,15 +631,21 @@ export default function UploadPage() {
                     onChange={(e) => setGenre(e.target.value)}
                     className="w-full bg-black/80 border border-zinc-800 rounded-xl py-2.5 px-4 text-xs text-white focus:outline-none focus:border-gold-500"
                   >
-                    <option value="Drama">Drama</option>
-                    <option value="Thriller">Thriller</option>
-                    <option value="Neo-Noir">Neo-Noir</option>
-                    <option value="Sci-Fi">Sci-Fi</option>
+                    <option value="Action">Action</option>
+                    <option value="Adventure">Adventure</option>
+                    <option value="Biography (Biopic)">Biography (Biopic)</option>
                     <option value="Comedy">Comedy</option>
                     <option value="Documentary">Documentary</option>
-                    <option value="Animation">Animation</option>
                     <option value="Experimental">Experimental</option>
+                    <option value="Fantasy">Fantasy</option>
                     <option value="Historical">Historical</option>
+                    <option value="Musical">Musical</option>
+                    <option value="Mystery">Mystery</option>
+                    <option value="Religious / Spiritual">Religious / Spiritual</option>
+                    <option value="Romance">Romance</option>
+                    <option value="Sports">Sports</option>
+                    <option value="War">War</option>
+                    <option value="Western">Western</option>
                     <option value="Other">Other</option>
                   </select>
                 </div>

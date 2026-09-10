@@ -32,7 +32,7 @@ export default function Header() {
               isActive('/') ? 'text-gold-400 border-b-2 border-gold-400 pb-1' : 'text-zinc-300 hover:text-gold-300'
             }`}
           >
-            <PlayCircle className="w-4 h-4" /> Gallery
+            <PlayCircle className="w-4 h-4 text-gold-400" /> Official Selections ⭐
           </Link>
 
           <Link

@@ -14,6 +14,7 @@ import VideoPlayerModal from '../components/VideoPlayerModal';
 import AuthWatchModal from '../components/AuthWatchModal';
 import TokenUnlockModal from '../components/TokenUnlockModal';
 import NetflixIntro from '../components/NetflixIntro';
+import FestivalCountdownBanner from '../components/FestivalCountdownBanner';
 import { Film, TrendingUp, AlertCircle, Sparkles } from 'lucide-react';
 import api from '../lib/api';
 import { useAuth } from '../context/AuthContext';
@@ -125,16 +126,19 @@ export default function HomePage() {
         />
       </section>
 
-      {/* 3. Film Festival Gallery Section */}
+      {/* Festival Date & Submissions Deadline Countdown Banner */}
+      <FestivalCountdownBanner />
+
+      {/* 3. Official Selections ⭐ Section */}
       <section className="space-y-6">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-gold-500/20 pb-4">
           <div>
             <div className="flex items-center gap-2">
               <Film className="w-5 h-5 text-gold-400" />
-              <h2 className="text-2xl font-extrabold text-white">Film Festival Gallery</h2>
+              <h2 className="text-2xl font-extrabold text-white">Official Selections ⭐</h2>
             </div>
             <p className="text-xs text-zinc-400 mt-1">
-              Browse official selections, award contenders, and newly submitted short film entries.
+              Browse festival official selections, award contenders, and newly premiered short films.
             </p>
           </div>
 
