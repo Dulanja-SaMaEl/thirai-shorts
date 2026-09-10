@@ -335,8 +335,8 @@ export default function PackagesSection({ onSubscribed }) {
                       ${pkg.originalUsd}
                     </span>
                     <span
-                      style={{ color: '#FACC15', textShadow: '0 0 20px rgba(250,204,21,0.5)' }}
-                      className="text-4xl sm:text-5xl font-black font-mono text-gold-400"
+                      style={{ color: '#FFFFFF' }}
+                      className="text-4xl sm:text-5xl font-black text-white font-mono"
                     >
                       ${pkg.usdPrice}
                     </span>

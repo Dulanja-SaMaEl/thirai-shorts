@@ -70,7 +70,7 @@ export default function FestivalCountdownBanner() {
           </div>
 
           <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">
-            Grand Festival Premiere: <span className="text-transparent bg-clip-text bg-gradient-to-r from-gold-300 via-gold-400 to-amber-500 font-serif">January 16, 2027</span>
+            Grand Festival Premiere: <span className="text-gold-400 font-serif font-bold" style={{ color: '#FACC15' }}>January 16, 2027</span>
           </h3>
 
           <p className="text-xs text-zinc-400 max-w-lg">
