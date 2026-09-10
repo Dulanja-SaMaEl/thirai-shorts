@@ -118,23 +118,39 @@ export default function TokenUnlockModal({ movie, userTokens, onConfirmUnlock, o
             </button>
           ) : (
             <div className="space-y-3">
-              {/* VIP Packages Quick Option */}
-              <div className="p-3 rounded-2xl bg-gold-500/10 border border-gold-500/30 text-left space-y-2">
+              {/* Free Pass used up notice + VIP comparison */}
+              <div className="p-3.5 rounded-2xl bg-zinc-900/80 border border-zinc-800 text-left space-y-2">
+                <div className="flex items-center justify-between text-[11px] text-zinc-400">
+                  <span>Free Audience Pass:</span>
+                  <span className="text-zinc-300 font-semibold">2 Free Tokens Claimed</span>
+                </div>
+                <p className="text-[11px] text-zinc-400 leading-snug">
+                  You have enjoyed your 2 free registration films. Upgrade to a VIP Pass for unlimited screening with zero token limits!
+                </p>
+              </div>
+
+              {/* VIP Packages Quick Option with Dec 31st promo */}
+              <div className="p-3.5 rounded-2xl bg-gold-500/10 border border-gold-500/40 text-left space-y-2.5 shadow-gold-glow">
                 <div className="flex items-center justify-between text-xs font-bold text-white">
                   <span className="flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-gold-400" /> Get Unlimited VIP Access
+                    <Sparkles className="w-3.5 h-3.5 text-gold-400" /> Unlimited VIP Streaming
                   </span>
-                  <span className="text-[10px] text-gold-400">1 USD ≈ 310 LKR</span>
+                  <span className="text-[10px] text-gold-300 bg-gold-500/20 border border-gold-500/40 px-2 py-0.5 rounded-full font-extrabold">
+                    50% Off Until Dec 31st
+                  </span>
                 </div>
                 <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div className="p-2 rounded-xl bg-black/60 border border-zinc-800">
+                  <div className="p-2 rounded-xl bg-black/70 border border-zinc-800">
                     <span className="block text-[10px] text-zinc-400">Monthly VIP</span>
-                    <span className="block font-black text-white font-mono">$4.99</span>
+                    <span className="block font-black text-white font-mono text-base">$4.99</span>
                     <span className="block text-[10px] text-gold-400 font-semibold font-mono">~Rs. 1,550 LKR</span>
                   </div>
-                  <div className="p-2 rounded-xl bg-black/60 border border-gold-500/40">
+                  <div className="relative p-2 rounded-xl bg-black/70 border-2 border-gold-500/80">
+                    <div className="absolute -top-2 right-2 px-1.5 py-0.2 bg-gold-gradient text-black text-[8px] font-black uppercase rounded">
+                      Best Value
+                    </div>
                     <span className="block text-[10px] text-gold-300 font-bold">Annual VIP</span>
-                    <span className="block font-black text-white font-mono">$39.99</span>
+                    <span className="block font-black text-gold-300 font-mono text-base">$39.99</span>
                     <span className="block text-[10px] text-gold-400 font-semibold font-mono">~Rs. 12,400 LKR</span>
                   </div>
                 </div>

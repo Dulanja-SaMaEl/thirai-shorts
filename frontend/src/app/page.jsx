@@ -13,6 +13,7 @@ import VotingModal from '../components/VotingModal';
 import VideoPlayerModal from '../components/VideoPlayerModal';
 import AuthWatchModal from '../components/AuthWatchModal';
 import TokenUnlockModal from '../components/TokenUnlockModal';
+import NetflixIntro from '../components/NetflixIntro';
 import { Film, TrendingUp, AlertCircle, Sparkles } from 'lucide-react';
 import api from '../lib/api';
 import { useAuth } from '../context/AuthContext';
@@ -109,6 +110,8 @@ export default function HomePage() {
 
   return (
     <div className="space-y-14">
+      {/* Netflix-Style Cinematic T+ Intro Splash (Sound-Ready) */}
+      <NetflixIntro />
       
       {/* 1. Viewer Token Balance Notification Banner */}
       <TokenBanner />

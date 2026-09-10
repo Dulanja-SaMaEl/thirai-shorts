@@ -85,11 +85,11 @@ export default function UserDashboardPage() {
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="text-2xl font-extrabold text-white">{user.full_name}</h1>
               <span className="px-2.5 py-0.5 rounded-full bg-gold-500/20 text-gold-300 border border-gold-500/40 text-[10px] font-bold uppercase tracking-wider">
-                {user.role === 'admin' ? 'Admin' : (user.role === 'judge' ? 'Jury Judge' : 'Audience Member')}
+                {user.role === 'admin' ? 'Admin' : (user.role === 'judge' ? 'Jury Judge' : (user.role === 'director' ? 'Film Submitter & Director' : 'Audience Member'))}
               </span>
               {user.subscription_status === 'active' ? (
                 <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-extrabold uppercase tracking-wider flex items-center gap-1 shadow-gold-glow">
-                  👑 {user.subscription_tier === 'yearly' ? 'Annual VIP Pass' : 'Monthly VIP Pass'}
+                  👑 {user.subscription_tier.includes('yearly') ? 'Annual VIP Pass' : 'Monthly VIP Pass'}
                 </span>
               ) : (
                 <span className="px-2.5 py-0.5 rounded-full bg-zinc-800 text-zinc-400 border border-zinc-700 text-[10px] font-semibold uppercase tracking-wider">

@@ -63,6 +63,9 @@ function LoginForm() {
     } else if (role === 'judge') {
       setEmailOrUsername('judge@thiraiplus.com');
       setPassword('Judge@123456');
+    } else if (role === 'director') {
+      setEmailOrUsername('director@thiraiplus.com');
+      setPassword('Director@123456');
     } else {
       setEmailOrUsername('viewer@thiraiplus.com');
       setPassword('Viewer@123456');
@@ -84,7 +87,7 @@ function LoginForm() {
           </div>
           <h2 className="text-2xl font-extrabold text-white tracking-tight">Thirai+ Portal Login</h2>
           <p className="text-xs text-zinc-400 max-w-xs mx-auto">
-            Common sign in for audience viewers, jury panel judges, and festival administrators.
+            Common sign in for Viewers, Filmmakers & Directors, Jury Members, and Admins.
           </p>
         </div>
 
@@ -96,7 +99,7 @@ function LoginForm() {
             </span>
             <span className="text-[10px] text-zinc-400 uppercase tracking-wider">Auto-route by role</span>
           </div>
-          <div className="grid grid-cols-3 gap-1.5">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
             <button
               type="button"
               onClick={() => fillDemoAccount('viewer')}
@@ -106,10 +109,17 @@ function LoginForm() {
             </button>
             <button
               type="button"
+              onClick={() => fillDemoAccount('director')}
+              className="py-1.5 px-2 bg-black/60 border border-gold-500/40 rounded-lg text-[11px] hover:bg-gold-500/20 text-gold-300 font-bold text-center transition-colors"
+            >
+              🎥 Director
+            </button>
+            <button
+              type="button"
               onClick={() => fillDemoAccount('judge')}
               className="py-1.5 px-2 bg-black/60 border border-gold-500/40 rounded-lg text-[11px] hover:bg-gold-500/20 text-gold-300 font-bold text-center transition-colors"
             >
-              🎬 Judge
+              ⚖️ Judge
             </button>
             <button
               type="button"
@@ -119,6 +129,11 @@ function LoginForm() {
               👑 Admin
             </button>
           </div>
+        </div>
+
+        {/* Submitter Note */}
+        <div className="px-3.5 py-2.5 rounded-xl bg-zinc-900/90 border border-zinc-800 text-[11px] text-zinc-400 leading-relaxed">
+          <strong className="text-gold-400">Film Submitters / Directors:</strong> Log in using the email provided during your film submission. Your filmmaker status and exclusive discount passes ($2.99/mo) will be recognized automatically.
         </div>
 
         {errorMsg && (

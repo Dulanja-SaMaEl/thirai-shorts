@@ -521,7 +521,7 @@ export default function UploadPage() {
 
                 <div className="pt-2 border-t border-zinc-850/80 flex flex-wrap items-center justify-between text-[11px] text-zinc-400">
                   <span>Official Submission Fee: <strong className="text-gold-400 font-bold">$4.99 USD</strong></span>
-                  <span>Viewer Membership (after 2 free films): <strong className="text-zinc-200 font-semibold">$9.99 USD</strong></span>
+                  <span>Viewer Membership (after 2 free films): <strong className="text-zinc-200 font-semibold">$4.99 USD</strong></span>
                 </div>
               </div>
 
@@ -546,14 +546,62 @@ export default function UploadPage() {
                   <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
                     Original Language <span className="text-gold-400">*</span>
                   </label>
-                  <input
-                    type="text"
+                  <select
                     required
                     value={originalLanguage}
                     onChange={(e) => setOriginalLanguage(e.target.value)}
-                    placeholder="e.g. Tamil, Sinhala, English"
                     className="w-full bg-black/80 border border-zinc-800 rounded-xl py-2.5 px-4 text-xs text-white focus:outline-none focus:border-gold-500"
-                  />
+                  >
+                    <optgroup label="Popular & Regional">
+                      <option value="Tamil">Tamil (தமிழ்)</option>
+                      <option value="Sinhala">Sinhala (සිංහල)</option>
+                      <option value="English">English</option>
+                      <option value="Hindi">Hindi (हिन्दी)</option>
+                      <option value="Telugu">Telugu (తెలుగు)</option>
+                      <option value="Malayalam">Malayalam (മലയാളം)</option>
+                      <option value="Kannada">Kannada (ಕನ್ನಡ)</option>
+                      <option value="Bengali">Bengali (বাংলা)</option>
+                      <option value="Marathi">Marathi (मराठी)</option>
+                      <option value="Urdu">Urdu (اردو)</option>
+                    </optgroup>
+                    <optgroup label="International Languages">
+                      <option value="Arabic">Arabic (العربية)</option>
+                      <option value="Chinese (Mandarin)">Chinese - Mandarin (中文)</option>
+                      <option value="Chinese (Cantonese)">Chinese - Cantonese (粵語)</option>
+                      <option value="Czech">Czech (Čeština)</option>
+                      <option value="Danish">Danish (Dansk)</option>
+                      <option value="Dutch">Dutch (Nederlands)</option>
+                      <option value="Finnish">Finnish (Suomi)</option>
+                      <option value="French">French (Français)</option>
+                      <option value="German">German (Deutsch)</option>
+                      <option value="Greek">Greek (Ελληνικά)</option>
+                      <option value="Hebrew">Hebrew (עברית)</option>
+                      <option value="Hungarian">Hungarian (Magyar)</option>
+                      <option value="Indonesian">Indonesian (Bahasa Indonesia)</option>
+                      <option value="Italian">Italian (Italiano)</option>
+                      <option value="Japanese">Japanese (日本語)</option>
+                      <option value="Korean">Korean (한국어)</option>
+                      <option value="Malay">Malay (Bahasa Melayu)</option>
+                      <option value="Norwegian">Norwegian (Norsk)</option>
+                      <option value="Persian (Farsi)">Persian / Farsi (فارسی)</option>
+                      <option value="Polish">Polish (Polski)</option>
+                      <option value="Portuguese">Portuguese (Português)</option>
+                      <option value="Romanian">Romanian (Română)</option>
+                      <option value="Russian">Russian (Русский)</option>
+                      <option value="Spanish">Spanish (Español)</option>
+                      <option value="Swahili">Swahili (Kiswahili)</option>
+                      <option value="Swedish">Swedish (Svenska)</option>
+                      <option value="Tagalog">Tagalog / Filipino</option>
+                      <option value="Thai">Thai (ไทย)</option>
+                      <option value="Turkish">Turkish (Türkçe)</option>
+                      <option value="Ukrainian">Ukrainian (Українська)</option>
+                      <option value="Vietnamese">Vietnamese (Tiếng Việt)</option>
+                    </optgroup>
+                    <optgroup label="Other">
+                      <option value="Silent Film">Silent Film (No Spoken Dialogue)</option>
+                      <option value="Other">Other / Indigenous Language</option>
+                    </optgroup>
+                  </select>
                 </div>
 
                 <div>
@@ -612,14 +660,18 @@ export default function UploadPage() {
                   <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
                     Year of Production <span className="text-gold-400">*</span>
                   </label>
-                  <input
-                    type="text"
+                  <select
                     required
                     value={yearOfProduction}
                     onChange={(e) => setYearOfProduction(e.target.value)}
-                    placeholder="2026"
                     className="w-full bg-black/80 border border-zinc-800 rounded-xl py-2.5 px-4 text-xs text-white focus:outline-none focus:border-gold-500"
-                  />
+                  >
+                    {Array.from({ length: 2026 - 2000 + 1 }, (_, i) => 2026 - i).map((yr) => (
+                      <option key={yr} value={yr.toString()}>
+                        {yr}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 <div>

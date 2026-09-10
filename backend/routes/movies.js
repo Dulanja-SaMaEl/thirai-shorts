@@ -267,6 +267,77 @@ router.get('/my/unlocked', requireAuth(), async (req, res) => {
 });
 
 /**
+ * @route GET /api/movies/my/is-submitter
+ * @desc Check if logged in user is a film submitter / director (qualifies for $2.99/mo filmmaker discount)
+ */
+router.get('/my/is-submitter', requireAuth(), async (req, res) => {
+  try {
+    const userEmail = (req.user.email || '').toLowerCase().trim();
+    const userRole = req.user.role;
+
+    // 1. Direct role check
+    if (userRole === 'director') {
+      return res.status(200).json({
+        success: true,
+        is_submitter: true,
+        email: userEmail,
+        discount_eligible: true
+      });
+    }
+
+    // 2. In-memory demo movies check
+    const demoFound = DEMO_MOVIES.find(m =>
+      (m.uploader_email && m.uploader_email.toLowerCase() === userEmail) ||
+      (m.director_email && m.director_email.toLowerCase() === userEmail) ||
+      (m.contact_email && m.contact_email.toLowerCase() === userEmail)
+    );
+
+    if (demoFound) {
+      return res.status(200).json({
+        success: true,
+        is_submitter: true,
+        email: userEmail,
+        film_title: demoFound.title,
+        discount_eligible: true
+      });
+    }
+
+    // 3. Supabase Database check across all film submissions
+    if (isSupabaseConfigured) {
+      try {
+        const { data: dbMovies } = await supabaseAdmin
+          .from('movies')
+          .select('id, title, director_name, status')
+          .or(`uploader_email.ilike.${userEmail},director_email.ilike.${userEmail},contact_email.ilike.${userEmail}`)
+          .limit(1);
+
+        if (dbMovies && dbMovies.length > 0) {
+          return res.status(200).json({
+            success: true,
+            is_submitter: true,
+            email: userEmail,
+            film_title: dbMovies[0].title,
+            discount_eligible: true
+          });
+        }
+      } catch (dbErr) {
+        console.warn('Supabase submitter check note:', dbErr.message);
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      is_submitter: false,
+      email: userEmail,
+      discount_eligible: false
+    });
+  } catch (error) {
+    console.error('Error checking submitter status:', error);
+    return res.status(500).json({ is_submitter: false, error: 'Server error' });
+  }
+});
+
+/**
  * @route POST /api/movies/:id/unlock
  * @desc Unlock movie using 1 viewing token
  */

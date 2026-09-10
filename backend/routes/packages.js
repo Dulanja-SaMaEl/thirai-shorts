@@ -37,6 +37,38 @@ export const PACKAGES = [
       'Grand Jury Choice community voting rights',
       'Save 33% compared to monthly pass'
     ]
+  },
+  {
+    id: 'submitter_monthly',
+    name: 'Filmmaker Submitter VIP (Monthly)',
+    price_usd: 2.99,
+    price_lkr_estimate: 930, // Approx. Rs. 930
+    billing_period: 'monthly',
+    badge: 'Exclusive Filmmaker Special',
+    is_submitter_only: true,
+    features: [
+      'Exclusive filmmaker discount ($2.99/month)',
+      'Unlimited short movie streaming (zero tokens deducted)',
+      'Instant access to all festival selections',
+      'Festival community jury voting privileges',
+      'Official Film Submitter profile badge'
+    ]
+  },
+  {
+    id: 'submitter_yearly',
+    name: 'Filmmaker Submitter VIP (Annual)',
+    price_usd: 29.99,
+    price_lkr_estimate: 9300, // Approx. Rs. 9,300
+    billing_period: 'yearly',
+    badge: 'Best Filmmaker Value • Save 50%',
+    is_submitter_only: true,
+    features: [
+      'Full 12-month unlimited movie streaming ($29.99/year)',
+      'Deepest festival discount for filmmakers',
+      'Priority access to Award Winner showcases',
+      'Grand Jury Choice community voting rights',
+      'Director statements & behind-the-scenes press kits'
+    ]
   }
 ];
 
@@ -61,7 +93,7 @@ router.get('/', async (req, res) => {
           price_usd: Number(p.price_usd),
           price_lkr_estimate: Number(p.estimated_price_lkr),
           billing_period: p.billing_cycle,
-          badge: p.plan_id === 'yearly' ? 'Best Value • Save 33%' : 'Popular',
+          badge: p.plan_id.includes('yearly') ? 'Best Value • Save 33%' : 'Popular',
           features: Array.isArray(p.features) ? p.features : []
         }));
       }
@@ -91,8 +123,9 @@ router.post('/subscribe', requireAuth(), async (req, res) => {
     const { package_id } = req.body;
     const userId = req.user.id;
 
-    if (!package_id || !['monthly', 'yearly'].includes(package_id)) {
-      return res.status(400).json({ error: 'Valid package_id (monthly or yearly) is required.' });
+    const allowedPlans = ['monthly', 'yearly', 'submitter_monthly', 'submitter_yearly'];
+    if (!package_id || !allowedPlans.includes(package_id)) {
+      return res.status(400).json({ error: 'Valid package_id is required.' });
     }
 
     const selectedPkg = PACKAGES.find(p => p.id === package_id);
@@ -102,7 +135,7 @@ router.post('/subscribe', requireAuth(), async (req, res) => {
     if (isSupabaseConfigured) {
       try {
         const expiresAt = new Date();
-        if (package_id === 'yearly') expiresAt.setFullYear(expiresAt.getFullYear() + 1);
+        if (package_id.includes('yearly')) expiresAt.setFullYear(expiresAt.getFullYear() + 1);
         else expiresAt.setMonth(expiresAt.getMonth() + 1);
 
         await supabaseAdmin.from('users').update({
