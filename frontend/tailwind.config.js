@@ -13,10 +13,16 @@ module.exports = {
         "surface-card": "#121216",
         "surface-border": "#22222A",
         gold: {
+          100: "#FEF9C3",
+          200: "#FEF08A",
+          300: "#FDE047",
           400: "#FACC15",
           500: "#D4AF37",
           600: "#CA8A04",
           700: "#A16207",
+          800: "#854D0E",
+          900: "#713F12",
+          950: "#422006",
           glow: "#FFD700"
         },
         amber: {

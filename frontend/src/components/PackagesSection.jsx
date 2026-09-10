@@ -116,7 +116,7 @@ export default function PackagesSection({ onSubscribed }) {
             </div>
 
             <h3 className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-tight leading-tight">
-              First 1–50 Members Get <span className="text-transparent bg-clip-text bg-gradient-to-r from-gold-200 via-gold-400 to-gold-500 underline decoration-gold-400 decoration-4">50% OFF</span> on Any VIP Pass
+              First 1–50 Members Get <span className="text-gold-400 underline decoration-gold-400 decoration-4">50% OFF</span> on Any VIP Pass
             </h3>
 
             {/* Prominent Dec 31 Deadline Highlight Badge */}
@@ -334,7 +334,7 @@ export default function PackagesSection({ onSubscribed }) {
                     <span className="text-base text-zinc-500 line-through font-mono">
                       ${pkg.originalUsd}
                     </span>
-                    <span className="text-4xl sm:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gold-200 via-gold-400 to-gold-500 font-mono">
+                    <span className="text-4xl sm:text-5xl font-black text-white font-mono drop-shadow-[0_2px_12px_rgba(250,204,21,0.4)]">
                       ${pkg.usdPrice}
                     </span>
                     <span className="text-xs text-zinc-400 font-semibold">{pkg.period}</span>
