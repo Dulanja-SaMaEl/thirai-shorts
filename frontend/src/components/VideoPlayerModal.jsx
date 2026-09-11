@@ -8,8 +8,13 @@ import {
 } from 'lucide-react';
 import api from '../lib/api';
 
-export default function VideoPlayerModal({ movie, onClose, onOpenVoteModal }) {
+export default function VideoPlayerModal({ movie, onClose, onOpenVoteModal, isTrailer = false, onWatchFullMovie }) {
   if (!movie) return null;
+
+  const isTrailerMode = isTrailer || Boolean(movie.isTrailer);
+  const activeVideoUrl = isTrailerMode
+    ? (movie.trailer_url || movie.video_url || '/videos/demo-film.mp4')
+    : (movie.video_url || movie.trailer_url || '/videos/demo-film.mp4');
 
   const [viewCount, setViewCount] = useState(movie.view_count || 1420);
   const [videoError, setVideoError] = useState(false);
@@ -62,7 +67,7 @@ export default function VideoPlayerModal({ movie, onClose, onOpenVoteModal }) {
     return null;
   };
 
-  const embedUrl = getEmbedUrl(movie.video_url);
+  const embedUrl = getEmbedUrl(activeVideoUrl);
 
   return (
     <div
@@ -76,15 +81,20 @@ export default function VideoPlayerModal({ movie, onClose, onOpenVoteModal }) {
         
         {/* Top Header Bar */}
         <div className="flex items-center justify-between px-5 py-3.5 bg-black/90 border-b border-zinc-800">
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2.5 flex-wrap">
             <span className="w-2.5 h-2.5 rounded-full bg-gold-400 animate-pulse" />
             <span className="text-xs font-black text-gold-400 uppercase tracking-widest">
-              Thirai+ Cinema Player
+              {isTrailerMode ? '🎬 Official Trailer (Free Preview)' : 'Thirai+ Cinema Player'}
             </span>
             <span className="hidden sm:inline-block text-[11px] text-zinc-500">•</span>
             <span className="hidden sm:inline-block text-xs font-bold text-zinc-300 truncate max-w-md">
               {movie.title}
             </span>
+            {isTrailerMode && (
+              <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 text-[10px] font-black uppercase tracking-wider">
+                ✓ Free (0 Tokens)
+              </span>
+            )}
           </div>
 
           <button
@@ -130,7 +140,7 @@ export default function VideoPlayerModal({ movie, onClose, onOpenVoteModal }) {
                   controls
                   autoPlay
                   playsInline
-                  src={movie.video_url || '/videos/demo-film.mp4'}
+                  src={activeVideoUrl || '/videos/demo-film.mp4'}
                   poster={movie.thumbnail_url || '/images/logo-wordmark.png'}
                   onError={() => setVideoError(true)}
                   onLoadedData={() => setVideoLoading(false)}
@@ -146,6 +156,31 @@ export default function VideoPlayerModal({ movie, onClose, onOpenVoteModal }) {
 
         {/* Film Details & Metadata Section */}
         <div className="p-6 md:p-8 space-y-6 max-h-[45vh] overflow-y-auto">
+
+          {/* Trailer Free Mode Callout Banner */}
+          {isTrailerMode && (
+            <div className="p-4 rounded-2xl bg-gradient-to-r from-gold-500/20 via-surface-card to-gold-500/10 border border-gold-500/50 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-gold-glow">
+              <div className="flex items-center gap-2.5">
+                <Sparkles className="w-5 h-5 text-gold-400 shrink-0" />
+                <div>
+                  <span className="text-xs font-black text-white block">
+                    You are watching the Free Official Trailer (0 Tokens Required)
+                  </span>
+                  <p className="text-[11px] text-zinc-300">
+                    Watch the full short film with high-bitrate cinema streaming using your pass or 1 token.
+                  </p>
+                </div>
+              </div>
+              {onWatchFullMovie && (
+                <button
+                  onClick={() => onWatchFullMovie(movie)}
+                  className="gold-btn px-4 py-2 rounded-xl text-xs font-extrabold uppercase tracking-wider shrink-0 shadow-gold-glow"
+                >
+                  Watch Full Film →
+                </button>
+              )}
+            </div>
+          )}
           
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div>

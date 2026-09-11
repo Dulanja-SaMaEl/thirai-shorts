@@ -12,6 +12,7 @@ const DEMO_MOVIES = [
     description: 'A breathtaking visual journey capturing winter landscapes, serene typography, and high-contrast cinematic atmosphere.',
     thumbnail_url: '/images/logo-wordmark.png',
     video_url: '/videos/demo-film.mp4',
+    trailer_url: '/videos/demo-film.mp4',
     attachments: [
       { name: 'Director Statement.pdf', url: '/videos/demo-film.mp4' },
       { name: 'Official Poster HD.png', url: '/images/logo-icon.png' }
@@ -79,6 +80,7 @@ const DEMO_MOVIES = [
     description: 'A poignant drama set along the sun-drenched shores of Jaffna, following an aging fisherman preserving timeless coastal folklore against modern tides.',
     thumbnail_url: 'https://images.unsplash.com/photo-1518173946687-a4c8a383392e?w=800',
     video_url: '/videos/demo-film.mp4',
+    trailer_url: '/videos/demo-film.mp4',
     attachments: [
       { name: 'Production Notes.pdf', url: '/videos/demo-film.mp4' }
     ],
@@ -312,12 +314,14 @@ router.get('/my/is-submitter', requireAuth(), async (req, res) => {
           .limit(1);
 
         if (dbMovies && dbMovies.length > 0) {
+          const isApproved = dbMovies[0].status === 'approved';
           return res.status(200).json({
             success: true,
             is_submitter: true,
+            is_approved: isApproved,
             email: userEmail,
             film_title: dbMovies[0].title,
-            discount_eligible: true
+            discount_eligible: isApproved
           });
         }
       } catch (dbErr) {
@@ -520,6 +524,7 @@ router.post('/', async (req, res) => {
       synopsis,
       thumbnail_url,
       video_url,
+      trailer_url,
       attachments,
       
       // Film Information
@@ -595,6 +600,7 @@ router.post('/', async (req, res) => {
       description: finalDescription,
       thumbnail_url,
       video_url,
+      trailer_url: trailer_url || null,
       attachments: Array.isArray(attachments) ? attachments : [],
       
       // Contact & Identification

@@ -97,45 +97,42 @@ export default function NetflixIntro({ onComplete }) {
             className="absolute w-64 h-64 md:w-80 md:h-80 rounded-full bg-gold-500/20 blur-3xl pointer-events-none"
           />
 
-          {/* Iconic "T+" Emblem */}
+          {/* Official T+ 3D Logo from User */}
           <motion.div
-            initial={{ scale: 0.2, opacity: 0, filter: "brightness(0.5) blur(10px)" }}
+            initial={{ scale: 0.4, opacity: 0, filter: "brightness(0.5) blur(10px)" }}
             animate={{
-              scale: [0.3, 1.2, 1],
+              scale: [0.5, 1.1, 1],
               opacity: [0, 1, 1],
-              filter: ["brightness(2) blur(10px)", "brightness(1.5) blur(0px)", "brightness(1) blur(0px)"]
+              filter: ["brightness(2) blur(8px)", "brightness(1.3) blur(0px)", "brightness(1) blur(0px)"]
             }}
-            transition={{ duration: 1.6, ease: [0.16, 1, 0.3, 1] }}
-            className="relative"
+            transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
+            className="relative flex flex-col items-center justify-center"
           >
-            <div className="relative flex items-center justify-center">
-              {/* T+ Monogram Badge */}
-              <div className="relative px-8 py-6 rounded-3xl bg-gradient-to-b from-zinc-900/90 to-black border-2 border-gold-400/80 shadow-[0_0_60px_rgba(234,179,8,0.5)] flex items-center justify-center">
-                <span className="text-7xl sm:text-9xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-gold-200 via-gold-400 to-gold-600 drop-shadow-[0_4px_25px_rgba(234,179,8,0.8)] font-sans">
-                  T<span className="text-gold-300 drop-shadow-[0_0_20px_rgba(255,255,255,0.8)]">+</span>
-                </span>
-              </div>
+            <div className="relative p-4 flex items-center justify-center">
+              <img
+                src="/images/logo-splash.png"
+                alt="Thirai+"
+                className="w-52 sm:w-64 md:w-72 h-auto object-contain drop-shadow-[0_0_45px_rgba(234,179,8,0.55)] select-none pointer-events-none"
+              />
             </div>
           </motion.div>
 
-          {/* Subtitle Brand Sweep: "THIRAI+ SHORTS" */}
+          {/* Official Tagline: Future of Cinema */}
           <motion.div
-            initial={{ opacity: 0, y: 30, letterSpacing: "0.2em" }}
-            animate={{ opacity: 1, y: 0, letterSpacing: "0.45em" }}
-            transition={{ delay: 0.6, duration: 1.2, ease: "easeOut" }}
-            className="mt-6 space-y-1"
+            initial={{ opacity: 0, y: 25, letterSpacing: "0.2em" }}
+            animate={{ opacity: 1, y: 0, letterSpacing: "0.35em" }}
+            transition={{ delay: 0.6, duration: 1.1, ease: "easeOut" }}
+            className="mt-4 space-y-2 text-center"
           >
-            <h1 className="text-lg sm:text-2xl font-black uppercase text-transparent bg-clip-text bg-gradient-to-r from-gold-100 via-gold-300 to-gold-500 tracking-[0.45em]">
-              THIRAI+ SHORTS
-            </h1>
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 0.8 }}
-              transition={{ delay: 1.1, duration: 0.8 }}
-              className="text-[10px] sm:text-xs font-semibold text-zinc-400 uppercase tracking-[0.3em]"
-            >
-              Short Film Festival & Cinema Hub
-            </motion.p>
+            <p className="text-xs sm:text-sm md:text-base font-extrabold uppercase tracking-[0.35em] text-transparent bg-clip-text bg-gradient-to-r from-gold-100 via-gold-400 to-gold-200 drop-shadow-[0_2px_12px_rgba(234,179,8,0.6)]">
+              Future of Cinema
+            </p>
+            <motion.div
+              initial={{ scaleX: 0, opacity: 0 }}
+              animate={{ scaleX: 1, opacity: 0.6 }}
+              transition={{ delay: 0.9, duration: 0.8 }}
+              className="w-32 h-[1px] bg-gradient-to-r from-transparent via-gold-400 to-transparent mx-auto"
+            />
           </motion.div>
         </div>
 

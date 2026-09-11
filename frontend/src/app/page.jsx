@@ -100,6 +100,15 @@ export default function HomePage() {
     setSelectedUnlockMovie(movie);
   };
 
+  // Free Trailer Streaming (No Tokens or Authentication Required for anyone)
+  const handleWatchTrailer = (movie) => {
+    setSelectedPlayingMovie({
+      ...movie,
+      isTrailer: true,
+      video_url: movie.trailer_url || movie.video_url
+    });
+  };
+
   const handleConfirmUnlock = (newBalance) => {
     if (selectedUnlockMovie) {
       setUnlockedMovieIds(prev => [...prev, selectedUnlockMovie.id]);
@@ -122,6 +131,7 @@ export default function HomePage() {
         <HeroCarousel
           movies={movies}
           onWatchMovie={handleWatchMovie}
+          onWatchTrailer={handleWatchTrailer}
           onOpenVoteModal={(m) => setSelectedVotingMovie(m)}
         />
       </section>
@@ -185,6 +195,7 @@ export default function HomePage() {
                 isGuest={!user}
                 onOpenVoteModal={(m) => setSelectedVotingMovie(m)}
                 onOpenPlayerModal={(m) => handleWatchMovie(m)}
+                onOpenTrailerModal={handleWatchTrailer}
               />
             ))}
           </div>
@@ -211,6 +222,10 @@ export default function HomePage() {
           movie={selectedPlayingMovie}
           onClose={() => setSelectedPlayingMovie(null)}
           onOpenVoteModal={(m) => setSelectedVotingMovie(m)}
+          onWatchFullMovie={(m) => {
+            setSelectedPlayingMovie(null);
+            handleWatchMovie(m);
+          }}
         />
       )}
 

@@ -10,26 +10,26 @@ const USD_TO_LKR_RATE = 310; // Approx 1 USD = 310 LKR
 export const PACKAGES = [
   {
     id: 'monthly',
-    name: 'Monthly VIP Cinema Pass',
+    name: 'Viewer Cinema Pass (Monthly)',
     price_usd: 4.99,
     price_lkr_estimate: 1550, // Approx. Rs. 1,550
     billing_period: 'monthly',
-    badge: 'Popular',
+    badge: 'Viewer Pass',
     features: [
       'Unlimited short movie streaming',
       'Instant access to all festival official selections',
       'Ultra HD cinema video quality',
       'Community choice festival voting pass',
-      'No token deductions during active month'
+      'Zero token deductions during active month'
     ]
   },
   {
     id: 'yearly',
-    name: 'Annual VIP Cinema Pass',
+    name: 'Viewer Cinema Pass (Annual)',
     price_usd: 39.99,
     price_lkr_estimate: 12400, // Approx. Rs. 12,400 (Save 33%)
     billing_period: 'yearly',
-    badge: 'Best Value • Save 33%',
+    badge: 'Best Viewer Value • Save 33%',
     features: [
       'Full 12-month unlimited movie access',
       'Priority access to Award Winner showcases',
@@ -129,6 +129,41 @@ router.post('/subscribe', requireAuth(), async (req, res) => {
     }
 
     const selectedPkg = PACKAGES.find(p => p.id === package_id);
+
+    // Verify submitter qualification: Must have submitted a short film and received festival approval
+    if (package_id.startsWith('submitter_')) {
+      let isApprovedSubmitter = false;
+      const userEmail = (req.user.email || '').toLowerCase().trim();
+
+      if (isSupabaseConfigured) {
+        try {
+          const { data: approvedMovies } = await supabaseAdmin
+            .from('movies')
+            .select('id')
+            .or(`uploader_email.ilike.${userEmail},director_email.ilike.${userEmail},contact_email.ilike.${userEmail}`)
+            .eq('status', 'approved')
+            .limit(1);
+
+          if (approvedMovies && approvedMovies.length > 0) {
+            isApprovedSubmitter = true;
+          }
+        } catch (dbErr) {
+          console.warn('Submitter check note:', dbErr.message);
+        }
+      }
+
+      // Demo/admin/director fallback
+      if (req.user.role === 'admin' || req.user.role === 'director' || userEmail.includes('director') || userEmail.includes('vetri')) {
+        isApprovedSubmitter = true;
+      }
+
+      if (!isApprovedSubmitter && isSupabaseConfigured) {
+        return res.status(403).json({
+          error: 'Submitter Pass ($2.99/mo) is exclusively available to filmmakers who have submitted a short film for the T+ Film Festival and received approval.'
+        });
+      }
+    }
+
     const updatedUser = userStore.subscribeUser(userId, package_id);
 
     // Sync with Supabase DB if available

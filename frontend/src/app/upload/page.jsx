@@ -63,6 +63,8 @@ export default function UploadPage() {
   const [thumbnailFile, setThumbnailFile] = useState(null);
   const [directorPhotoFile, setDirectorPhotoFile] = useState(null);
   const [videoFile, setVideoFile] = useState(null);
+  const [trailerFile, setTrailerFile] = useState(null);
+  const [trailerUrlInput, setTrailerUrlInput] = useState('');
   const [attachmentFile, setAttachmentFile] = useState(null);
 
   // Legal Declaration
@@ -237,8 +239,15 @@ export default function UploadPage() {
       setUploadStatusText('Uploading Cinema Video File directly to Cloudflare R2...');
       const videoBase = directorPhotoFile ? 35 : 20;
       const videoUrl = await uploadFileToR2(videoFile, 'video', (pct) => {
-        setUploadProgress(videoBase + Math.round(pct * 0.55));
+        setUploadProgress(videoBase + Math.round(pct * 0.50));
       });
+
+      // Step 2.5: Upload Trailer Video to R2 if provided (Optional)
+      let trailerUrl = trailerUrlInput.trim() || null;
+      if (trailerFile) {
+        setUploadStatusText('Uploading Film Trailer (Optional)...');
+        trailerUrl = await uploadFileToR2(trailerFile, 'trailer', () => {});
+      }
 
       // Step 3: Upload Optional Attachment if provided
       let attachmentsList = [];
@@ -267,6 +276,7 @@ export default function UploadPage() {
         synopsis: synopsis.trim(),
         thumbnail_url: thumbnailUrl,
         video_url: videoUrl,
+        trailer_url: trailerUrl,
         attachments: attachmentsList,
 
         // Film Information
@@ -1243,6 +1253,49 @@ export default function UploadPage() {
                         {videoFile ? `${videoFile.name} (${(videoFile.size / (1024 * 1024)).toFixed(1)} MB)` : 'Click or Drag Film Video File'}
                       </span>
                       <span className="text-[10px] text-zinc-500 mt-0.5">Direct Cloudflare R2 Presigned Cloud Upload</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Trailer Video (Optional) */}
+                <div className="p-4 rounded-2xl bg-black/60 border border-gold-500/30 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-white flex items-center gap-2">
+                      <Film className="w-4 h-4 text-gold-400" />
+                      Trailer Video (Optional)
+                    </label>
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold">
+                      Free for All to Watch
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-zinc-400 leading-relaxed">
+                    If available, add a trailer or teaser for your short film. It is <strong>not mandatory</strong>, but when provided, <strong>anyone can watch your trailer completely free without costing any tokens</strong>.
+                  </p>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                    {/* File upload option */}
+                    <div className="relative border border-dashed border-zinc-700 hover:border-gold-500/50 rounded-xl p-3 bg-zinc-950/80 text-center transition-colors">
+                      <input
+                        type="file"
+                        accept="video/mp4,video/webm,video/quicktime"
+                        onChange={(e) => setTrailerFile(e.target.files[0] || null)}
+                        className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                      />
+                      <span className="text-xs text-zinc-300 font-semibold block truncate">
+                        {trailerFile ? `✓ ${trailerFile.name}` : '📁 Upload Trailer File'}
+                      </span>
+                      <span className="text-[9px] text-zinc-500 block mt-0.5">MP4, WebM, or MOV</span>
+                    </div>
+
+                    {/* Or URL link option */}
+                    <div>
+                      <input
+                        type="url"
+                        value={trailerUrlInput}
+                        onChange={(e) => setTrailerUrlInput(e.target.value)}
+                        placeholder="Or paste YouTube / Vimeo / Direct URL"
+                        className="w-full h-full bg-zinc-950/80 border border-zinc-700 rounded-xl py-2.5 px-3 text-xs text-white focus:outline-none focus:border-gold-500"
+                      />
                     </div>
                   </div>
                 </div>

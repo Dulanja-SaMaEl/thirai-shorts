@@ -69,7 +69,7 @@ const FALLBACK_HERO_MOVIES = [
   }
 ];
 
-export default function HeroCarousel({ movies = [], onWatchMovie, onOpenVoteModal }) {
+export default function HeroCarousel({ movies = [], onWatchMovie, onOpenVoteModal, onWatchTrailer }) {
   // Use approved movies up to 5, fallback to curated list if none available
   const displayMovies = movies && movies.length > 0
     ? movies.filter(m => m.status === 'approved').slice(0, 5)
@@ -171,10 +171,20 @@ export default function HeroCarousel({ movies = [], onWatchMovie, onOpenVoteModa
             <Play className="w-4 h-4 fill-black" /> Watch Short Film
           </button>
 
+          {onWatchTrailer && (
+            <button
+              onClick={() => onWatchTrailer(currentMovie)}
+              className="px-5 py-3 rounded-2xl bg-zinc-900/90 hover:bg-zinc-800 border border-gold-500/50 hover:border-gold-400 text-gold-300 hover:text-white text-xs sm:text-sm font-black flex items-center gap-2 transition-all shadow-gold-glow backdrop-blur-md"
+              title="Watch Trailer completely free (0 Tokens)"
+            >
+              <Film className="w-4 h-4 text-gold-400" /> Watch Free Trailer
+            </button>
+          )}
+
           {onOpenVoteModal && (
             <button
               onClick={() => onOpenVoteModal(currentMovie)}
-              className="px-5 py-3 rounded-2xl bg-black/70 hover:bg-black border border-gold-500/40 hover:border-gold-400 text-gold-300 hover:text-white text-xs sm:text-sm font-extrabold flex items-center gap-2 transition-all backdrop-blur-md"
+              className="px-5 py-3 rounded-2xl bg-black/70 hover:bg-black border border-zinc-700 hover:border-gold-400 text-zinc-300 hover:text-white text-xs sm:text-sm font-extrabold flex items-center gap-2 transition-all backdrop-blur-md"
             >
               <Star className="w-4 h-4 text-gold-400" /> Public Vote
             </button>

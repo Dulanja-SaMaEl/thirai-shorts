@@ -12,7 +12,8 @@ import {
   ChevronDown,
   Sparkles,
   ArrowLeft,
-  CheckCircle2
+  CheckCircle2,
+  Film
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -56,11 +57,18 @@ export default function FAQPage() {
       highlight: "Premiere: January 16, 2027"
     },
     {
-      category: "Audience Passes & Tokens",
+      category: "Audience & Submitter Passes",
       icon: CreditCard,
-      question: "What are Viewer Tokens and VIP Audience Passes?",
-      answer: "Every registered viewer receives 2 free tokens upon sign-up to vote on short films. The Early Bird VIP Pass ($2.99) and the Annual Festival VIP Pass ($39.99) grant unlimited cinema streaming, 4K HDR playback, and 50 community voting tokens to rate official selections.",
-      highlight: "Early Bird VIP Pass: $2.99 / Annual VIP: $39.99"
+      question: "What passes are available for viewers and filmmakers?",
+      answer: "The Viewer Pass is $4.99 monthly for unlimited streaming of all festival short films and voting rights. If you have submitted your short film for the T+ Film Festival and got approved, you gain access to the Submitter Pass at just $2.99 monthly to stream unlimited movies and vote.",
+      highlight: "Viewer Pass: $4.99/mo • Submitter Pass: $2.99/mo (Approved Filmmakers)"
+    },
+    {
+      category: "Trailers & Free Streaming",
+      icon: Film,
+      question: "Can anyone watch movie trailers without costing tokens?",
+      answer: "Yes! Trailers can be watched by anyone completely free without costing any viewing tokens or requiring a subscription. Directors can optionally add a trailer when submitting their film.",
+      highlight: "Anyone can watch trailers for movies without costing any tokens."
     },
     {
       category: "Jury & Rating System",

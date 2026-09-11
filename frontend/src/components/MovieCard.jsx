@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from 'react';
-import { Eye, Star, Clock, MessageSquare, ExternalLink, ThumbsUp, Lock, Coins } from 'lucide-react';
+import { Eye, Star, Clock, MessageSquare, ExternalLink, ThumbsUp, Lock, Coins, Film, Play } from 'lucide-react';
 
-export default function MovieCard({ movie, isUnlocked = false, isGuest = true, onOpenVoteModal, onOpenPlayerModal }) {
+export default function MovieCard({ movie, isUnlocked = false, isGuest = true, onOpenVoteModal, onOpenPlayerModal, onOpenTrailerModal }) {
   const [showReviewsModal, setShowReviewsModal] = useState(false);
 
   const isPending = movie.status === 'pending';
@@ -135,39 +135,58 @@ export default function MovieCard({ movie, isUnlocked = false, isGuest = true, o
               )}
             </div>
 
-            {/* Actions: Watch & Vote */}
-            <div className="flex items-center gap-2">
+            {/* Actions: Watch, Trailer & Rate */}
+            <div className="flex items-center gap-1.5 pt-1">
               <button
                 onClick={() => onOpenPlayerModal && onOpenPlayerModal(movie)}
-                className={`flex-1 py-2 px-3 rounded-lg font-extrabold text-xs text-center flex items-center justify-center gap-1.5 shadow-gold-glow transition-all ${
+                className={`flex-1 py-2 px-2.5 rounded-xl font-extrabold text-xs text-center flex items-center justify-center gap-1 shadow-gold-glow transition-all ${
                   isUnlocked
                     ? 'bg-gold-gradient text-black hover:opacity-90'
                     : isGuest
                       ? 'bg-zinc-900 border border-gold-500/40 text-gold-300 hover:bg-gold-500/20'
                       : 'bg-gold-gradient text-black hover:opacity-90'
                 }`}
+                title="Stream Full Short Film"
               >
                 {isUnlocked ? (
                   <>
-                    <ExternalLink className="w-3.5 h-3.5" /> Watch Stream
+                    <ExternalLink className="w-3.5 h-3.5" /> Watch Film
                   </>
                 ) : isGuest ? (
                   <>
-                    <Lock className="w-3.5 h-3.5 text-gold-400" /> Sign In to Watch
+                    <Lock className="w-3.5 h-3.5 text-gold-400" /> Watch Film
                   </>
                 ) : (
                   <>
-                    <Coins className="w-3.5 h-3.5 text-black" /> Unlock & Watch (1 Token)
+                    <Coins className="w-3.5 h-3.5 text-black" /> Watch (1 Token)
                   </>
                 )}
+              </button>
+
+              {/* Free Trailer Button (0 Tokens for Anyone) */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (onOpenTrailerModal) {
+                    onOpenTrailerModal(movie);
+                  } else if (onOpenPlayerModal) {
+                    onOpenPlayerModal({ ...movie, isTrailer: true });
+                  }
+                }}
+                className="py-2 px-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-gold-500/40 text-gold-300 hover:text-white text-xs font-bold flex items-center gap-1 transition-colors shrink-0"
+                title="Watch Movie Trailer completely free (0 Tokens)"
+              >
+                <Film className="w-3.5 h-3.5 text-gold-400" />
+                <span>Trailer</span>
               </button>
 
               {!isPending && (
                 <button
                   onClick={() => onOpenVoteModal(movie)}
-                  className="py-2 px-3 rounded-lg bg-black/60 border border-gold-500/40 hover:bg-gold-500/20 text-gold-300 text-xs font-bold flex items-center gap-1 transition-colors"
+                  className="py-2 px-2.5 rounded-xl bg-black/60 border border-zinc-700 hover:border-gold-500/40 text-zinc-300 hover:text-gold-300 text-xs font-bold flex items-center gap-1 transition-colors shrink-0"
+                  title="Rate Film"
                 >
-                  <ThumbsUp className="w-3.5 h-3.5" /> Rate Film
+                  <ThumbsUp className="w-3.5 h-3.5" />
                 </button>
               )}
             </div>
