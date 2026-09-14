@@ -6,7 +6,8 @@ import Link from 'next/link';
 import {
   Shield, Eye, Star, DollarSign, Film, UserPlus, Clock, CheckCircle2,
   XCircle, AlertTriangle, BarChart3, Trophy, LogIn, Play, FileText,
-  Users, Globe, X, Camera, ShieldCheck, PenTool, Calendar, Sparkles, RefreshCw, Zap
+  Users, Globe, X, Camera, ShieldCheck, PenTool, Calendar, Sparkles, RefreshCw, Zap,
+  Plus, Trash2, Edit3, ExternalLink
 } from 'lucide-react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import api from '../../lib/api';
@@ -61,6 +62,24 @@ export default function AdminPanelPage() {
   const [awardCitation, setAwardCitation] = useState('');
   const [awardsLoading, setAwardsLoading] = useState(false);
 
+  // Festival Sponsors Management State
+  const [sponsorsList, setSponsorsList] = useState([]);
+  const [sponsorsLoading, setSponsorsLoading] = useState(false);
+  const [sponsorForm, setSponsorForm] = useState({
+    id: null,
+    name: '',
+    product: '',
+    tier: 'headline',
+    role: '',
+    category: '',
+    tag: '',
+    description: '',
+    website_url: '',
+    logo_url: ''
+  });
+  const [sponsorEditMode, setSponsorEditMode] = useState(false);
+  const [sponsorMsg, setSponsorMsg] = useState({ type: '', text: '' });
+
   useEffect(() => {
     if (user && user.role === 'admin') {
       fetchAdminData();
@@ -104,11 +123,12 @@ export default function AdminPanelPage() {
     setLoading(true);
     try {
       // Fetch all admin resources concurrently in parallel
-      const [analyticsRes, moviesRes, timerRes, awardsRes] = await Promise.allSettled([
+      const [analyticsRes, moviesRes, timerRes, awardsRes, sponsorsRes] = await Promise.allSettled([
         api.get('/admin/dashboard'),
         api.get('/movies?status=all'),
         api.get('/admin/community-rating-timer'),
-        api.get('/awards')
+        api.get('/awards'),
+        api.get('/sponsors')
       ]);
 
       // 1. Process Analytics
@@ -148,11 +168,139 @@ export default function AdminPanelPage() {
         setAwardsList(awardsRes.value.data.awards || []);
       }
 
+      // 5. Process Sponsors
+      if (sponsorsRes.status === 'fulfilled' && sponsorsRes.value?.data?.success) {
+        setSponsorsList(sponsorsRes.value.data.sponsors || []);
+      }
+
     } catch (err) {
       console.error('Error loading admin data:', err);
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchSponsors = async () => {
+    setSponsorsLoading(true);
+    try {
+      const res = await api.get('/sponsors');
+      if (res.data?.success && Array.isArray(res.data.sponsors)) {
+        setSponsorsList(res.data.sponsors);
+      }
+    } catch (e) {
+      console.warn('Error fetching sponsors in admin:', e);
+    } finally {
+      setSponsorsLoading(false);
+    }
+  };
+
+  const handleSaveSponsor = async (e) => {
+    e.preventDefault();
+    setSponsorMsg({ type: '', text: '' });
+    setSponsorsLoading(true);
+
+    try {
+      if (sponsorEditMode && sponsorForm.id) {
+        const res = await api.put(`/sponsors/${sponsorForm.id}`, sponsorForm);
+        if (res.data?.success) {
+          setSponsorMsg({ type: 'success', text: `Sponsor "${sponsorForm.name}" updated successfully!` });
+          setActionNotification(`Sponsor "${sponsorForm.name}" updated successfully.`);
+          setTimeout(() => setActionNotification(''), 4000);
+          fetchSponsors();
+          resetSponsorForm();
+        }
+      } else {
+        const res = await api.post('/sponsors', sponsorForm);
+        if (res.data?.success) {
+          setSponsorMsg({ type: 'success', text: `Sponsor "${sponsorForm.name}" added successfully!` });
+          setActionNotification(`✨ Sponsor "${sponsorForm.name}" added to festival partners!`);
+          setTimeout(() => setActionNotification(''), 4000);
+          fetchSponsors();
+          resetSponsorForm();
+        }
+      }
+    } catch (err) {
+      setSponsorMsg({ type: 'error', text: err.response?.data?.error || 'Failed to save sponsor.' });
+    } finally {
+      setSponsorsLoading(false);
+    }
+  };
+
+  const handleDeleteSponsor = async (id, name) => {
+    if (!confirm(`Are you sure you want to delete sponsor "${name}"? It will be removed from the homepage.`)) return;
+    try {
+      const res = await api.delete(`/sponsors/${id}`);
+      if (res.data?.success) {
+        setSponsorsList(prev => prev.filter(s => s.id !== id));
+        setActionNotification(`Sponsor "${name}" removed from homepage.`);
+        setTimeout(() => setActionNotification(''), 4000);
+      }
+    } catch (err) {
+      alert('Failed to delete sponsor.');
+    }
+  };
+
+  const handleToggleSponsorActive = async (sponsor) => {
+    try {
+      const res = await api.put(`/sponsors/${sponsor.id}`, {
+        is_active: !sponsor.is_active
+      });
+      if (res.data?.success) {
+        setSponsorsList(prev => prev.map(s => s.id === sponsor.id ? { ...s, is_active: !s.is_active } : s));
+        setActionNotification(`Sponsor "${sponsor.name}" is now ${!sponsor.is_active ? 'Active' : 'Hidden'}.`);
+        setTimeout(() => setActionNotification(''), 4000);
+      }
+    } catch (err) {
+      alert('Failed to toggle sponsor status.');
+    }
+  };
+
+  const handleResetSponsors = async () => {
+    if (!confirm('Reset sponsors list to the official default partners?')) return;
+    try {
+      const res = await api.post('/sponsors/reset');
+      if (res.data?.success) {
+        setSponsorsList(res.data.sponsors);
+        setActionNotification('Sponsors reset to default festival partners.');
+        setTimeout(() => setActionNotification(''), 4000);
+      }
+    } catch (err) {
+      alert('Failed to reset sponsors.');
+    }
+  };
+
+  const resetSponsorForm = () => {
+    setSponsorForm({
+      id: null,
+      name: '',
+      product: '',
+      tier: 'headline',
+      role: '',
+      category: '',
+      tag: '',
+      description: '',
+      website_url: '',
+      logo_url: ''
+    });
+    setSponsorEditMode(false);
+  };
+
+  const startEditSponsor = (s) => {
+    setSponsorForm({
+      id: s.id,
+      name: s.name || '',
+      product: s.product || '',
+      tier: s.tier || 'headline',
+      role: s.role || '',
+      category: s.category || '',
+      tag: s.tag || '',
+      description: s.description || '',
+      website_url: s.website_url || '',
+      logo_url: s.logo_url || ''
+    });
+    setSponsorEditMode(true);
+    const element = document.getElementById('sponsor-form-card');
+    if (element) element.scrollIntoView({ behavior: 'smooth' });
   };
 
   const handleSelectMovieForAward = (movie, defaultCategory = null) => {
@@ -379,10 +527,11 @@ export default function AdminPanelPage() {
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex items-center gap-2 bg-black/60 border border-zinc-800 p-1.5 rounded-2xl">
+        <div className="flex items-center gap-2 bg-black/60 border border-zinc-800 p-1.5 rounded-2xl flex-wrap">
           {[
             { id: 'moderation', label: 'Moderation Queue', icon: Film },
             { id: 'awards', label: 'Awards & Laurels (22)', icon: Trophy },
+            { id: 'sponsors', label: 'Sponsors & Partners', icon: Sparkles },
             { id: 'analytics', label: 'Analytics & Revenue', icon: BarChart3 },
             { id: 'judges', label: 'Register Judges', icon: UserPlus },
             { id: 'timer', label: 'Community Event', icon: Clock },
@@ -1448,6 +1597,418 @@ export default function AdminPanelPage() {
           </form>
         </div>
       )}
+
+      {/* Tab Content: Sponsors & Brand Partners */}
+      {activeTab === 'sponsors' && (
+        <div className="space-y-8 animate-fade-in">
+          
+          {/* Header & Metrics */}
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-surface-card border border-gold-500/30 rounded-3xl p-6 glass-panel">
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gold-500/15 border border-gold-400/40 text-gold-300 text-xs font-mono font-bold">
+                <Sparkles className="w-3.5 h-3.5 text-gold-400" /> HOMEPAGE SPONSORS ENGINE
+              </div>
+              <h2 className="text-xl sm:text-2xl font-black text-white mt-1">Festival Sponsors & Brand Partnerships</h2>
+              <p className="text-xs text-zinc-400 mt-1">
+                Add and manage official sponsors, tech infrastructure partners, and cultural associates displayed on the homepage.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleResetSponsors}
+                type="button"
+                className="px-4 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-700 text-xs font-bold transition-all flex items-center gap-1.5"
+                title="Reset to default official partners"
+              >
+                <RefreshCw className="w-3.5 h-3.5" /> Reset to Defaults
+              </button>
+              <button
+                onClick={fetchSponsors}
+                type="button"
+                className="px-4 py-2 rounded-xl bg-gold-500 hover:bg-gold-400 text-black text-xs font-bold transition-all flex items-center gap-1.5 shadow-gold-glow"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${sponsorsLoading ? 'animate-spin' : ''}`} /> Refresh
+              </button>
+            </div>
+          </div>
+
+          {/* Quick Metrics */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="bg-surface-card border border-zinc-800 rounded-2xl p-4 flex items-center justify-between">
+              <div>
+                <span className="text-[11px] text-zinc-400 uppercase tracking-wider font-bold">Total Partners</span>
+                <span className="text-2xl font-black text-white font-mono block mt-0.5">{sponsorsList.length}</span>
+              </div>
+              <Sparkles className="w-6 h-6 text-gold-400 opacity-80" />
+            </div>
+            <div className="bg-surface-card border border-zinc-800 rounded-2xl p-4 flex items-center justify-between">
+              <div>
+                <span className="text-[11px] text-zinc-400 uppercase tracking-wider font-bold">Headline Tier</span>
+                <span className="text-2xl font-black text-amber-400 font-mono block mt-0.5">
+                  {sponsorsList.filter(s => s.tier === 'headline').length}
+                </span>
+              </div>
+              <Award className="w-6 h-6 text-amber-400 opacity-80" />
+            </div>
+            <div className="bg-surface-card border border-zinc-800 rounded-2xl p-4 flex items-center justify-between">
+              <div>
+                <span className="text-[11px] text-zinc-400 uppercase tracking-wider font-bold">Guild Associates</span>
+                <span className="text-2xl font-black text-blue-400 font-mono block mt-0.5">
+                  {sponsorsList.filter(s => s.tier === 'guild').length}
+                </span>
+              </div>
+              <Users className="w-6 h-6 text-blue-400 opacity-80" />
+            </div>
+          </div>
+
+          {/* Add / Edit Sponsor Form Card */}
+          <div id="sponsor-form-card" className="bg-surface-card border border-gold-500/40 rounded-3xl p-6 sm:p-8 space-y-6 glass-panel">
+            <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-gold-500/10 border border-gold-500/30 flex items-center justify-center text-gold-400">
+                  {sponsorEditMode ? <Edit3 className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white">
+                    {sponsorEditMode ? `Edit Sponsor: ${sponsorForm.name}` : 'Add New Festival Sponsor / Partner'}
+                  </h3>
+                  <p className="text-xs text-zinc-400">
+                    {sponsorEditMode
+                      ? 'Update partner branding, role title, and web placement.'
+                      : 'Create a new partner card to appear on the homepage sponsor section.'}
+                  </p>
+                </div>
+              </div>
+
+              {sponsorEditMode && (
+                <button
+                  type="button"
+                  onClick={resetSponsorForm}
+                  className="px-3 py-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-zinc-300"
+                >
+                  Cancel Edit
+                </button>
+              )}
+            </div>
+
+            {sponsorMsg.text && (
+              <div className={`p-4 rounded-xl text-xs font-bold flex items-center gap-2 ${
+                sponsorMsg.type === 'success'
+                  ? 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-300'
+                  : 'bg-rose-500/20 border border-rose-500/40 text-rose-300'
+              }`}>
+                {sponsorMsg.type === 'success' ? <CheckCircle2 className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
+                <span>{sponsorMsg.text}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleSaveSponsor} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
+                    Sponsor / Brand Name <span className="text-gold-400">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={sponsorForm.name}
+                    onChange={(e) => setSponsorForm({ ...sponsorForm, name: e.target.value })}
+                    placeholder="e.g. Dolby, Canon, Sri Lanka Telecom"
+                    className="w-full bg-black/80 border border-zinc-800 rounded-xl py-2.5 px-4 text-xs text-white focus:outline-none focus:border-gold-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
+                    Product / Subtitle (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={sponsorForm.product}
+                    onChange={(e) => setSponsorForm({ ...sponsorForm, product: e.target.value })}
+                    placeholder="e.g. Vision • Atmos, Cinema EOS"
+                    className="w-full bg-black/80 border border-zinc-800 rounded-xl py-2.5 px-4 text-xs text-white focus:outline-none focus:border-gold-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
+                    Partnership Tier <span className="text-gold-400">*</span>
+                  </label>
+                  <select
+                    value={sponsorForm.tier}
+                    onChange={(e) => setSponsorForm({ ...sponsorForm, tier: e.target.value })}
+                    className="w-full bg-black/80 border border-zinc-800 rounded-xl py-2.5 px-4 text-xs text-white focus:outline-none focus:border-gold-500"
+                  >
+                    <option value="headline">Headline Tier (Featured Card)</option>
+                    <option value="guild">Guild & Cultural Associate (Compact Badge)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
+                    Partnership Role Title <span className="text-gold-400">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={sponsorForm.role}
+                    onChange={(e) => setSponsorForm({ ...sponsorForm, role: e.target.value })}
+                    placeholder="e.g. Official Cinema Audio Partner"
+                    className="w-full bg-black/80 border border-zinc-800 rounded-xl py-2.5 px-4 text-xs text-white focus:outline-none focus:border-gold-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
+                    Category Tag
+                  </label>
+                  <input
+                    type="text"
+                    value={sponsorForm.category}
+                    onChange={(e) => setSponsorForm({ ...sponsorForm, category: e.target.value })}
+                    placeholder="e.g. Cloud & Media, Audio Tech, Camera Guild"
+                    className="w-full bg-black/80 border border-zinc-800 rounded-xl py-2.5 px-4 text-xs text-white focus:outline-none focus:border-gold-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
+                    Pill Badge Label
+                  </label>
+                  <input
+                    type="text"
+                    value={sponsorForm.tag}
+                    onChange={(e) => setSponsorForm({ ...sponsorForm, tag: e.target.value })}
+                    placeholder="e.g. Global Edge Network, Studio Sound"
+                    className="w-full bg-black/80 border border-zinc-800 rounded-xl py-2.5 px-4 text-xs text-white focus:outline-none focus:border-gold-500"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
+                    Official Website URL (Optional)
+                  </label>
+                  <input
+                    type="url"
+                    value={sponsorForm.website_url}
+                    onChange={(e) => setSponsorForm({ ...sponsorForm, website_url: e.target.value })}
+                    placeholder="https://www.example.com"
+                    className="w-full bg-black/80 border border-zinc-800 rounded-xl py-2.5 px-4 text-xs text-white focus:outline-none focus:border-gold-500 font-mono"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
+                    Logo Image URL (Optional)
+                  </label>
+                  <input
+                    type="url"
+                    value={sponsorForm.logo_url}
+                    onChange={(e) => setSponsorForm({ ...sponsorForm, logo_url: e.target.value })}
+                    placeholder="https://example.com/logo.png"
+                    className="w-full bg-black/80 border border-zinc-800 rounded-xl py-2.5 px-4 text-xs text-white focus:outline-none focus:border-gold-500 font-mono"
+                  />
+                  {sponsorForm.logo_url && (
+                    <div className="mt-2 flex items-center gap-2 p-2 bg-black/60 rounded-lg border border-zinc-850">
+                      <span className="text-[10px] text-zinc-500">Preview:</span>
+                      <img
+                        src={sponsorForm.logo_url}
+                        alt="Preview"
+                        className="h-6 max-w-[120px] object-contain"
+                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
+                  Description / Contribution Note (Featured on Card)
+                </label>
+                <textarea
+                  rows={2}
+                  value={sponsorForm.description}
+                  onChange={(e) => setSponsorForm({ ...sponsorForm, description: e.target.value })}
+                  placeholder="Describe how this partner supports the festival and independent short filmmakers..."
+                  className="w-full bg-black/80 border border-zinc-800 rounded-xl py-2.5 px-4 text-xs text-white focus:outline-none focus:border-gold-500"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-2">
+                {sponsorEditMode && (
+                  <button
+                    type="button"
+                    onClick={resetSponsorForm}
+                    className="px-5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-xs font-bold text-zinc-300 hover:text-white"
+                  >
+                    Cancel
+                  </button>
+                )}
+                <button
+                  type="submit"
+                  disabled={sponsorsLoading}
+                  className="gold-btn py-2.5 px-6 rounded-xl text-xs font-bold uppercase tracking-wider shadow-gold-glow flex items-center gap-2"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  {sponsorEditMode ? 'Update Sponsor Details' : 'Publish Sponsor to Homepage'}
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {/* Current Sponsors Roster */}
+          <div className="space-y-6">
+            
+            {/* Headline Tier Sponsors */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
+                <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                  <Award className="w-4 h-4 text-gold-400" /> Headline Tier Sponsors ({sponsorsList.filter(s => s.tier === 'headline').length})
+                </h3>
+                <span className="text-[10px] text-zinc-500">Displayed in main featured 4-column cards</span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {sponsorsList.filter(s => s.tier === 'headline').map((s) => (
+                  <div
+                    key={s.id}
+                    className="bg-surface-card border border-zinc-800 hover:border-gold-500/40 rounded-2xl p-4 flex flex-col justify-between gap-3 transition-colors"
+                  >
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2.5">
+                          {s.logo_url ? (
+                            <img src={s.logo_url} alt={s.name} className="h-7 w-auto object-contain max-w-[80px]" />
+                          ) : (
+                            <span className="w-7 h-7 rounded-lg bg-gold-500/10 border border-gold-500/30 flex items-center justify-center text-xs font-black text-gold-400 font-mono">
+                              {s.name.slice(0, 2).toUpperCase()}
+                            </span>
+                          )}
+                          <div>
+                            <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                              {s.name}
+                              {s.product && <span className="text-xs text-zinc-400 font-normal">({s.product})</span>}
+                            </h4>
+                            <span className="text-[11px] text-gold-400 font-medium block">{s.role}</span>
+                          </div>
+                        </div>
+
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-mono font-bold ${
+                          s.is_active !== false
+                            ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                            : 'bg-zinc-800 text-zinc-400 border border-zinc-700'
+                        }`}>
+                          {s.is_active !== false ? 'Active' : 'Hidden'}
+                        </span>
+                      </div>
+
+                      {s.description && (
+                        <p className="text-xs text-zinc-400 line-clamp-2">{s.description}</p>
+                      )}
+
+                      <div className="flex items-center gap-2 text-[10px] text-zinc-500">
+                        {s.category && <span className="px-2 py-0.5 rounded bg-zinc-900">{s.category}</span>}
+                        {s.tag && <span className="px-2 py-0.5 rounded bg-zinc-900 text-gold-400">{s.tag}</span>}
+                        {s.website_url && (
+                          <a href={s.website_url} target="_blank" rel="noopener noreferrer" className="text-zinc-400 hover:text-white flex items-center gap-0.5 underline">
+                            {s.website_url.replace(/^https?:\/\//, '').split('/')[0]} <ExternalLink className="w-2.5 h-2.5" />
+                          </a>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-end gap-2 pt-2 border-t border-zinc-850">
+                      <button
+                        onClick={() => handleToggleSponsorActive(s)}
+                        className="px-2.5 py-1 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-[11px] font-semibold text-zinc-300"
+                      >
+                        {s.is_active !== false ? 'Hide' : 'Show'}
+                      </button>
+                      <button
+                        onClick={() => startEditSponsor(s)}
+                        className="px-2.5 py-1 rounded-lg bg-zinc-900 hover:bg-gold-500 hover:text-black text-[11px] font-semibold text-zinc-300 transition-colors flex items-center gap-1"
+                      >
+                        <Edit3 className="w-3 h-3" /> Edit
+                      </button>
+                      <button
+                        onClick={() => handleDeleteSponsor(s.id, s.name)}
+                        className="px-2.5 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 text-[11px] font-semibold transition-colors flex items-center gap-1"
+                      >
+                        <Trash2 className="w-3 h-3" /> Delete
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Guild & Cultural Associates */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
+                <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                  <Users className="w-4 h-4 text-blue-400" /> Guild & Cultural Associates ({sponsorsList.filter(s => s.tier === 'guild').length})
+                </h3>
+                <span className="text-[10px] text-zinc-500">Displayed in compact footer strip</span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {sponsorsList.filter(s => s.tier === 'guild').map((s) => (
+                  <div
+                    key={s.id}
+                    className="bg-surface-card border border-zinc-800 hover:border-blue-500/40 rounded-xl p-3.5 flex flex-col justify-between gap-2.5 transition-colors"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-xs font-bold text-white line-clamp-1">{s.name}</h4>
+                        <span className={`text-[9px] px-2 py-0.5 rounded-full font-mono font-bold ${
+                          s.is_active !== false
+                            ? 'bg-emerald-500/20 text-emerald-300'
+                            : 'bg-zinc-800 text-zinc-400'
+                        }`}>
+                          {s.is_active !== false ? 'Active' : 'Hidden'}
+                        </span>
+                      </div>
+                      <span className="text-[10px] text-zinc-400 block line-clamp-1 mt-0.5">{s.role}</span>
+                      <span className="inline-block text-[9px] font-mono text-gold-400 mt-1">{s.tag || 'Partner'}</span>
+                    </div>
+
+                    <div className="flex items-center justify-end gap-1.5 pt-2 border-t border-zinc-850 text-[10px]">
+                      <button
+                        onClick={() => handleToggleSponsorActive(s)}
+                        className="px-2 py-0.5 rounded bg-zinc-900 hover:bg-zinc-800 text-zinc-300"
+                      >
+                        {s.is_active !== false ? 'Hide' : 'Show'}
+                      </button>
+                      <button
+                        onClick={() => startEditSponsor(s)}
+                        className="px-2 py-0.5 rounded bg-zinc-900 hover:bg-gold-500 hover:text-black text-zinc-300 transition-colors flex items-center gap-1"
+                      >
+                        <Edit3 className="w-2.5 h-2.5" /> Edit
+                      </button>
+                      <button
+                        onClick={() => handleDeleteSponsor(s.id, s.name)}
+                        className="px-2 py-0.5 rounded bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 transition-colors flex items-center gap-1"
+                      >
+                        <Trash2 className="w-2.5 h-2.5" /> Delete
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      )}
     </div>
   );
 }
+

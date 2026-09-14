@@ -13,6 +13,7 @@ import voteRoutes from './routes/vote.js';
 import stripeRoutes from './routes/stripe.js';
 import packageRoutes from './routes/packages.js';
 import awardRoutes from './routes/awards.js';
+import sponsorRoutes from './routes/sponsors.js';
 
 dotenv.config();
 
@@ -88,6 +89,7 @@ app.use('/api/stripe', stripeRoutes);
 app.use('/api/packages', packageRoutes);
 app.use('/api/awards', awardRoutes);
 app.use('/api/nominations', awardRoutes);
+app.use('/api/sponsors', sponsorRoutes);
 
 // Global Production Error Handler (prevents stack-trace leaks)
 app.use((err, req, res, next) => {
