@@ -1,6 +1,6 @@
 "use client";
 
-import { Award, Star, BookOpen, CheckCircle2, ShieldAlert } from 'lucide-react';
+import { Award, Star, BookOpen, CheckCircle2, ShieldAlert, Users } from 'lucide-react';
 import Link from 'next/link';
 
 export default function JuryGuidelinesPage() {
@@ -18,9 +18,17 @@ export default function JuryGuidelinesPage() {
         <p className="text-xs text-zinc-400 max-w-xl mx-auto">
           Ethical code, 1-10 scoring rubric, and critique standards for appointed Thirai+ festival judges.
         </p>
-        <span className="inline-block text-[11px] font-mono text-gold-400 bg-gold-500/10 px-3 py-1 rounded-full border border-gold-500/30">
-          Jury Code of Ethics & Rubric
-        </span>
+        <div className="pt-1 flex items-center justify-center flex-wrap gap-2.5">
+          <span className="inline-block text-[11px] font-mono text-gold-400 bg-gold-500/10 px-3 py-1 rounded-full border border-gold-500/30">
+            Jury Code of Ethics & Rubric
+          </span>
+          <Link
+            href="/judges"
+            className="inline-flex items-center gap-1.5 text-[11px] font-bold text-zinc-300 hover:text-white bg-zinc-900 hover:bg-zinc-800 px-3.5 py-1 rounded-full border border-zinc-700 transition-colors"
+          >
+            <Users className="w-3.5 h-3.5 text-gold-400" /> Meet Our Grand Jury
+          </Link>
+        </div>
       </div>
 
       {/* Guidelines Content */}

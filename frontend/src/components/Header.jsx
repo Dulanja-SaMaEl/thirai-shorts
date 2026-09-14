@@ -51,6 +51,15 @@ export default function Header() {
             <Sparkles className="w-4 h-4 text-gold-400" /> VIP Passes
           </a>
 
+          <Link
+            href="/judges"
+            className={`flex items-center gap-2 text-sm font-semibold transition-colors ${
+              isActive('/judges') || isActive('/jury') ? 'text-gold-400 border-b-2 border-gold-400 pb-1' : 'text-zinc-300 hover:text-gold-300'
+            }`}
+          >
+            <Award className="w-4 h-4 text-gold-400" /> Jury
+          </Link>
+
           {/* Role-Gated Navigation Links: Shown ONLY to authenticated judges/admins/viewers */}
           {user && user.role === 'viewer' && (
             <Link
