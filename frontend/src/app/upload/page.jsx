@@ -15,7 +15,7 @@ export default function UploadPage() {
 
   // --- Step 1: Film Information ---
   const [title, setTitle] = useState('');
-  const [originalLanguage, setOriginalLanguage] = useState('Tamil');
+  const [originalLanguage, setOriginalLanguage] = useState('English');
   const [subtitleLanguage, setSubtitleLanguage] = useState('English');
   const [genre, setGenre] = useState('Action');
   const [runningTime, setRunningTime] = useState('');
@@ -116,8 +116,8 @@ export default function UploadPage() {
         return false;
       }
       const extractedMins = parseInt(runningTime.replace(/\D/g, ''), 10);
-      if (extractedMins && extractedMins > 20) {
-        setErrorMsg('Festival eligibility rule: Maximum short film runtime is 20 minutes.');
+      if (extractedMins && extractedMins > 40) {
+        setErrorMsg('Festival eligibility rule: Maximum short film runtime is 40 minutes.');
         return false;
       }
     }
@@ -501,8 +501,9 @@ export default function UploadPage() {
                       Official Festival Eligibility Rules
                     </h4>
                   </div>
-                  <span className="px-2.5 py-0.5 rounded-full bg-gold-500/10 border border-gold-500/30 text-gold-400 text-[10px] font-mono font-bold">
-                    Submission Fee: $4.99 USD
+                  <span className="px-3 py-1 rounded-full bg-gold-500/20 border border-gold-400/60 text-gold-300 text-xs font-mono font-bold shadow-[0_0_12px_rgba(234,179,8,0.2)] flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-gold-400" />
+                    Submission Fee: <strong className="text-white font-black text-xs">$4.99 USD</strong>
                   </span>
                 </div>
 
@@ -517,7 +518,7 @@ export default function UploadPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-gold-400 text-xs font-bold">✓</span>
-                    <span><strong>Runtime:</strong> Maximum runtime: <strong>20 minutes</strong>.</span>
+                    <span><strong>Runtime:</strong> Maximum runtime: <strong>40 minutes</strong>.</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-gold-400 text-xs font-bold">✓</span>
@@ -529,11 +530,9 @@ export default function UploadPage() {
                   </div>
                 </div>
 
-                <div className="pt-2.5 border-t border-zinc-850/80 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 text-[11px] text-zinc-400">
-                  <span>Official Submission Fee: <strong className="text-gold-400 font-bold">$4.99 USD</strong></span>
+                <div className="pt-2.5 border-t border-zinc-850/80 flex flex-wrap items-center justify-between gap-3 text-xs text-zinc-400">
                   <span>Submissions Close: <strong className="text-amber-400 font-bold">November 30th, 2026</strong></span>
                   <span>Festival Date: <strong className="text-gold-300 font-bold">January 16th, 2027</strong></span>
-                  <span>Viewer Pass: <strong className="text-zinc-200 font-semibold">$4.99 USD</strong></span>
                 </div>
               </div>
 
@@ -565,21 +564,21 @@ export default function UploadPage() {
                     className="w-full bg-black/80 border border-zinc-800 rounded-xl py-2.5 px-4 text-xs text-white focus:outline-none focus:border-gold-500"
                   >
                     <optgroup label="Popular & Regional">
-                      <option value="Tamil">Tamil (தமிழ்)</option>
-                      <option value="Sinhala">Sinhala (සිංහල)</option>
                       <option value="English">English</option>
-                      <option value="Hindi">Hindi (हिन्दी)</option>
-                      <option value="Telugu">Telugu (తెలుగు)</option>
-                      <option value="Malayalam">Malayalam (മലയാളം)</option>
-                      <option value="Kannada">Kannada (ಕನ್ನಡ)</option>
+                      <option value="Sinhala">Sinhala (සිංහල)</option>
+                      <option value="Tamil">Tamil (தமிழ்)</option>
                       <option value="Bengali">Bengali (বাংলা)</option>
+                      <option value="Hindi">Hindi (हिन्दी)</option>
+                      <option value="Kannada">Kannada (ಕನ್ನಡ)</option>
+                      <option value="Malayalam">Malayalam (മലയാളം)</option>
                       <option value="Marathi">Marathi (मराठी)</option>
+                      <option value="Telugu">Telugu (తెలుగు)</option>
                       <option value="Urdu">Urdu (اردو)</option>
                     </optgroup>
                     <optgroup label="International Languages">
                       <option value="Arabic">Arabic (العربية)</option>
-                      <option value="Chinese (Mandarin)">Chinese - Mandarin (中文)</option>
                       <option value="Chinese (Cantonese)">Chinese - Cantonese (粵語)</option>
+                      <option value="Chinese (Mandarin)">Chinese - Mandarin (中文)</option>
                       <option value="Czech">Czech (Čeština)</option>
                       <option value="Danish">Danish (Dansk)</option>
                       <option value="Dutch">Dutch (Nederlands)</option>
@@ -1183,7 +1182,7 @@ export default function UploadPage() {
                   <div><span className="text-zinc-500">Language:</span> <span className="text-white font-semibold">{originalLanguage}</span></div>
                   <div><span className="text-zinc-500">Cast:</span> <span className="text-white font-semibold">{leadCasts.filter(c => c.actor).length} actors</span></div>
                   <div><span className="text-zinc-500">Entry Fee:</span> <span className="text-gold-400 font-bold">$4.99 USD</span></div>
-                  <div><span className="text-zinc-500">Eligibility:</span> <span className="text-emerald-400 font-semibold">Max 20m • Verified</span></div>
+                  <div><span className="text-zinc-500">Eligibility:</span> <span className="text-emerald-400 font-semibold">Max 40m • Verified</span></div>
                 </div>
               </div>
 
