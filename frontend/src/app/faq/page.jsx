@@ -1,188 +1,484 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import Link from 'next/link';
 import {
   HelpCircle,
-  Video,
-  Trophy,
+  Search,
+  X,
   Upload,
-  Calendar,
   CreditCard,
+  Calendar,
   ShieldCheck,
-  ChevronDown,
+  Trophy,
+  Film,
   Sparkles,
+  Lock,
+  ChevronDown,
   ArrowLeft,
   CheckCircle2,
-  Film
+  Copy,
+  Check,
+  ExternalLink,
+  Clapperboard,
+  ArrowRight,
+  Zap,
+  Tag
 } from 'lucide-react';
-import Link from 'next/link';
+import { FAQ_CATEGORIES, FAQ_ITEMS } from './faqData';
+
+// Map string icon names to Lucide components
+const ICON_MAP = {
+  HelpCircle,
+  Upload,
+  CreditCard,
+  Calendar,
+  ShieldCheck,
+  Trophy,
+  Film,
+  Sparkles,
+  Lock
+};
 
 export default function FAQPage() {
-  const [openIndex, setOpenIndex] = useState(0);
+  const [activeCategory, setActiveCategory] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [openIds, setOpenIds] = useState(new Set(['submission-fee', 'viewer-pass-details']));
+  const [copiedId, setCopiedId] = useState(null);
 
-  const faqItems = [
-    {
-      category: "Brand Partnerships & Video Content",
-      icon: Video,
-      question: "How are brand partner, promotional, and sponsor videos added to Thirai+?",
-      answer: "Videos will be added by BrandPartner. All promotional, brand showcase, and sponsored cinema segments are uploaded and managed directly by our verified BrandPartner network through their dedicated distribution pipeline.",
-      highlight: "Videos will be added by BrandPartner."
-    },
-    {
-      category: "Festival Nominations & Awards",
-      icon: Trophy,
-      question: "When are official nominations unveiled?",
-      answer: "Official festival nominations will be unveiled after January 1st, 2027. Ahead of January 1st, our Grand Jury evaluations and verified community audience rating rounds remain active. The full official shortlist is revealed on New Year's Day.",
-      highlight: "Nominations will be visible and unveiled after January 1st."
-    },
-    {
-      category: "Festival Nominations & Awards",
-      icon: Trophy,
-      question: "How many films are nominated per award category?",
-      answer: "Each of the 22 festival award categories showcases exactly 3 nominated films shortlisted from thousands of global submissions. Category winners are crowned during the Grand Premiere Gala.",
-      highlight: "Each category showcases 3 nominated films."
-    },
-    {
-      category: "Film Submissions",
-      icon: Upload,
-      question: "How do filmmakers submit short films, and where is the submit button?",
-      answer: "Filmmakers can submit their films by clicking the golden 'SUBMIT' button located on the top right side of the navigation bar. You will be prompted to provide film details, cast & crew metadata, and upload your high-definition video master file.",
-      highlight: "Submissions close November 30, 2026."
-    },
-    {
-      category: "Festival Schedule & Dates",
-      icon: Calendar,
-      question: "What are the key dates for the Thirai+ Short Film Festival 2026/2027?",
-      answer: "Important festival milestones include: Submissions Deadline on November 30, 2026; Official Nominations Unveil on January 1, 2027; and the Global Festival Premiere & Grand Gala on January 16, 2027.",
-      highlight: "Premiere: January 16, 2027"
-    },
-    {
-      category: "Audience & Submitter Passes",
-      icon: CreditCard,
-      question: "What passes are available for viewers and filmmakers?",
-      answer: "The Viewer Pass is $4.99 monthly for unlimited streaming of all festival short films and voting rights. If you have submitted your short film for the T+ Film Festival and got approved, you gain access to the Submitter Pass at just $2.99 monthly to stream unlimited movies and vote.",
-      highlight: "Viewer Pass: $4.99/mo • Submitter Pass: $2.99/mo (Approved Filmmakers)"
-    },
-    {
-      category: "Trailers & Free Streaming",
-      icon: Film,
-      question: "Can anyone watch movie trailers without costing tokens?",
-      answer: "Yes! Trailers can be watched by anyone completely free without costing any viewing tokens or requiring a subscription. Directors can optionally add a trailer when submitting their film.",
-      highlight: "Anyone can watch trailers for movies without costing any tokens."
-    },
-    {
-      category: "Jury & Rating System",
-      icon: ShieldCheck,
-      question: "How does the hybrid judging & rating process work?",
-      answer: "Thirai+ combines Grand Jury evaluation (70% weightage) with community audience ratings (30% weightage) verified via cryptographic blockchain tokens to ensure unbiased, transparent cinematic recognition.",
-      highlight: "70% Grand Jury + 30% Verified Audience Votes"
+  // Deep-link anchor detection on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.location.hash) {
+      const hashId = window.location.hash.replace('#', '');
+      const matched = FAQ_ITEMS.find(item => item.id === hashId);
+      if (matched) {
+        setOpenIds(new Set([hashId]));
+        if (matched.category !== 'all') {
+          setActiveCategory(matched.category);
+        }
+        setTimeout(() => {
+          const el = document.getElementById(hashId);
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }, 300);
+      }
     }
-  ];
+  }, []);
+
+  // Filter items based on active category and search query
+  const filteredItems = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+
+    return FAQ_ITEMS.filter(item => {
+      // Category filter
+      if (activeCategory !== 'all' && item.category !== activeCategory) {
+        return false;
+      }
+
+      // Search filter
+      if (!query) return true;
+
+      const inQuestion = item.question.toLowerCase().includes(query);
+      const inAnswer = (item.answerText || '').toLowerCase().includes(query);
+      const inCategory = item.categoryLabel.toLowerCase().includes(query);
+      const inTags = item.tags && item.tags.some(t => t.toLowerCase().includes(query));
+
+      return inQuestion || inAnswer || inCategory || inTags;
+    });
+  }, [activeCategory, searchQuery]);
+
+  // Toggle single item accordion
+  const toggleItem = (id) => {
+    setOpenIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  // Expand all / Collapse all
+  const handleExpandAll = () => {
+    setOpenIds(new Set(filteredItems.map(i => i.id)));
+  };
+
+  const handleCollapseAll = () => {
+    setOpenIds(new Set());
+  };
+
+  // Copy direct anchor link to clipboard
+  const handleCopyLink = (e, id) => {
+    e.stopPropagation();
+    if (typeof window !== 'undefined') {
+      const url = `${window.location.origin}${window.location.pathname}#${id}`;
+      navigator.clipboard.writeText(url).then(() => {
+        setCopiedId(id);
+        setTimeout(() => setCopiedId(null), 2500);
+      });
+    }
+  };
 
   return (
-    <div className="max-w-4xl mx-auto py-10 px-4 sm:px-6 space-y-10">
+    <main className="min-h-screen bg-black text-slate-100 py-8 px-4 sm:px-6 lg:px-8 space-y-10">
       
-      {/* Navigation Breadcrumb */}
-      <div className="flex items-center justify-between">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 text-xs font-semibold text-zinc-400 hover:text-gold-400 transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" /> Back to Cinema Home
-        </Link>
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gold-500/10 border border-gold-500/30 text-gold-400 text-xs font-extrabold uppercase tracking-wider">
-          <Sparkles className="w-3.5 h-3.5" /> Festival Help Center
-        </span>
-      </div>
-
-      {/* Page Header */}
-      <div className="relative rounded-3xl p-8 sm:p-10 bg-gradient-to-b from-zinc-950 via-zinc-950 to-black border border-gold-500/40 shadow-gold-glow text-center space-y-4 overflow-hidden">
-        <div className="absolute top-0 right-1/4 w-72 h-72 bg-gold-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="max-w-5xl mx-auto space-y-8">
         
-        <div className="w-14 h-14 rounded-2xl bg-gold-gradient p-0.5 shadow-gold-glow mx-auto flex items-center justify-center">
-          <div className="w-full h-full bg-black rounded-[14px] flex items-center justify-center">
-            <HelpCircle className="w-7 h-7 text-gold-400" />
+        {/* Navigation Breadcrumb */}
+        <div className="flex items-center justify-between">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 text-xs font-bold text-zinc-400 hover:text-gold-400 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" /> Back to Cinema Home
+          </Link>
+
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gold-500/10 border border-gold-500/30 text-gold-400 text-xs font-extrabold uppercase tracking-wider">
+              <Sparkles className="w-3.5 h-3.5" /> Official Help & FAQ Center
+            </span>
           </div>
         </div>
 
-        <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
-          Frequently Asked <span className="gold-text-gradient">Questions</span>
-        </h1>
-        <p className="text-xs sm:text-sm text-zinc-400 max-w-xl mx-auto leading-relaxed">
-          Find comprehensive answers regarding brand partnerships, nomination unveil dates, short film submissions, and festival passes.
-        </p>
-      </div>
+        {/* Hero Header Card */}
+        <header className="relative rounded-3xl p-8 sm:p-12 bg-gradient-to-b from-zinc-950 via-zinc-950 to-black border border-gold-500/40 shadow-gold-glow-lg text-center space-y-5 overflow-hidden">
+          <div className="absolute -top-20 right-1/4 w-96 h-96 bg-gold-500/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-20 left-1/4 w-96 h-96 bg-gold-500/5 rounded-full blur-3xl pointer-events-none" />
+          
+          <div className="w-16 h-16 rounded-2xl bg-gold-gradient p-0.5 shadow-gold-glow mx-auto flex items-center justify-center">
+            <div className="w-full h-full bg-black rounded-[14px] flex items-center justify-center">
+              <HelpCircle className="w-8 h-8 text-gold-400" />
+            </div>
+          </div>
 
-      {/* FAQ Accordion List */}
-      <div className="space-y-4">
-        {faqItems.map((item, idx) => {
-          const isOpen = openIndex === idx;
-          const Icon = item.icon;
+          <div className="space-y-2 max-w-2xl mx-auto">
+            <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight">
+              Frequently Asked <span className="gold-text-gradient">Questions</span>
+            </h1>
+            <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed">
+              Find instant, clear answers on short film submissions ($4.99 fee, 40 min max), festival passes ($4.99 viewer & $2.99 submitter pass), free trailers, hybrid jury judging, and premiere dates.
+            </p>
+          </div>
 
-          return (
-            <div
-              key={idx}
-              className={`rounded-2xl border transition-all duration-300 overflow-hidden ${
-                isOpen
-                  ? 'bg-zinc-950/90 border-gold-500/50 shadow-gold-glow'
-                  : 'bg-surface-card/70 border-zinc-800 hover:border-zinc-700'
-              }`}
-            >
-              <button
-                onClick={() => setOpenIndex(isOpen ? -1 : idx)}
-                className="w-full p-5 sm:p-6 text-left flex items-start justify-between gap-4 transition-colors"
-                aria-expanded={isOpen}
-              >
-                <div className="flex items-start gap-4">
-                  <div className={`p-2.5 rounded-xl shrink-0 transition-colors ${
-                    isOpen ? 'bg-gold-500/20 text-gold-400 border border-gold-500/40' : 'bg-zinc-900 text-zinc-400 border border-zinc-800'
-                  }`}>
-                    <Icon className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-gold-400/80 block mb-1">
-                      {item.category}
-                    </span>
-                    <h3 className="text-sm sm:text-base font-bold text-white leading-snug">
-                      {item.question}
-                    </h3>
-                  </div>
-                </div>
+          {/* Quick Stats Highlights */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4 max-w-3xl mx-auto">
+            <div className="p-3 rounded-2xl bg-black/60 border border-zinc-800 text-center">
+              <span className="text-[10px] uppercase font-bold text-zinc-400 block">Submission Fee</span>
+              <strong className="text-sm sm:text-base font-black text-gold-300 font-mono">$4.99 USD</strong>
+            </div>
+            <div className="p-3 rounded-2xl bg-black/60 border border-zinc-800 text-center">
+              <span className="text-[10px] uppercase font-bold text-zinc-400 block">Max Runtime</span>
+              <strong className="text-sm sm:text-base font-black text-gold-300 font-mono">40 Minutes</strong>
+            </div>
+            <div className="p-3 rounded-2xl bg-black/60 border border-zinc-800 text-center">
+              <span className="text-[10px] uppercase font-bold text-zinc-400 block">Viewer Pass</span>
+              <strong className="text-sm sm:text-base font-black text-gold-300 font-mono">$4.99 / mo</strong>
+            </div>
+            <div className="p-3 rounded-2xl bg-black/60 border border-zinc-800 text-center">
+              <span className="text-[10px] uppercase font-bold text-zinc-400 block">Movie Trailers</span>
+              <strong className="text-sm sm:text-base font-black text-emerald-400 font-mono">100% Free</strong>
+            </div>
+          </div>
 
-                <div className={`p-1.5 rounded-lg border transition-transform duration-300 shrink-0 ${
-                  isOpen ? 'rotate-180 bg-gold-500/10 border-gold-500/40 text-gold-400' : 'bg-zinc-900 border-zinc-800 text-zinc-400'
-                }`}>
-                  <ChevronDown className="w-4 h-4" />
-                </div>
-              </button>
-
-              {isOpen && (
-                <div className="px-5 pb-6 sm:px-6 pt-1 text-xs sm:text-sm text-zinc-300 leading-relaxed border-t border-zinc-850 space-y-3">
-                  <p className="pt-3">{item.answer}</p>
-
-                  {item.highlight && (
-                    <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-gold-500/10 border border-gold-500/30 text-gold-300 text-xs font-semibold">
-                      <CheckCircle2 className="w-4 h-4 text-gold-400 shrink-0" />
-                      <span>{item.highlight}</span>
-                    </div>
-                  )}
-                </div>
+          {/* Search Input Box */}
+          <div className="max-w-2xl mx-auto pt-2">
+            <div className="relative flex items-center">
+              <Search className="w-5 h-5 text-zinc-400 absolute left-4 pointer-events-none" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search by keywords (e.g. 'submission fee', 'trailer', 'runtime', 'pass', 'sinhala', 'jury')..."
+                className="w-full pl-12 pr-10 py-3.5 rounded-2xl bg-black/80 border border-zinc-700 hover:border-gold-500/50 focus:border-gold-400 focus:outline-none focus:ring-2 focus:ring-gold-500/20 text-xs sm:text-sm text-white placeholder:text-zinc-500 transition-all shadow-inner"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  title="Clear search"
+                  className="absolute right-3.5 p-1 rounded-lg hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
               )}
             </div>
-          );
-        })}
+          </div>
+        </header>
+
+        {/* Category Navigation Tabs */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-xs uppercase font-extrabold tracking-wider text-zinc-400">
+              Filter by Category:
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleExpandAll}
+                className="text-[11px] font-bold text-zinc-400 hover:text-gold-400 transition-colors px-2 py-1 rounded-lg hover:bg-zinc-900"
+              >
+                Expand All
+              </button>
+              <span className="text-zinc-700">•</span>
+              <button
+                onClick={handleCollapseAll}
+                className="text-[11px] font-bold text-zinc-400 hover:text-gold-400 transition-colors px-2 py-1 rounded-lg hover:bg-zinc-900"
+              >
+                Collapse All
+              </button>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            {FAQ_CATEGORIES.map((cat) => {
+              const Icon = ICON_MAP[cat.icon] || HelpCircle;
+              const isSelected = activeCategory === cat.id;
+              const count = cat.id === 'all'
+                ? FAQ_ITEMS.length
+                : FAQ_ITEMS.filter(i => i.category === cat.id).length;
+
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => {
+                    setActiveCategory(cat.id);
+                  }}
+                  className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
+                    isSelected
+                      ? 'bg-gold-500/20 border-2 border-gold-400 text-gold-300 shadow-gold-glow'
+                      : 'bg-surface-card border border-zinc-800 hover:border-zinc-700 text-zinc-300 hover:text-white'
+                  }`}
+                >
+                  <Icon className={`w-3.5 h-3.5 ${isSelected ? 'text-gold-400' : 'text-zinc-400'}`} />
+                  <span>{cat.label}</span>
+                  <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
+                    isSelected ? 'bg-gold-500/30 text-gold-200' : 'bg-zinc-800 text-zinc-500'
+                  }`}>
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Results Counter Notice if Searching */}
+        {searchQuery && (
+          <div className="flex items-center justify-between px-4 py-2.5 rounded-xl bg-zinc-900/80 border border-zinc-800 text-xs text-zinc-400">
+            <span>
+              Found <strong className="text-gold-300">{filteredItems.length}</strong> matching questions for "{searchQuery}"
+            </span>
+            <button
+              onClick={() => setSearchQuery('')}
+              className="text-xs font-semibold text-gold-400 hover:underline"
+            >
+              Reset Search
+            </button>
+          </div>
+        )}
+
+        {/* Empty State */}
+        {filteredItems.length === 0 && (
+          <div className="text-center py-16 px-4 rounded-3xl bg-surface-card border border-zinc-800 space-y-4">
+            <HelpCircle className="w-10 h-10 text-zinc-600 mx-auto" />
+            <h3 className="text-base font-bold text-white">No Matching Questions Found</h3>
+            <p className="text-xs text-zinc-400 max-w-md mx-auto">
+              We couldn't find any questions matching "{searchQuery}". Try searching with different terms or reset your filters.
+            </p>
+            <button
+              onClick={() => { setSearchQuery(''); setActiveCategory('all'); }}
+              className="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-white transition-colors"
+            >
+              Show All Questions
+            </button>
+          </div>
+        )}
+
+        {/* FAQ Accordion List */}
+        <section aria-label="FAQ Questions List" className="space-y-4">
+          {filteredItems.map((item, idx) => {
+            const isOpen = openIds.has(item.id);
+
+            return (
+              <article
+                key={item.id}
+                id={item.id}
+                className={`rounded-2xl border transition-all duration-300 overflow-hidden scroll-mt-24 ${
+                  isOpen
+                    ? 'bg-zinc-950/95 border-gold-500/50 shadow-gold-glow'
+                    : 'bg-surface-card/80 border-zinc-800/80 hover:border-zinc-700 hover:bg-surface-card'
+                }`}
+              >
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => toggleItem(item.id)}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleItem(item.id); } }}
+                  aria-expanded={isOpen}
+                  aria-controls={`faq-answer-${item.id}`}
+                  className="w-full p-5 sm:p-6 text-left flex items-start justify-between gap-4 cursor-pointer select-none"
+                >
+                  <div className="flex items-start gap-3.5">
+                    <div className="mt-0.5">
+                      <span className="w-6 h-6 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 text-[11px] font-mono font-bold flex items-center justify-center shrink-0">
+                        {idx + 1}
+                      </span>
+                    </div>
+
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-gold-400/90">
+                          <Tag className="w-3 h-3 text-gold-500" /> {item.categoryLabel}
+                        </span>
+                      </div>
+
+                      <h2 className="text-sm sm:text-base font-bold text-white leading-snug">
+                        {item.question}
+                      </h2>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    {/* Direct Copy Link Button */}
+                    <button
+                      onClick={(e) => handleCopyLink(e, item.id)}
+                      title="Copy link to this question"
+                      className="p-1.5 rounded-lg bg-zinc-900/80 hover:bg-zinc-800 border border-zinc-800 text-zinc-400 hover:text-gold-300 transition-colors"
+                      aria-label="Copy direct link"
+                    >
+                      {copiedId === item.id ? (
+                        <span className="flex items-center gap-1 text-[10px] text-emerald-400 font-bold px-1">
+                          <Check className="w-3.5 h-3.5" /> Copied
+                        </span>
+                      ) : (
+                        <Copy className="w-3.5 h-3.5" />
+                      )}
+                    </button>
+
+                    {/* Expand/Collapse Chevron */}
+                    <div className={`p-1.5 rounded-lg border transition-transform duration-300 ${
+                      isOpen ? 'rotate-180 bg-gold-500/10 border-gold-500/40 text-gold-400' : 'bg-zinc-900 border-zinc-800 text-zinc-400'
+                    }`}>
+                      <ChevronDown className="w-4 h-4" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Expanded Answer Content */}
+                {isOpen && (
+                  <div
+                    id={`faq-answer-${item.id}`}
+                    className="px-5 pb-6 sm:px-6 pt-2 text-xs sm:text-sm text-zinc-300 leading-relaxed border-t border-zinc-850/80 space-y-4"
+                  >
+                    <p className="pt-2 text-zinc-200">
+                      {item.answerText}
+                    </p>
+
+                    <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+                      {/* Highlight Takeaway Pill */}
+                      {item.highlight && (
+                        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-gold-500/10 border border-gold-500/30 text-gold-300 text-xs font-semibold">
+                          <CheckCircle2 className="w-4 h-4 text-gold-400 shrink-0" />
+                          <span>{item.highlight}</span>
+                        </div>
+                      )}
+
+                      {/* Optional Action Link */}
+                      {item.link && (
+                        <Link
+                          href={item.link.href}
+                          className="inline-flex items-center gap-1.5 text-xs font-bold text-gold-400 hover:text-white hover:underline transition-colors"
+                        >
+                          <span>{item.link.text}</span>
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </Link>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </article>
+            );
+          })}
+        </section>
+
+        {/* Brand Partner Dedicated Notice Callout */}
+        <section className="rounded-3xl p-6 sm:p-8 bg-gradient-to-r from-zinc-950 via-surface-card to-zinc-950 border border-gold-500/30 text-center space-y-3 shadow-gold-glow">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-gold-500/10 border border-gold-500/30 text-gold-400 text-xs font-extrabold uppercase tracking-wider">
+            <Sparkles className="w-3.5 h-3.5" /> Brand Partnerships & Official Media
+          </div>
+          <h3 className="text-base sm:text-lg font-bold text-white">
+            Official Partner Spotlight & Sponsored Segments
+          </h3>
+          <p className="text-xs sm:text-sm text-zinc-400 max-w-2xl mx-auto leading-relaxed">
+            All brand showcases, official festival partner reels, and sponsored cinema segments: <strong className="text-gold-300">Videos will be added by BrandPartner</strong> via their verified distribution pipeline.
+          </p>
+        </section>
+
+        {/* Interactive Quick Action CTAs */}
+        <section className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
+          
+          {/* Card 1: Submit a Film */}
+          <div className="rounded-3xl p-6 bg-surface-card border border-gold-500/30 flex flex-col justify-between space-y-4 hover:border-gold-500/60 transition-all shadow-gold-glow">
+            <div className="space-y-2">
+              <div className="w-10 h-10 rounded-xl bg-gold-500/10 border border-gold-500/30 text-gold-400 flex items-center justify-center">
+                <Upload className="w-5 h-5" />
+              </div>
+              <h4 className="text-base font-extrabold text-white">Ready to Submit?</h4>
+              <p className="text-xs text-zinc-400 leading-relaxed">
+                Submit your short film before November 30th, 2026. $4.99 entry fee, up to 40-minute runtime. English, Sinhala & Tamil accepted.
+              </p>
+            </div>
+            <Link
+              href="/upload"
+              className="gold-btn py-3 px-4 rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 shadow-gold-glow"
+            >
+              <Clapperboard className="w-4 h-4" /> Submit Short Film
+            </Link>
+          </div>
+
+          {/* Card 2: Festival VIP Passes */}
+          <div className="rounded-3xl p-6 bg-surface-card border border-gold-500/30 flex flex-col justify-between space-y-4 hover:border-gold-500/60 transition-all shadow-gold-glow">
+            <div className="space-y-2">
+              <div className="w-10 h-10 rounded-xl bg-gold-500/10 border border-gold-500/30 text-gold-400 flex items-center justify-center">
+                <Zap className="w-5 h-5" />
+              </div>
+              <h4 className="text-base font-extrabold text-white">Get Festival Passes</h4>
+              <p className="text-xs text-zinc-400 leading-relaxed">
+                Viewer Pass at $4.99/mo or Submitter Pass at $2.99/mo for approved directors. Year Pass only $39.99 until Dec 31st! Free trailers for everyone.
+              </p>
+            </div>
+            <a
+              href="/#packages"
+              className="py-3 px-4 rounded-xl bg-zinc-900 hover:bg-gold-500/20 border border-gold-500/40 text-gold-300 hover:text-white text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition-all"
+            >
+              <CreditCard className="w-4 h-4" /> Explore VIP Passes
+            </a>
+          </div>
+
+          {/* Card 3: Meet the Jury */}
+          <div className="rounded-3xl p-6 bg-surface-card border border-gold-500/30 flex flex-col justify-between space-y-4 hover:border-gold-500/60 transition-all shadow-gold-glow">
+            <div className="space-y-2">
+              <div className="w-10 h-10 rounded-xl bg-gold-500/10 border border-gold-500/30 text-gold-400 flex items-center justify-center">
+                <ShieldCheck className="w-5 h-5" />
+              </div>
+              <h4 className="text-base font-extrabold text-white">Meet the Grand Jury</h4>
+              <p className="text-xs text-zinc-400 leading-relaxed">
+                Discover the jury panel chaired by Steven Spielberg, Prasanna Vithanage, Vetri Maaran, and industry technicians.
+              </p>
+            </div>
+            <Link
+              href="/judges"
+              className="py-3 px-4 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 hover:text-white text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition-all"
+            >
+              <Trophy className="w-4 h-4 text-gold-400" /> View Jury Profiles
+            </Link>
+          </div>
+
+        </section>
+
       </div>
 
-      {/* Brand Partner Notice Callout */}
-      <div className="rounded-2xl p-6 bg-gradient-to-r from-zinc-950 via-surface-card to-zinc-950 border border-gold-500/30 text-center space-y-2">
-        <h4 className="text-xs uppercase font-extrabold tracking-wider text-gold-400">
-          Brand Partnerships & Media Relations
-        </h4>
-        <p className="text-xs text-zinc-400 max-w-lg mx-auto">
-          Official partner spotlight segments and sponsored trailers: <strong>Videos will be added by BrandPartner</strong>. For commercial inquiries, contact our festival relations desk.
-        </p>
-      </div>
-
-    </div>
+    </main>
   );
 }
