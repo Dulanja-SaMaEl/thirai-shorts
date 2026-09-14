@@ -8,9 +8,11 @@ import {
 import Link from 'next/link';
 import api from '../lib/api';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function PackagesSection({ onSubscribed }) {
   const { user, refreshUser } = useAuth();
+  const { t } = useLanguage();
   const [loadingPkg, setLoadingPkg] = useState(null);
   const [successMsg, setSuccessMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
@@ -79,10 +81,10 @@ export default function PackagesSection({ onSubscribed }) {
         <div>
           <div className="flex items-center gap-2">
             <Crown className="w-6 h-6 text-gold-400" />
-            <h2 className="text-2xl font-extrabold text-white">VIP Audience Packages & Passes</h2>
+            <h2 className="text-2xl font-extrabold text-white">{t('passes.title', 'VIP Audience Packages & Passes')}</h2>
           </div>
           <p className="text-xs text-zinc-400 mt-1">
-            Unlock unlimited short film streaming, 4K playback, and community jury voting privileges.
+            {t('passes.subtitle', 'Unlock unlimited short film streaming, 4K playback, and community jury voting privileges.')}
           </p>
         </div>
 
@@ -169,13 +171,13 @@ export default function PackagesSection({ onSubscribed }) {
             </div>
 
             <div className="space-y-2">
-              <h3 className="text-xl font-black text-white">Free Audience Pass</h3>
+              <h3 className="text-xl font-black text-white">{t('passes.freePassTitle', 'Free Audience Pass')}</h3>
               <div className="flex items-baseline gap-2">
                 <span className="text-4xl sm:text-5xl font-black text-white font-mono">$0</span>
-                <span className="text-xs text-zinc-400 font-semibold">Free Forever</span>
+                <span className="text-xs text-zinc-400 font-semibold">{t('passes.freeForever', 'Free Forever')}</span>
               </div>
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-zinc-400 font-medium">
-                <span>Registration gift with account</span>
+                <span>{t('passes.freePassDesc', 'Registration gift with account')}</span>
               </div>
             </div>
 
@@ -220,7 +222,7 @@ export default function PackagesSection({ onSubscribed }) {
           <div>
             <div className="flex items-center justify-between gap-2 mb-4">
               <span className="px-3 py-1 rounded-full text-[10px] uppercase tracking-wider font-extrabold bg-gold-500/20 text-gold-300 border border-gold-500/40">
-                Viewer Pass
+                {t('passes.viewerPassBadge', 'Viewer Pass')}
               </span>
               <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-black uppercase">
                 Monthly Pass
@@ -228,7 +230,7 @@ export default function PackagesSection({ onSubscribed }) {
             </div>
 
             <div className="space-y-2">
-              <h3 className="text-xl font-black text-white">Only Viewer Pass</h3>
+              <h3 className="text-xl font-black text-white">{t('passes.viewerPassTitle', 'Only Viewer Pass')}</h3>
               <div className="flex items-baseline gap-2.5">
                 <span className="text-base text-zinc-500 line-through font-mono">
                   $9.99
@@ -236,13 +238,13 @@ export default function PackagesSection({ onSubscribed }) {
                 <span className="text-4xl sm:text-5xl font-black text-white font-mono">
                   $4.99
                 </span>
-                <span className="text-xs text-zinc-400 font-semibold">per month</span>
+                <span className="text-xs text-zinc-400 font-semibold">{t('passes.perMonth', '/ month')}</span>
               </div>
 
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-gold-500/10 border border-gold-500/30 text-xs text-gold-300 font-semibold">
                 <span>Approx.</span>
                 <span className="text-gold-400 font-bold font-mono">Rs. 1,550 LKR</span>
-                <span className="text-zinc-400 font-light text-[10px]">/ month</span>
+                <span className="text-zinc-400 font-light text-[10px]">{t('passes.perMonth', '/ month')}</span>
               </div>
             </div>
 
@@ -275,7 +277,7 @@ export default function PackagesSection({ onSubscribed }) {
                 <div className="w-4 h-4 rounded-full bg-gold-500/20 text-gold-400 flex items-center justify-center shrink-0">
                   <Check className="w-3 h-3" />
                 </div>
-                <span>Cancel anytime with 1-click</span>
+                <span>{t('passes.cancelAnytime', 'Cancel anytime with 1-click')}</span>
               </li>
             </ul>
           </div>
@@ -292,10 +294,10 @@ export default function PackagesSection({ onSubscribed }) {
             {loadingPkg === 'monthly' ? (
               'Activating...'
             ) : isSubActive && (currentTier === 'monthly' || currentTier === 'viewer_monthly') ? (
-              'Current Active Pass'
+              t('passes.currentActivePass', 'Current Active Pass')
             ) : (
               <>
-                <Zap className="w-4 h-4 fill-current" /> Claim Viewer Pass — $4.99/mo
+                <Zap className="w-4 h-4 fill-current" /> {t('passes.claimViewerPass', 'Claim Viewer Pass — $4.99/mo')}
               </>
             )}
           </button>
@@ -304,13 +306,13 @@ export default function PackagesSection({ onSubscribed }) {
         {/* 3. Annual VIP Cinema Pass (YEAR PASS) - $39.99 / year (Best Value & Dec 31st Special) */}
         <div className="relative rounded-3xl p-6 md:p-8 flex flex-col justify-between bg-surface-card border-2 border-gold-500 shadow-gold-glow-lg transition-all">
           <div className="absolute -top-3.5 right-6 px-3 py-1 rounded-full bg-gold-gradient text-black text-[10px] font-black uppercase tracking-wider shadow-gold-glow">
-            Dec 31st Special • Save 50%
+            {t('passes.dec31Special', 'Dec 31st Special • Save 50%')}
           </div>
 
           <div>
             <div className="flex items-center justify-between gap-2 mb-4">
               <span className="px-3 py-1 rounded-full text-[10px] uppercase tracking-wider font-extrabold bg-gold-gradient text-black shadow-gold-glow">
-                Year Pass • Best Value
+                {t('passes.yearPassBadge', 'Year Pass • Best Value')}
               </span>
               <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-[10px] font-black uppercase">
                 <Clock className="w-3 h-3" /> Until Dec 31st
@@ -318,7 +320,7 @@ export default function PackagesSection({ onSubscribed }) {
             </div>
 
             <div className="space-y-2">
-              <h3 className="text-xl font-black text-white">Annual VIP Cinema Pass</h3>
+              <h3 className="text-xl font-black text-white">{t('passes.annualPassTitle', 'Annual VIP Cinema Pass')}</h3>
               <div className="flex items-baseline gap-2.5">
                 <span className="text-base text-zinc-500 line-through font-mono">
                   $79.99
@@ -329,13 +331,13 @@ export default function PackagesSection({ onSubscribed }) {
                 >
                   $39.99
                 </span>
-                <span className="text-xs text-zinc-400 font-semibold">per year</span>
+                <span className="text-xs text-zinc-400 font-semibold">{t('passes.perYear', '/ year')}</span>
               </div>
 
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-gold-500/20 border border-gold-500/50 text-xs text-gold-300 font-bold">
                 <span>Approx.</span>
                 <span className="text-gold-400 font-mono">Rs. 12,400 LKR</span>
-                <span className="text-zinc-400 font-normal text-[10px]">/ year</span>
+                <span className="text-zinc-400 font-normal text-[10px]">{t('passes.perYear', '/ year')}</span>
               </div>
             </div>
 
@@ -391,10 +393,10 @@ export default function PackagesSection({ onSubscribed }) {
             {loadingPkg === 'yearly' ? (
               'Activating Year Pass...'
             ) : isSubActive && (currentTier === 'yearly' || currentTier === 'viewer_yearly') ? (
-              'Current Active Pass'
+              t('passes.currentActivePass', 'Current Active Pass')
             ) : (
               <>
-                <Zap className="w-4 h-4 fill-current" /> Claim Year Pass — $39.99/yr
+                <Zap className="w-4 h-4 fill-current" /> {t('passes.claimYearPass', 'Claim Year Pass — $39.99/yr')}
               </>
             )}
           </button>
@@ -409,15 +411,15 @@ export default function PackagesSection({ onSubscribed }) {
         <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
           <div className="space-y-3 max-w-2xl">
             <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-gold-gradient text-black text-[10px] font-black uppercase tracking-wider shadow-gold-glow">
-              <Clapperboard className="w-3.5 h-3.5" /> Approved Filmmaker Exclusive Pass
+              <Clapperboard className="w-3.5 h-3.5" /> {t('passes.approvedFilmmakerBadge', 'Approved Filmmaker Exclusive Pass')}
             </div>
 
             <h3 className="text-xl sm:text-2xl md:text-3xl font-black text-white tracking-tight">
-              Submitter Pass: <span className="text-gold-300 font-mono text-2xl sm:text-3xl font-black">$2.99</span> <span className="text-xs font-normal text-zinc-400">/ month</span>
+              {t('passes.submitterPassTitle', 'Submitter Pass')}: <span className="text-gold-300 font-mono text-2xl sm:text-3xl font-black">$2.99</span> <span className="text-xs font-normal text-zinc-400">{t('passes.perMonth', '/ month')}</span>
             </h3>
 
             <div className="p-3.5 rounded-2xl bg-gold-500/10 border border-gold-500/30 text-xs text-gold-300 leading-relaxed">
-              <strong>Official Filmmaker Rule:</strong> If you have submitted your short film for T+ film festival and got approved, you can gain access to view pass at just <strong>$2.99 monthly</strong> to stream unlimited movies and vote.
+              {t('passes.submitterRuleNotice', 'Official Filmmaker Rule: If you have submitted your short film for T+ film festival and got approved, you can gain access to view pass at just $2.99 monthly to stream unlimited movies and vote.')}
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs text-zinc-300 pt-1">
@@ -465,10 +467,10 @@ export default function PackagesSection({ onSubscribed }) {
                     {loadingPkg === 'submitter_monthly' ? (
                       'Activating...'
                     ) : isSubActive && currentTier === 'submitter_monthly' ? (
-                      'Current Active Pass'
+                      t('passes.currentActivePass', 'Current Active Pass')
                     ) : (
                       <>
-                        <Zap className="w-4 h-4 fill-current" /> Claim Submitter Pass — $2.99/mo
+                        <Zap className="w-4 h-4 fill-current" /> {t('passes.claimSubmitterPass', 'Claim Submitter Pass — $2.99/mo')}
                       </>
                     )}
                   </button>

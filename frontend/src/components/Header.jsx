@@ -3,16 +3,19 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
+import LanguageSwitcher from './LanguageSwitcher';
 import { Film, Shield, Award, Upload, PlayCircle, LogIn, LogOut, User, Coins, LayoutDashboard, Sparkles, Trophy, HelpCircle } from 'lucide-react';
 
 export default function Header() {
   const pathname = usePathname();
   const { user, logout } = useAuth();
+  const { t } = useLanguage();
 
   const isActive = (path) => pathname === path;
 
   return (
-    <header className="sticky top-0 z-50 bg-black/90 backdrop-blur-md border-b border-gold-500/20 px-6 py-4">
+    <header className="sticky top-0 z-50 bg-black/90 backdrop-blur-md border-b border-gold-500/20 px-4 sm:px-6 py-4">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         
         {/* Brand Logo */}
@@ -20,19 +23,19 @@ export default function Header() {
           <img
             src="/images/logo-wordmark.png"
             alt="Thirai+"
-            className="h-9 w-auto object-contain group-hover:scale-105 transition-transform"
+            className="h-8 sm:h-9 w-auto object-contain group-hover:scale-105 transition-transform"
           />
         </Link>
 
         {/* Navigation Links */}
-        <nav className="hidden md:flex items-center gap-7">
+        <nav className="hidden lg:flex items-center gap-6">
           <Link
             href="/"
             className={`flex items-center gap-2 text-sm font-semibold transition-colors ${
               isActive('/') ? 'text-gold-400 border-b-2 border-gold-400 pb-1' : 'text-zinc-300 hover:text-gold-300'
             }`}
           >
-            <PlayCircle className="w-4 h-4 text-gold-400" /> Official Selections ⭐
+            <PlayCircle className="w-4 h-4 text-gold-400" /> {t('nav.officialSelections', 'Official Selections ⭐')}
           </Link>
 
           <Link
@@ -41,14 +44,14 @@ export default function Header() {
               isActive('/nominations') || isActive('/awards') ? 'text-gold-400 border-b-2 border-gold-400 pb-1' : 'text-zinc-300 hover:text-gold-300'
             }`}
           >
-            <Trophy className="w-4 h-4 text-gold-400" /> Nominations
+            <Trophy className="w-4 h-4 text-gold-400" /> {t('nav.nominations', 'Nominations')}
           </Link>
 
           <a
             href="/#packages"
             className="flex items-center gap-2 text-sm font-semibold text-zinc-300 hover:text-gold-300 transition-colors"
           >
-            <Sparkles className="w-4 h-4 text-gold-400" /> VIP Passes
+            <Sparkles className="w-4 h-4 text-gold-400" /> {t('nav.vipPasses', 'VIP Passes')}
           </a>
 
           <Link
@@ -57,7 +60,7 @@ export default function Header() {
               isActive('/judges') || isActive('/jury') ? 'text-gold-400 border-b-2 border-gold-400 pb-1' : 'text-zinc-300 hover:text-gold-300'
             }`}
           >
-            <Award className="w-4 h-4 text-gold-400" /> Jury
+            <Award className="w-4 h-4 text-gold-400" /> {t('nav.jury', 'Jury')}
           </Link>
 
           <Link
@@ -66,7 +69,7 @@ export default function Header() {
               isActive('/faq') ? 'text-gold-400 border-b-2 border-gold-400 pb-1' : 'text-zinc-300 hover:text-gold-300'
             }`}
           >
-            <HelpCircle className="w-4 h-4 text-gold-400" /> FAQ
+            <HelpCircle className="w-4 h-4 text-gold-400" /> {t('nav.faq', 'FAQ')}
           </Link>
 
           {/* Role-Gated Navigation Links: Shown ONLY to authenticated judges/admins/viewers */}
@@ -77,7 +80,7 @@ export default function Header() {
                 isActive('/dashboard') ? 'text-gold-400 border-b-2 border-gold-400 pb-1' : 'text-zinc-300 hover:text-gold-300'
               }`}
             >
-              <LayoutDashboard className="w-4 h-4" /> Dashboard
+              <LayoutDashboard className="w-4 h-4" /> {t('nav.dashboard', 'Dashboard')}
             </Link>
           )}
 
@@ -88,7 +91,7 @@ export default function Header() {
                 isActive('/judge') ? 'text-gold-400 border-b-2 border-gold-400 pb-1' : 'text-gold-300 hover:text-white'
               }`}
             >
-              <Award className="w-4 h-4 text-gold-400" /> Judge Panel
+              <Award className="w-4 h-4 text-gold-400" /> {t('nav.judgePanel', 'Judge Panel')}
             </Link>
           )}
 
@@ -99,15 +102,19 @@ export default function Header() {
                 isActive('/admin') ? 'text-gold-400 border-b-2 border-gold-400 pb-1' : 'text-gold-300 hover:text-white'
               }`}
             >
-              <Shield className="w-4 h-4 text-gold-400" /> Admin Portal
+              <Shield className="w-4 h-4 text-gold-400" /> {t('nav.adminPortal', 'Admin Portal')}
             </Link>
           )}
         </nav>
 
-        {/* User Auth Controls & Action Button */}
-        <div className="flex items-center gap-3">
+        {/* User Auth Controls, Language Switcher & Action Button */}
+        <div className="flex items-center gap-2.5 sm:gap-3">
+          
+          {/* 3-Language Switcher (English, Sinhala, Tamil) */}
+          <LanguageSwitcher />
+
           {user ? (
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               {/* Token Balance Pill */}
               <Link
                 href="/dashboard"
@@ -115,7 +122,7 @@ export default function Header() {
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gold-500/10 hover:bg-gold-500/20 border border-gold-500/40 text-gold-300 text-xs font-bold transition-all shadow-gold-glow"
               >
                 <Coins className="w-3.5 h-3.5 text-gold-400" />
-                <span>{user.tokens_balance ?? 2} {user.tokens_balance === 1 ? 'Token' : 'Tokens'}</span>
+                <span>{user.tokens_balance ?? 2} {user.tokens_balance === 1 ? t('nav.token', 'Token') : t('nav.tokens', 'Tokens')}</span>
               </Link>
 
               {/* User Profile Info */}
@@ -140,7 +147,7 @@ export default function Header() {
                 className="p-2 rounded-xl bg-zinc-900 border border-zinc-700 hover:border-rose-500/50 text-zinc-300 hover:text-rose-400 text-xs font-semibold flex items-center gap-1 transition-colors"
               >
                 <LogOut className="w-4 h-4" />
-                <span className="hidden sm:inline">Logout</span>
+                <span className="hidden sm:inline">{t('nav.logout', 'Logout')}</span>
               </button>
             </div>
           ) : (
@@ -149,23 +156,23 @@ export default function Header() {
                 href="/register"
                 className="hidden sm:flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gold-500/10 border border-gold-500/40 text-gold-300 text-xs font-bold hover:bg-gold-500/20 transition-all shadow-gold-glow"
               >
-                <Sparkles className="w-3.5 h-3.5 text-gold-400" /> 2 Free Tokens
+                <Sparkles className="w-3.5 h-3.5 text-gold-400" /> {t('nav.freeTokens', '2 Free Tokens')}
               </Link>
 
               <Link
                 href="/login"
-                className="px-3.5 py-2 rounded-xl bg-zinc-900 border border-zinc-700 hover:border-gold-400 text-zinc-300 hover:text-white text-xs font-bold flex items-center gap-1.5 transition-colors"
+                className="px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-700 hover:border-gold-400 text-zinc-300 hover:text-white text-xs font-bold flex items-center gap-1.5 transition-colors"
               >
-                <LogIn className="w-3.5 h-3.5 text-gold-400" /> Sign In
+                <LogIn className="w-3.5 h-3.5 text-gold-400" /> {t('nav.signIn', 'Sign In')}
               </Link>
             </div>
           )}
 
           <Link
             href="/upload"
-            className="gold-btn px-4 py-2 rounded-xl text-xs tracking-wider uppercase flex items-center gap-1.5 shadow-gold-glow"
+            className="gold-btn px-3.5 sm:px-4 py-2 rounded-xl text-xs tracking-wider uppercase flex items-center gap-1.5 shadow-gold-glow"
           >
-            <Upload className="w-4 h-4" /> Submit
+            <Upload className="w-4 h-4" /> {t('nav.submit', 'Submit')}
           </Link>
         </div>
       </div>
