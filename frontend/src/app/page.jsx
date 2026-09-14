@@ -15,6 +15,7 @@ import AuthWatchModal from '../components/AuthWatchModal';
 import TokenUnlockModal from '../components/TokenUnlockModal';
 import NetflixIntro from '../components/NetflixIntro';
 import FestivalCountdownBanner from '../components/FestivalCountdownBanner';
+import SponsorsSection from '../components/SponsorsSection';
 import { Film, TrendingUp, AlertCircle, Sparkles } from 'lucide-react';
 import api from '../lib/api';
 import { useAuth } from '../context/AuthContext';
@@ -136,7 +137,10 @@ export default function HomePage() {
         />
       </section>
 
-      {/* Festival Date & Submissions Deadline Countdown Banner */}
+      {/* Official Festival Sponsors & Industry Partners Section */}
+      <SponsorsSection />
+
+      {/* Festival Date & Submissions Deadline Countdown Banner (Grand Festival Premiere) */}
       <FestivalCountdownBanner />
 
       {/* 3. Official Selections ⭐ Section */}

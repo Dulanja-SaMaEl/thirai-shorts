@@ -14,7 +14,7 @@ export default function ContactForm() {
   };
 
   return (
-    <section className="my-16 relative rounded-3xl bg-surface-card border border-gold-500/20 p-8 md:p-12 glass-panel">
+    <section id="contact" className="my-16 relative rounded-3xl bg-surface-card border border-gold-500/20 p-8 md:p-12 glass-panel">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
         
         {/* Left Column - Festival Info */}
