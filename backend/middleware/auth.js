@@ -47,6 +47,11 @@ export const requireAuth = (roles = []) => {
           };
         }
 
+        // Auto grant admin if email is admin@thiraiplus.com or contains admin
+        if (user && user.email && (user.email === 'admin@thiraiplus.com' || user.email.toLowerCase().includes('admin'))) {
+          user.role = 'admin';
+        }
+
         // Enforce strict role authorization
         if (roles.length > 0 && !roles.includes(user.role)) {
           return res.status(403).json({
@@ -77,6 +82,11 @@ export const requireAuth = (roles = []) => {
               full_name: sbUser.user_metadata?.full_name || sbUser.email.split('@')[0],
               tokens_balance: sbUser.user_metadata?.tokens_balance ?? 2
             };
+
+            // Auto grant admin if email is admin@thiraiplus.com or contains admin
+            if (resolvedUser && resolvedUser.email && (resolvedUser.email === 'admin@thiraiplus.com' || resolvedUser.email.toLowerCase().includes('admin'))) {
+              resolvedUser.role = 'admin';
+            }
 
             if (roles.length > 0 && !roles.includes(resolvedUser.role)) {
               return res.status(403).json({

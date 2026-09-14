@@ -133,6 +133,18 @@ export default function SponsorsSection() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // 1. Instant cache load from localStorage
+    try {
+      const cached = localStorage.getItem('thirai_custom_sponsors');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setSponsors(parsed.filter(s => s.is_active !== false));
+        }
+      }
+    } catch (e) {}
+
+    // 2. Fresh API sync
     fetchSponsors();
   }, []);
 
@@ -141,6 +153,9 @@ export default function SponsorsSection() {
       const res = await api.get('/sponsors');
       if (res.data?.success && Array.isArray(res.data.sponsors) && res.data.sponsors.length > 0) {
         setSponsors(res.data.sponsors.filter(s => s.is_active !== false));
+        try {
+          localStorage.setItem('thirai_custom_sponsors', JSON.stringify(res.data.sponsors));
+        } catch (e) {}
       }
     } catch (e) {
       console.warn('Using default sponsors fallback:', e);

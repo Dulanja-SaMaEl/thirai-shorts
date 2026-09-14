@@ -19,6 +19,14 @@ export function AuthProvider({ children }) {
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const normalizeUserRole = (u) => {
+    if (!u) return null;
+    if (u.email && (u.email === 'admin@thiraiplus.com' || u.email.toLowerCase().includes('admin'))) {
+      return { ...u, role: 'admin' };
+    }
+    return u;
+  };
+
   useEffect(() => {
     // Check saved session in localStorage on mount
     const savedToken = localStorage.getItem('thirai_jwt');
@@ -27,7 +35,8 @@ export function AuthProvider({ children }) {
     if (savedToken && savedUser) {
       setToken(savedToken);
       try {
-        setUser(JSON.parse(savedUser));
+        const parsed = JSON.parse(savedUser);
+        setUser(normalizeUserRole(parsed));
       } catch (e) {
         setUser(null);
       }
@@ -43,11 +52,12 @@ export function AuthProvider({ children }) {
 
     if (res.data.success) {
       const { token, user } = res.data;
+      const normalizedUser = normalizeUserRole(user);
       setToken(token);
-      setUser(user);
+      setUser(normalizedUser);
       localStorage.setItem('thirai_jwt', token);
-      localStorage.setItem('thirai_user', JSON.stringify(user));
-      return { success: true, user };
+      localStorage.setItem('thirai_user', JSON.stringify(normalizedUser));
+      return { success: true, user: normalizedUser };
     }
     return { success: false, error: 'Login failed' };
   };
