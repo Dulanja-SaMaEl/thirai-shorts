@@ -194,6 +194,11 @@ ALTER TABLE public.movies ADD COLUMN IF NOT EXISTS declaration_confirmed BOOLEAN
 ALTER TABLE public.movies ADD COLUMN IF NOT EXISTS digital_signature VARCHAR(255);
 ALTER TABLE public.movies ADD COLUMN IF NOT EXISTS signature_date VARCHAR(50);
 ALTER TABLE public.movies ADD COLUMN IF NOT EXISTS submission_metadata JSONB DEFAULT '{}'::jsonb;
+ALTER TABLE public.movies ADD COLUMN IF NOT EXISTS is_student BOOLEAN DEFAULT FALSE;
+ALTER TABLE public.movies ADD COLUMN IF NOT EXISTS student_school_name VARCHAR(255);
+ALTER TABLE public.movies ADD COLUMN IF NOT EXISTS student_school_contact VARCHAR(100);
+ALTER TABLE public.movies ADD COLUMN IF NOT EXISTS student_verification_document TEXT;
+ALTER TABLE public.movies ADD COLUMN IF NOT EXISTS student_verification_status VARCHAR(50) DEFAULT 'none';
 
 CREATE INDEX IF NOT EXISTS idx_movies_status ON public.movies(status);
 CREATE INDEX IF NOT EXISTS idx_movies_created_at ON public.movies(created_at DESC);

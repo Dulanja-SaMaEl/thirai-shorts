@@ -33,9 +33,9 @@ export default function Header() {
         <div className="flex items-center gap-8">
           <Link href="/" className="flex items-center gap-3 group relative py-1">
             <img
-              src="/images/logo-wordmark.png"
-              alt="Thirai+"
-              className="h-8 sm:h-9 w-auto object-contain transition-all duration-300 group-hover:brightness-110 group-hover:scale-[1.02]"
+              src="/images/logo-icon.png"
+              alt="T+"
+              className="h-10 sm:h-12 w-auto object-contain transition-all duration-300 group-hover:brightness-110 group-hover:scale-[1.05]"
             />
           </Link>
 

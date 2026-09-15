@@ -57,7 +57,7 @@ function RegisterForm() {
           <div className="inline-flex items-center justify-center">
             <img
               src="/images/logo-icon.png"
-              alt="Thirai+"
+              alt="T+"
               className="w-20 h-20 object-contain mx-auto drop-shadow-[0_0_15px_rgba(255,215,0,0.4)]"
             />
           </div>

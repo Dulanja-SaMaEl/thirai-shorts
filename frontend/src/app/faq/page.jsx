@@ -154,15 +154,19 @@ export default function FAQPage() {
               Frequently Asked <span className="text-gold-400 font-serif">Questions</span>
             </h1>
             <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed font-normal">
-              Find clear answers on short film submissions ($4.99 fee, 40 min max), festival passes ($4.99 viewer & $2.99 submitter pass), free trailers, hybrid jury judging, and premiere dates.
+              Find clear answers on short film submissions ($4.99 standard, 100% FREE for students with Principal verification), festival passes ($4.99 viewer & $2.99 submitter pass), free trailers, and jury evaluations.
             </p>
           </div>
 
           {/* Quick Stats Highlights */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-2 max-w-3xl mx-auto">
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 pt-2 max-w-4xl mx-auto">
             <div className="p-3 rounded-lg bg-[#080a0f] border border-white/[0.06] text-center">
-              <span className="text-[10px] uppercase font-semibold text-zinc-400 block">Submission Fee</span>
+              <span className="text-[10px] uppercase font-semibold text-zinc-400 block">Standard Entry</span>
               <strong className="text-sm sm:text-base font-bold text-gold-400 font-mono">$4.99 USD</strong>
+            </div>
+            <div className="p-3 rounded-lg bg-[#080a0f] border border-emerald-500/30 text-center">
+              <span className="text-[10px] uppercase font-semibold text-emerald-400 block">Student Entry</span>
+              <strong className="text-sm sm:text-base font-bold text-emerald-400 font-mono">100% Free ($0)</strong>
             </div>
             <div className="p-3 rounded-lg bg-[#080a0f] border border-white/[0.06] text-center">
               <span className="text-[10px] uppercase font-semibold text-zinc-400 block">Max Runtime</span>
@@ -172,7 +176,7 @@ export default function FAQPage() {
               <span className="text-[10px] uppercase font-semibold text-zinc-400 block">Viewer Pass</span>
               <strong className="text-sm sm:text-base font-bold text-gold-400 font-mono">$4.99 / mo</strong>
             </div>
-            <div className="p-3 rounded-lg bg-[#080a0f] border border-white/[0.06] text-center">
+            <div className="p-3 rounded-lg bg-[#080a0f] border border-white/[0.06] text-center col-span-2 sm:col-span-1">
               <span className="text-[10px] uppercase font-semibold text-zinc-400 block">Movie Trailers</span>
               <strong className="text-sm sm:text-base font-bold text-emerald-400 font-mono">100% Free</strong>
             </div>

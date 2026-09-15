@@ -7,7 +7,7 @@ import {
   Shield, Eye, Star, DollarSign, Film, UserPlus, Clock, CheckCircle2,
   XCircle, AlertTriangle, BarChart3, Trophy, LogIn, Play, FileText,
   Users, Globe, X, Camera, ShieldCheck, PenTool, Calendar, Sparkles, RefreshCw, Zap,
-  Plus, Trash2, Edit3, ExternalLink, Award, Upload
+  Plus, Trash2, Edit3, ExternalLink, Award, Upload, GraduationCap
 } from 'lucide-react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import api from '../../lib/api';
@@ -24,6 +24,7 @@ export default function AdminPanelPage() {
   const [analytics, setAnalytics] = useState(null);
   const [moviesList, setMoviesList] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [moderationFilter, setModerationFilter] = useState('all'); // 'all' | 'students' | 'pending'
 
   // Video Player & Dossier Modal State
   const [selectedPlayingMovie, setSelectedPlayingMovie] = useState(null);
@@ -530,6 +531,39 @@ export default function AdminPanelPage() {
     }
   };
 
+  const handleVerifyStudent = async (movieId, verificationStatus) => {
+    // 1. Optimistic UI update
+    setMoviesList(prev => prev.map(m => {
+      if (m.id === movieId) {
+        return {
+          ...m,
+          student_verification_status: verificationStatus
+        };
+      }
+      return m;
+    }));
+
+    if (selectedDossierMovie && selectedDossierMovie.id === movieId) {
+      setSelectedDossierMovie(prev => ({
+        ...prev,
+        student_verification_status: verificationStatus
+      }));
+    }
+
+    const label = verificationStatus === 'verified' ? 'APPROVED & VERIFIED' : 'REJECTED';
+    setActionNotification(`🎓 Student verification status updated to ${label} successfully!`);
+    setTimeout(() => setActionNotification(''), 4000);
+
+    // 2. API Call
+    try {
+      await api.put(`/admin/movies/${movieId}/verify-student`, {
+        verification_status: verificationStatus
+      });
+    } catch (err) {
+      console.warn('Student verification sync note:', err);
+    }
+  };
+
   const handleJudgeImageUpload = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -877,117 +911,260 @@ export default function AdminPanelPage() {
       )}
 
       {/* Tab Content 1: Moderation Queue */}
-      {activeTab === 'moderation' && (
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold text-white">Submission Moderation Queue</h2>
-            <span className="text-xs text-zinc-400 font-mono">
-              Total Submissions: {moviesList.length}
-            </span>
-          </div>
+      {activeTab === 'moderation' && (() => {
+        const studentCount = moviesList.filter(m => m.is_student || m.film_type === 'Student Film').length;
+        const pendingStudentCount = moviesList.filter(m => (m.is_student || m.film_type === 'Student Film') && m.student_verification_status !== 'verified').length;
 
-          <div className="space-y-4">
-            {moviesList.map((movie) => (
-              <div
-                key={movie.id}
-                className="bg-surface-card border border-zinc-800 rounded-2xl p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 hover:border-gold-500/30 transition-colors"
-              >
-                <div className="flex items-center gap-4">
-                  <img
-                    src={movie.thumbnail_url || '/images/logo-wordmark.png'}
-                    alt={movie.title}
-                    className="w-24 h-16 rounded-xl object-cover shrink-0 border border-zinc-800"
-                  />
-                  <div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="text-base font-bold text-white">{movie.title}</h3>
-                      <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-extrabold uppercase ${
-                        movie.is_winner
-                          ? 'bg-gold-500/20 text-gold-300 border border-gold-500/50'
-                          : movie.status === 'approved'
-                          ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
-                          : movie.status === 'rejected'
-                          ? 'bg-rose-500/20 text-rose-400 border border-rose-500/40'
-                          : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
-                      }`}>
-                        {movie.is_winner ? `🏆 Winner: ${movie.winner_category || 'Best Film'}` : movie.status}
-                      </span>
-                      {movie.genre && (
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-300 border border-zinc-700">
-                          {movie.genre}
-                        </span>
-                      )}
-                      {movie.film_type && (
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-300 border border-blue-500/30">
-                          {movie.film_type}
-                        </span>
-                      )}
-                      {movie.premiere_status && (
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-300 border border-purple-500/30">
-                          {movie.premiere_status}
-                        </span>
-                      )}
-                    </div>
+        const displayedMovies = moviesList.filter(movie => {
+          const isStudent = movie.is_student || movie.film_type === 'Student Film';
+          if (moderationFilter === 'students') return isStudent;
+          if (moderationFilter === 'pending_students') return isStudent && movie.student_verification_status !== 'verified';
+          return true;
+        });
 
-                    <p className="text-xs text-zinc-400 line-clamp-1 mt-1 font-light">{movie.description}</p>
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-zinc-400 mt-2 font-mono">
-                      <span>Director: <strong className="text-white">{movie.director_name || 'N/A'}</strong></span>
-                      {movie.producer_name && <span>• Producer: <strong className="text-white">{movie.producer_name}</strong></span>}
-                      <span>• Email: {movie.director_email || movie.uploader_email || 'N/A'}</span>
-                      <span>• Phone: {movie.director_phone || movie.uploader_phone || 'N/A'}</span>
-                      <span>• Views: {movie.view_count || 0}</span>
-                    </div>
-
-                    {movie.status === 'rejected' && movie.rejection_reason && (
-                      <div className="mt-2 text-[11px] text-rose-300 italic bg-rose-500/10 p-2 rounded-lg border border-rose-500/20">
-                        Rejection Reason: "{movie.rejection_reason}"
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Moderation Actions */}
-                <div className="flex flex-wrap items-center gap-2 shrink-0">
-                  <button
-                    onClick={() => setSelectedDossierMovie(movie)}
-                    className="px-3.5 py-2 rounded-xl bg-gold-500/10 border border-gold-500/40 hover:bg-gold-500/20 text-gold-300 text-xs font-bold flex items-center gap-1.5 transition-colors"
-                  >
-                    <FileText className="w-3.5 h-3.5 text-gold-400" /> Dossier
-                  </button>
-
-                  <button
-                    onClick={() => setSelectedPlayingMovie(movie)}
-                    className="px-3.5 py-2 rounded-xl bg-zinc-900 border border-zinc-700 hover:border-gold-400 text-gold-300 text-xs font-bold flex items-center gap-1.5 transition-colors"
-                  >
-                    <Play className="w-3.5 h-3.5 text-gold-400 fill-gold-400" /> Preview Video
-                  </button>
-
-                  <button
-                    onClick={() => handleModerateMovie(movie.id, 'approved')}
-                    className="px-3.5 py-2 rounded-xl bg-emerald-500/20 border border-emerald-500/40 hover:bg-emerald-500/30 text-emerald-300 text-xs font-bold flex items-center gap-1 transition-colors"
-                  >
-                    <CheckCircle2 className="w-3.5 h-3.5" /> Approve
-                  </button>
-
-                  <button
-                    onClick={() => setSelectedMovieForAction(movie.id)}
-                    className="px-3.5 py-2 rounded-xl bg-rose-500/20 border border-rose-500/40 hover:bg-rose-500/30 text-rose-300 text-xs font-bold flex items-center gap-1 transition-colors"
-                  >
-                    <XCircle className="w-3.5 h-3.5" /> Reject
-                  </button>
-
-                  <button
-                    onClick={() => handleModerateMovie(movie.id, 'approved', true, 'Festival Award Winner')}
-                    className="px-3.5 py-2 rounded-xl bg-gold-500/20 border border-gold-500/50 hover:bg-gold-500/30 text-gold-300 text-xs font-extrabold flex items-center gap-1 shadow-gold-glow transition-colors"
-                  >
-                    <Trophy className="w-3.5 h-3.5 text-gold-400 fill-black" /> Crown Winner
-                  </button>
-                </div>
+        return (
+          <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-bold text-white">Submission Moderation Queue</h2>
+                <p className="text-xs text-zinc-400 mt-0.5">
+                  Review short film entries, verify student endorsement credentials, and moderate festival status.
+                </p>
               </div>
-            ))}
+
+              {/* Moderation Filter Pills */}
+              <div className="flex items-center gap-1.5 flex-wrap bg-black/60 p-1.5 rounded-xl border border-zinc-800">
+                <button
+                  type="button"
+                  onClick={() => setModerationFilter('all')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                    moderationFilter === 'all'
+                      ? 'bg-gold-gradient text-black font-bold shadow-sm'
+                      : 'text-zinc-400 hover:text-white'
+                  }`}
+                >
+                  All Entries ({moviesList.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setModerationFilter('students')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5 ${
+                    moderationFilter === 'students'
+                      ? 'bg-gold-gradient text-black font-bold shadow-sm'
+                      : 'text-zinc-400 hover:text-white'
+                  }`}
+                >
+                  <GraduationCap className="w-3.5 h-3.5" />
+                  <span>Student Films ({studentCount})</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setModerationFilter('pending_students')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5 ${
+                    moderationFilter === 'pending_students'
+                      ? 'bg-amber-500 text-black font-bold shadow-sm'
+                      : 'text-amber-400 hover:text-white'
+                  }`}
+                >
+                  <span>Pending Student Verification ({pendingStudentCount})</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              {displayedMovies.length === 0 ? (
+                <div className="text-center py-16 bg-surface-card border border-zinc-800 rounded-2xl p-8 space-y-2">
+                  <Film className="w-10 h-10 text-zinc-600 mx-auto" />
+                  <h3 className="text-base font-bold text-white">No Submissions Found</h3>
+                  <p className="text-xs text-zinc-400">
+                    No short films match the selected moderation filter.
+                  </p>
+                  <button
+                    onClick={() => setModerationFilter('all')}
+                    className="mt-2 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg text-xs font-semibold"
+                  >
+                    View All Submissions
+                  </button>
+                </div>
+              ) : (
+                displayedMovies.map((movie) => {
+                  const isStudentEntry = Boolean(movie.is_student || movie.film_type === 'Student Film');
+
+                  return (
+                    <div
+                      key={movie.id}
+                      className="bg-surface-card border border-zinc-800 rounded-2xl p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 hover:border-gold-500/30 transition-colors"
+                    >
+                      <div className="flex items-start sm:items-center gap-4">
+                        <img
+                          src={movie.thumbnail_url || '/images/logo-icon.png'}
+                          alt={movie.title}
+                          className="w-24 h-16 rounded-xl object-cover shrink-0 border border-zinc-800"
+                        />
+                        <div>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <h3 className="text-base font-bold text-white">{movie.title}</h3>
+                            
+                            {/* Moderation Status */}
+                            <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-extrabold uppercase ${
+                              movie.is_winner
+                                ? 'bg-gold-500/20 text-gold-300 border border-gold-500/50'
+                                : movie.status === 'approved'
+                                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
+                                : movie.status === 'rejected'
+                                ? 'bg-rose-500/20 text-rose-400 border border-rose-500/40'
+                                : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                            }`}>
+                              {movie.is_winner ? `🏆 Winner: ${movie.winner_category || 'Best Film'}` : movie.status}
+                            </span>
+
+                            {/* Student Badge & Verification Status */}
+                            {isStudentEntry && (
+                              <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 font-extrabold uppercase inline-flex items-center gap-1">
+                                <GraduationCap className="w-3 h-3 text-cyan-400" /> Student Entry (100% Free)
+                              </span>
+                            )}
+
+                            {isStudentEntry && (
+                              <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-extrabold uppercase ${
+                                movie.student_verification_status === 'verified'
+                                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
+                                  : movie.student_verification_status === 'rejected'
+                                  ? 'bg-rose-500/20 text-rose-400 border border-rose-500/40'
+                                  : 'bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-pulse'
+                              }`}>
+                                {movie.student_verification_status === 'verified'
+                                  ? '✓ Student Verified'
+                                  : movie.student_verification_status === 'rejected'
+                                  ? '✕ Verification Rejected'
+                                  : '⏳ Verification Pending'}
+                              </span>
+                            )}
+
+                            {movie.genre && (
+                              <span className="text-[10px] px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-300 border border-zinc-700">
+                                {movie.genre}
+                              </span>
+                            )}
+                          </div>
+
+                          <p className="text-xs text-zinc-400 line-clamp-1 mt-1 font-light">{movie.description}</p>
+                          
+                          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-zinc-400 mt-2 font-mono">
+                            <span>Director: <strong className="text-white">{movie.director_name || 'N/A'}</strong></span>
+                            {movie.producer_name && <span>• Producer: <strong className="text-white">{movie.producer_name}</strong></span>}
+                            <span>• Email: {movie.director_email || movie.uploader_email || 'N/A'}</span>
+                            <span>• Phone: {movie.director_phone || movie.uploader_phone || 'N/A'}</span>
+                            <span>• Views: {movie.view_count || 0}</span>
+                          </div>
+
+                          {/* Student School & Document Verification Banner */}
+                          {isStudentEntry && (
+                            <div className="mt-2.5 p-2.5 rounded-xl bg-zinc-950 border border-cyan-500/20 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-zinc-300">
+                              <span className="inline-flex items-center gap-1 text-cyan-300 font-semibold">
+                                <GraduationCap className="w-3.5 h-3.5" /> School: <strong className="text-white font-normal ml-1">{movie.student_school_name || 'Not provided'}</strong>
+                              </span>
+                              <span className="text-zinc-400">
+                                School Contact: <strong className="text-gold-300 font-mono font-medium">{movie.student_school_contact || 'N/A'}</strong>
+                              </span>
+                              {movie.student_verification_document ? (
+                                <a
+                                  href={movie.student_verification_document}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 text-gold-400 hover:text-gold-300 underline font-semibold text-[11px] ml-auto"
+                                >
+                                  <ExternalLink className="w-3 h-3" /> Inspect Principal's Letter
+                                </a>
+                              ) : (
+                                <span className="text-rose-400 text-[11px] italic ml-auto">No letter uploaded</span>
+                              )}
+                            </div>
+                          )}
+
+                          {movie.status === 'rejected' && movie.rejection_reason && (
+                            <div className="mt-2 text-[11px] text-rose-300 italic bg-rose-500/10 p-2 rounded-lg border border-rose-500/20">
+                              Rejection Reason: "{movie.rejection_reason}"
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Moderation Actions */}
+                      <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2 shrink-0">
+                        {/* Student Verification Fast Actions */}
+                        {isStudentEntry && (
+                          <div className="flex items-center gap-1.5 border-b sm:border-b-0 sm:border-r border-zinc-800 pb-2 sm:pb-0 sm:pr-2">
+                            <button
+                              type="button"
+                              onClick={() => handleVerifyStudent(movie.id, 'verified')}
+                              title="Approve Student Verification Document"
+                              className={`px-2.5 py-1.5 rounded-lg text-[11px] font-bold flex items-center gap-1 transition-colors ${
+                                movie.student_verification_status === 'verified'
+                                  ? 'bg-emerald-500/30 text-emerald-300 border border-emerald-500/50'
+                                  : 'bg-zinc-900 border border-zinc-700 hover:border-emerald-500 text-zinc-300 hover:text-emerald-300'
+                              }`}
+                            >
+                              <CheckCircle2 className="w-3 h-3 text-emerald-400" /> Verify Student
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleVerifyStudent(movie.id, 'rejected')}
+                              title="Reject Student Status (Invalid Letter)"
+                              className={`px-2.5 py-1.5 rounded-lg text-[11px] font-bold flex items-center gap-1 transition-colors ${
+                                movie.student_verification_status === 'rejected'
+                                  ? 'bg-rose-500/30 text-rose-300 border border-rose-500/50'
+                                  : 'bg-zinc-900 border border-zinc-700 hover:border-rose-500 text-zinc-300 hover:text-rose-300'
+                              }`}
+                            >
+                              <XCircle className="w-3 h-3 text-rose-400" /> Reject Student
+                            </button>
+                          </div>
+                        )}
+
+                        <button
+                          onClick={() => setSelectedDossierMovie(movie)}
+                          className="px-3.5 py-2 rounded-xl bg-gold-500/10 border border-gold-500/40 hover:bg-gold-500/20 text-gold-300 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors"
+                        >
+                          <FileText className="w-3.5 h-3.5 text-gold-400" /> Dossier
+                        </button>
+
+                        <button
+                          onClick={() => setSelectedPlayingMovie(movie)}
+                          className="px-3.5 py-2 rounded-xl bg-zinc-900 border border-zinc-700 hover:border-gold-400 text-gold-300 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors"
+                        >
+                          <Play className="w-3.5 h-3.5 text-gold-400 fill-gold-400" /> Preview Video
+                        </button>
+
+                        <button
+                          onClick={() => handleModerateMovie(movie.id, 'approved')}
+                          className="px-3.5 py-2 rounded-xl bg-emerald-500/20 border border-emerald-500/40 hover:bg-emerald-500/30 text-emerald-300 text-xs font-bold flex items-center justify-center gap-1 transition-colors"
+                        >
+                          <CheckCircle2 className="w-3.5 h-3.5" /> Approve
+                        </button>
+
+                        <button
+                          onClick={() => setSelectedMovieForAction(movie.id)}
+                          className="px-3.5 py-2 rounded-xl bg-rose-500/20 border border-rose-500/40 hover:bg-rose-500/30 text-rose-300 text-xs font-bold flex items-center justify-center gap-1 transition-colors"
+                        >
+                          <XCircle className="w-3.5 h-3.5" /> Reject
+                        </button>
+
+                        <button
+                          onClick={() => handleModerateMovie(movie.id, 'approved', true, 'Festival Award Winner')}
+                          className="px-3.5 py-2 rounded-xl bg-gold-500/20 border border-gold-500/50 hover:bg-gold-500/30 text-gold-300 text-xs font-extrabold flex items-center justify-center gap-1 shadow-gold-glow transition-colors"
+                        >
+                          <Trophy className="w-3.5 h-3.5 text-gold-400 fill-black" /> Crown Winner
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Reject Reason Modal */}
       {selectedMovieForAction && (
@@ -1232,6 +1409,87 @@ export default function AdminPanelPage() {
                   </div>
                 </div>
               </div>
+            </div>
+
+            {/* Section 6: Student Verification & School Endorsement */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-bold text-gold-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <GraduationCap className="w-4 h-4 text-gold-400" />
+                  6. Student Status & School Verification
+                </h4>
+                <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-extrabold uppercase ${
+                  selectedDossierMovie.student_verification_status === 'verified'
+                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
+                    : selectedDossierMovie.student_verification_status === 'rejected'
+                    ? 'bg-rose-500/20 text-rose-400 border border-rose-500/40'
+                    : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                }`}>
+                  {selectedDossierMovie.student_verification_status === 'verified'
+                    ? '✓ Student Status Verified'
+                    : selectedDossierMovie.student_verification_status === 'rejected'
+                    ? '✕ Verification Rejected'
+                    : '⏳ Awaiting Admin Verification'}
+                </span>
+              </div>
+
+              {selectedDossierMovie.is_student || selectedDossierMovie.film_type === 'Student Film' ? (
+                <div className="p-4 bg-black/60 rounded-xl border border-zinc-800 space-y-3 text-xs">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <span className="text-zinc-500 block text-[11px]">School / College / Institution:</span>
+                      <strong className="text-white text-xs">{selectedDossierMovie.student_school_name || 'Not provided'}</strong>
+                    </div>
+                    <div>
+                      <span className="text-zinc-500 block text-[11px]">Official School Phone:</span>
+                      <strong className="text-gold-300 font-mono text-xs">{selectedDossierMovie.student_school_contact || 'N/A'}</strong>
+                    </div>
+                  </div>
+
+                  {/* Principal Confirmation Document */}
+                  <div className="p-3 rounded-lg bg-zinc-950 border border-zinc-850 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                      <span className="text-xs font-semibold text-white block">Principal's Official Confirmation Document</span>
+                      <span className="text-[11px] text-zinc-400">School letterhead with Principal's signature & official stamp</span>
+                    </div>
+                    {selectedDossierMovie.student_verification_document ? (
+                      <a
+                        href={selectedDossierMovie.student_verification_document}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gold-500/20 text-gold-300 hover:bg-gold-500/30 border border-gold-500/40 font-bold text-xs transition-colors shrink-0"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" /> View / Download Document
+                      </a>
+                    ) : (
+                      <span className="text-rose-400 text-xs italic">No document uploaded</span>
+                    )}
+                  </div>
+
+                  {/* Admin Verification Decision Buttons */}
+                  <div className="flex items-center justify-between pt-2 border-t border-zinc-850">
+                    <span className="text-[11px] text-zinc-400">Review Principal endorsement and decide status:</span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleVerifyStudent(selectedDossierMovie.id, 'verified')}
+                        className="px-3 py-1.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 font-bold text-xs flex items-center gap-1 transition-colors"
+                      >
+                        <CheckCircle2 className="w-3.5 h-3.5" /> Approve Student
+                      </button>
+                      <button
+                        onClick={() => handleVerifyStudent(selectedDossierMovie.id, 'rejected')}
+                        className="px-3 py-1.5 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 font-bold text-xs flex items-center gap-1 transition-colors"
+                      >
+                        <XCircle className="w-3.5 h-3.5" /> Reject Verification
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-3 bg-black/60 rounded-xl border border-zinc-800 text-xs text-zinc-400">
+                  This submission is entered as an <strong className="text-white">Independent Film</strong> (Non-student entry, Standard festival fee).
+                </div>
+              )}
             </div>
 
             {/* Modal Actions */}

@@ -81,11 +81,11 @@ function LoginForm() {
           <div className="inline-flex items-center justify-center">
             <img
               src="/images/logo-icon.png"
-              alt="Thirai+"
+              alt="T+"
               className="w-24 h-24 object-contain mx-auto drop-shadow-[0_0_15px_rgba(255,215,0,0.4)]"
             />
           </div>
-          <h2 className="text-2xl font-extrabold text-white tracking-tight">Thirai+ Portal Login</h2>
+          <h2 className="text-2xl font-extrabold text-white tracking-tight">T+ Portal Login</h2>
           <p className="text-xs text-zinc-400 max-w-xs mx-auto">
             Common sign in for Viewers, Filmmakers & Directors, Jury Members, and Admins.
           </p>

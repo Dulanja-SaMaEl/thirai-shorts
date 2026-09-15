@@ -4,7 +4,8 @@ import { useState } from 'react';
 import {
   Upload, Film, Image as ImageIcon, FileText, CheckCircle2, AlertCircle,
   Loader2, Sparkles, Plus, Trash2, ArrowRight, ArrowLeft, Users,
-  Clapperboard, UserCheck, FolderUp, Award, Camera, ShieldCheck, PenTool, Calendar
+  Clapperboard, UserCheck, FolderUp, Award, Camera, ShieldCheck, PenTool, Calendar,
+  GraduationCap, Building2, Phone, FileCheck
 } from 'lucide-react';
 import axios from 'axios';
 import api from '../../lib/api';
@@ -52,6 +53,11 @@ export default function UploadPage() {
   const [productionDate, setProductionDate] = useState('');
   const [appliedFestivals, setAppliedFestivals] = useState('');
   const [filmType, setFilmType] = useState('Independent Film');
+
+  // Student Filmmaker Verification Details (100% Free Submission)
+  const [studentSchoolName, setStudentSchoolName] = useState('');
+  const [studentSchoolContact, setStudentSchoolContact] = useState('');
+  const [studentProofFile, setStudentProofFile] = useState(null);
 
   // --- Step 4: Primary Contact Person ---
   const [contactName, setContactName] = useState('');
@@ -133,6 +139,22 @@ export default function UploadPage() {
       if (!directorPhone.trim()) {
         setErrorMsg("Please provide the Director's phone number.");
         return false;
+      }
+    }
+    if (step === 3) {
+      if (filmType === 'Student Film') {
+        if (!studentSchoolName.trim()) {
+          setErrorMsg('Mandatory: Please enter your School / College / University Name.');
+          return false;
+        }
+        if (!studentSchoolContact.trim()) {
+          setErrorMsg('Mandatory: Please provide the official School Contact Telephone Number for administrative verification.');
+          return false;
+        }
+        if (!studentProofFile) {
+          setErrorMsg("Mandatory: Please upload the Confirmation Letter from the Principal on official school letterhead with signature.");
+          return false;
+        }
       }
     }
     if (step === 4) {
@@ -261,6 +283,13 @@ export default function UploadPage() {
         });
       }
 
+      // Step 3.5: Upload Mandatory Student Verification Document if Student Film
+      let studentProofUrl = null;
+      if (filmType === 'Student Film' && studentProofFile) {
+        setUploadStatusText("Uploading Principal's Confirmation Letter to Cloudflare R2...");
+        studentProofUrl = await uploadFileToR2(studentProofFile, 'student_verification', () => {});
+      }
+
       setUploadProgress(95);
       setUploadStatusText('Saving Complete Festival Submission Dossier...');
 
@@ -278,6 +307,13 @@ export default function UploadPage() {
         video_url: videoUrl,
         trailer_url: trailerUrl,
         attachments: attachmentsList,
+
+        // Student Verification & School Endorsement (100% Free Entry)
+        is_student: filmType === 'Student Film',
+        student_school_name: filmType === 'Student Film' ? studentSchoolName.trim() : null,
+        student_school_contact: filmType === 'Student Film' ? studentSchoolContact.trim() : null,
+        student_verification_document: studentProofUrl,
+        student_verification_status: filmType === 'Student Film' ? 'pending' : 'none',
 
         // Film Information
         original_language: originalLanguage,
@@ -364,7 +400,7 @@ export default function UploadPage() {
           <Sparkles className="w-3.5 h-3.5" /> Official Festival Entry Form
         </div>
         <h1 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight">
-          Submit Your Short Film to <span className="gold-text-gradient">Thirai+</span>
+          Submit Your Short Film to <span className="gold-text-gradient">T+</span>
         </h1>
         <p className="text-xs md:text-sm text-zinc-400 mt-2 max-w-xl mx-auto">
           Complete official film dossier & direct Cloudflare R2 cinema storage pipeline.
@@ -1070,6 +1106,103 @@ export default function UploadPage() {
                   </div>
                 </div>
 
+                {/* Student Verification & 100% Free Submission Form */}
+                {filmType === 'Student Film' && (
+                  <div className="p-5 rounded-2xl bg-black/80 border border-gold-500/40 space-y-4 shadow-gold-glow animate-fade-in">
+                    <div className="flex items-start gap-3 border-b border-zinc-800 pb-3">
+                      <div className="w-10 h-10 rounded-xl bg-gold-gradient p-0.5 shrink-0 flex items-center justify-center">
+                        <div className="w-full h-full bg-black rounded-[10px] flex items-center justify-center">
+                          <GraduationCap className="w-5 h-5 text-gold-400" />
+                        </div>
+                      </div>
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <h4 className="text-xs sm:text-sm font-extrabold text-white uppercase tracking-wider">
+                            Student Filmmaker 100% Free Submission
+                          </h4>
+                          <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 text-[10px] font-black uppercase font-mono">
+                            $0.00 Fee Waiver
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-zinc-300 leading-relaxed font-light">
+                          Thirai+ waives the entry fee entirely for students. To qualify and prevent unauthorized submissions, an official confirmation letter on school letterhead signed by the Principal/Dean is strictly mandatory.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {/* School Name */}
+                      <div>
+                        <label className="block text-xs font-semibold text-zinc-300 mb-1.5 flex items-center gap-1.5">
+                          <Building2 className="w-3.5 h-3.5 text-gold-400" />
+                          School / College / Institution Name <span className="text-gold-400">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={studentSchoolName}
+                          onChange={(e) => setStudentSchoolName(e.target.value)}
+                          placeholder="e.g. Royal College / Colombo International Film School"
+                          className="w-full bg-zinc-900 border border-zinc-800 rounded-xl py-2.5 px-4 text-xs text-white focus:outline-none focus:border-gold-500"
+                        />
+                      </div>
+
+                      {/* School Contact Number */}
+                      <div>
+                        <label className="block text-xs font-semibold text-zinc-300 mb-1.5 flex items-center gap-1.5">
+                          <Phone className="w-3.5 h-3.5 text-gold-400" />
+                          Official School Contact Number <span className="text-gold-400">*</span>
+                        </label>
+                        <input
+                          type="tel"
+                          required
+                          value={studentSchoolContact}
+                          onChange={(e) => setStudentSchoolContact(e.target.value)}
+                          placeholder="e.g. +94 11 269 5149 (Official administration desk)"
+                          className="w-full bg-zinc-900 border border-zinc-800 rounded-xl py-2.5 px-4 text-xs text-white focus:outline-none focus:border-gold-500"
+                        />
+                        <p className="text-[10px] text-zinc-500 mt-1">
+                          Festival admins use this number to verify the authenticity of the submission.
+                        </p>
+                      </div>
+
+                      {/* Principal Confirmation Document Upload */}
+                      <div className="sm:col-span-2">
+                        <label className="block text-xs font-semibold text-zinc-300 mb-1.5 flex items-center gap-1.5">
+                          <FileCheck className="w-3.5 h-3.5 text-gold-400" />
+                          Confirmation Letter from Principal (Official Letterhead & Signature) <span className="text-gold-400">*</span>
+                        </label>
+                        <div className="relative border-2 border-dashed border-zinc-700 hover:border-gold-500/60 rounded-2xl p-4 bg-zinc-950/70 text-center transition-colors">
+                          <input
+                            type="file"
+                            required
+                            accept=".pdf,image/png,image/jpeg,image/webp"
+                            onChange={(e) => setStudentProofFile(e.target.files[0] || null)}
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                          />
+                          {studentProofFile ? (
+                            <div className="flex items-center justify-center gap-2 text-emerald-400 text-xs font-semibold">
+                              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                              <span>Selected: {studentProofFile.name} ({(studentProofFile.size / 1024 / 1024).toFixed(2)} MB)</span>
+                              <span className="text-[10px] text-zinc-400">(Click to change)</span>
+                            </div>
+                          ) : (
+                            <div className="space-y-1">
+                              <Upload className="w-6 h-6 text-gold-400 mx-auto" />
+                              <p className="text-xs font-semibold text-white">
+                                Click or drag & drop Principal's Letterhead Document
+                              </p>
+                              <p className="text-[11px] text-zinc-400 font-light">
+                                Accepted: PDF, JPEG, PNG, WebP (Max 10MB). Must be on school letterhead with Principal's signature & official stamp.
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 <div>
                   <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
                     Applied Festivals / Competitions (Past or concurrent entries)
@@ -1315,6 +1448,53 @@ export default function UploadPage() {
                   </div>
                 </div>
               </div>
+
+              {/* Submission Tier & Fee Summary */}
+              {filmType === 'Student Film' ? (
+                <div className="p-4 sm:p-5 rounded-2xl bg-emerald-500/10 border border-emerald-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center shrink-0">
+                      <GraduationCap className="w-5 h-5 text-emerald-400" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h4 className="text-xs sm:text-sm font-bold text-white">Student Filmmaker Submission Tier</h4>
+                        <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 text-[10px] font-extrabold uppercase">
+                          100% Free
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-zinc-300 mt-0.5">
+                        {studentSchoolName ? `${studentSchoolName} • ` : ''}Principal Endorsement Letter Attached (Fee Waived)
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 self-end sm:self-auto">
+                    <span className="text-zinc-500 line-through text-xs font-mono">$4.99 USD</span>
+                    <span className="px-3 py-1 rounded-lg bg-emerald-500 text-black text-xs font-black uppercase font-mono shadow-sm">
+                      $0.00 Free
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-4 sm:p-5 rounded-2xl bg-black/70 border border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-gold-500/10 flex items-center justify-center shrink-0">
+                      <Clapperboard className="w-5 h-5 text-gold-400" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs sm:text-sm font-bold text-white">Independent Film Festival Submission Tier</h4>
+                      <p className="text-[11px] text-zinc-400 mt-0.5">
+                        Standard Entry Fee • 4K R2 Cloud Screening & Jury Evaluation
+                      </p>
+                    </div>
+                  </div>
+                  <div className="self-end sm:self-auto">
+                    <span className="px-3 py-1 rounded-lg bg-gold-500/20 text-gold-300 border border-gold-500/40 text-xs font-bold font-mono">
+                      $4.99 USD
+                    </span>
+                  </div>
+                </div>
+              )}
 
               {/* Official Festival Declaration & Rights Clearance */}
               <div className="p-5 sm:p-6 rounded-2xl bg-zinc-950 border border-gold-500/30 space-y-4 shadow-lg">

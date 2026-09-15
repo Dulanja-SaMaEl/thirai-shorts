@@ -16,7 +16,8 @@ import TokenUnlockModal from '../components/TokenUnlockModal';
 import NetflixIntro from '../components/NetflixIntro';
 import FestivalCountdownBanner from '../components/FestivalCountdownBanner';
 import SponsorsSection from '../components/SponsorsSection';
-import { Film, TrendingUp, AlertCircle, Sparkles, Search, X, Clapperboard, Filter } from 'lucide-react';
+import { Film, TrendingUp, AlertCircle, Sparkles, Search, X, Clapperboard, Filter, GraduationCap, Award, CheckCircle2, ArrowRight, ShieldCheck } from 'lucide-react';
+import Link from 'next/link';
 import api from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 
@@ -325,6 +326,75 @@ export default function HomePage() {
             ))}
           </div>
         )}
+      </section>
+
+      {/* 3.5. Student Filmmaker Grant & 100% Free Submission Opportunity */}
+      <section className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-[#0B0E14] via-[#0E131E] to-[#07090D] border border-gold-500/25 p-6 sm:p-10 shadow-2xl">
+        {/* Ambient Projector Flare */}
+        <div className="absolute -top-24 -right-24 w-96 h-96 bg-gold-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-24 -left-24 w-80 h-80 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+          <div className="space-y-4 max-w-2xl">
+            {/* Opportunity Pill */}
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/35 text-emerald-400 text-xs font-bold uppercase tracking-wider">
+              <GraduationCap className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Student Filmmaker Grant • 100% Free Entry ($0 USD)</span>
+            </div>
+
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white tracking-tight leading-tight">
+              Calling All Student Filmmakers: <br />
+              <span className="text-gold-400 font-serif">Submit Your Film with Zero Fees</span>
+            </h2>
+
+            <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed font-normal">
+              Are you enrolled in a school, college, or university film program? Thirai+ is proud to sponsor youth cinema by waiving the standard $4.99 submission fee entirely. Submit your short film with an official Principal confirmation letter on school letterhead, and your work will be screened before our Grand Jury for prestigious festival laurels.
+            </p>
+
+            {/* Opportunity Pillars */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+              <div className="p-3 rounded-xl bg-black/50 border border-white/[0.06] space-y-1">
+                <span className="text-[11px] font-bold text-white flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" /> $0.00 Submission
+                </span>
+                <p className="text-[11px] text-zinc-400 font-light">100% fee waiver for all verified school & university students.</p>
+              </div>
+
+              <div className="p-3 rounded-xl bg-black/50 border border-white/[0.06] space-y-1">
+                <span className="text-[11px] font-bold text-white flex items-center gap-1.5">
+                  <ShieldCheck className="w-3.5 h-3.5 text-gold-400 shrink-0" /> School Letterhead
+                </span>
+                <p className="text-[11px] text-zinc-400 font-light">Official confirmation letter signed by your Principal / Dean.</p>
+              </div>
+
+              <div className="p-3 rounded-xl bg-black/50 border border-white/[0.06] space-y-1">
+                <span className="text-[11px] font-bold text-white flex items-center gap-1.5">
+                  <Award className="w-3.5 h-3.5 text-gold-400 shrink-0" /> Jury Laurels
+                </span>
+                <p className="text-[11px] text-zinc-400 font-light">Compete for the Best Student Film award & official laurels.</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Action CTAs */}
+          <div className="flex flex-col sm:flex-row lg:flex-col gap-3 shrink-0 lg:w-64">
+            <Link
+              href="/upload"
+              className="gold-btn py-3.5 px-6 rounded-xl text-xs font-black uppercase tracking-wider text-center inline-flex items-center justify-center gap-2 shadow-gold-glow"
+            >
+              <GraduationCap className="w-4 h-4 text-black" />
+              <span>Submit Student Film</span>
+              <ArrowRight className="w-3.5 h-3.5 text-black" />
+            </Link>
+
+            <Link
+              href="/faq#free-student-submissions"
+              className="py-3 px-5 rounded-xl bg-white/[0.05] hover:bg-white/[0.09] border border-white/[0.12] text-xs font-semibold text-zinc-300 hover:text-white transition-colors text-center inline-flex items-center justify-center gap-2"
+            >
+              <span>View Verification Guide</span>
+            </Link>
+          </div>
+        </div>
       </section>
 
       {/* 4. VIP Audience Packages & Pass Subscriptions */}

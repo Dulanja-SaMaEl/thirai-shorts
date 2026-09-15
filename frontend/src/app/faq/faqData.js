@@ -17,10 +17,20 @@ export const FAQ_ITEMS = [
     category: 'submissions',
     categoryLabel: 'Filmmakers & Submissions',
     question: 'What is the official submission fee for short films?',
-    answerText: 'The official submission fee is $4.99 USD (approx. Rs. 1,550 LKR) per film entry. This fee covers digital pre-selection review, 4K DCP cloud transcoding, and server delivery across our global festival network. Submission fees are non-refundable once your film enters jury review.',
-    highlight: 'Submission Fee: $4.99 USD per film entry.',
+    answerText: 'The official submission fee is $4.99 USD (approx. Rs. 1,550 LKR) per independent film entry. This fee covers digital pre-selection review, 4K DCP cloud transcoding, and server delivery across our global festival network. NOTE: Student submissions are 100% FREE ($0.00 USD) when submitted with an official confirmation letter on school letterhead signed by the Principal.',
+    highlight: 'Standard Entry: $4.99 USD • Student Submissions: 100% FREE ($0.00).',
     link: { text: 'Submit Your Film Now', href: '/upload' },
-    tags: ['fee', 'price', 'cost', 'submit', 'submission', 'upload', '$4.99', 'lkr', 'entry fee']
+    tags: ['fee', 'price', 'cost', 'submit', 'submission', 'upload', '$4.99', 'lkr', 'entry fee', 'free student']
+  },
+  {
+    id: 'free-student-submissions',
+    category: 'submissions',
+    categoryLabel: 'Filmmakers & Submissions',
+    question: 'Are short film submissions completely free for students? How does verification work?',
+    answerText: 'Yes! Submissions for student filmmakers are 100% FREE ($0.00 USD entry fee waiver). To qualify for this opportunity and maintain festival integrity, student filmmakers must provide: (1) An official confirmation letter on school letterhead signed and stamped by the School Principal, Dean, or Head of Department, (2) The official School / College / Institution Name, and (3) The official School Contact Telephone Number. Festival administrators verify the confirmation letter and school contact details through the executive admin panel before approving the verified student entry.',
+    highlight: 'Student Submissions: 100% FREE ($0.00 fee) with Principal letterhead confirmation & admin verification.',
+    link: { text: 'Submit Free as a Student Filmmaker', href: '/upload' },
+    tags: ['student', 'free', 'waiver', 'principal', 'school', 'letterhead', 'zero fee', 'verification', 'college', 'university', 'young filmmaker', 'grant', '$0']
   },
   {
     id: 'maximum-runtime',

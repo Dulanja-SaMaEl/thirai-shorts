@@ -39,6 +39,22 @@ router.post('/presigned-url', async (req, res) => {
       }
     }
 
+    // Enforce student verification document formats (PDF or Official Letterhead Scan/Image)
+    if (fileCategory === 'student_verification') {
+      const allowedDocTypes = [
+        'application/pdf',
+        'image/jpeg',
+        'image/jpg',
+        'image/png',
+        'image/webp'
+      ];
+      if (!allowedDocTypes.includes(fileType.toLowerCase())) {
+        return res.status(400).json({
+          error: 'Invalid student verification document format. Please upload a PDF document or high-resolution letterhead image (PDF, JPEG, PNG, WebP).'
+        });
+      }
+    }
+
     // Generate unique object key in R2
     const fileExtension = fileName.substring(fileName.lastIndexOf('.'));
     const uniqueId = crypto.randomBytes(16).toString('hex');

@@ -1012,7 +1012,14 @@ router.post('/', async (req, res) => {
       uploader_email,
       uploader_phone,
       payment_intent_id,
-      submission_metadata
+      submission_metadata,
+
+      // Student Submission & Verification
+      is_student,
+      student_school_name,
+      student_school_contact,
+      student_verification_document,
+      student_verification_status
     } = req.body;
 
     const finalDescription = (description || synopsis || '').trim();
@@ -1024,6 +1031,25 @@ router.post('/', async (req, res) => {
       return res.status(400).json({
         error: 'Please provide all mandatory fields: Film Title, Thumbnail, Video, and Contact Information.'
       });
+    }
+
+    const isStudentSubmission = Boolean(is_student || film_type === 'Student Film');
+    if (isStudentSubmission) {
+      if (!student_school_name || !String(student_school_name).trim()) {
+        return res.status(400).json({
+          error: 'School / Institution Name is mandatory for student film submissions.'
+        });
+      }
+      if (!student_school_contact || !String(student_school_contact).trim()) {
+        return res.status(400).json({
+          error: 'Official School Contact Phone Number is mandatory for student film verification.'
+        });
+      }
+      if (!student_verification_document) {
+        return res.status(400).json({
+          error: 'Official Confirmation Letter from the Principal on school letterhead with signature is mandatory for student submissions.'
+        });
+      }
     }
 
     const movieRecord = {
@@ -1089,13 +1115,20 @@ router.post('/', async (req, res) => {
       signature_date: signature_date || new Date().toISOString().split('T')[0],
       submission_metadata: submission_metadata || {},
 
+      // Student Verification & School Endorsement
+      is_student: isStudentSubmission,
+      student_school_name: isStudentSubmission ? String(student_school_name).trim() : null,
+      student_school_contact: isStudentSubmission ? String(student_school_contact).trim() : null,
+      student_verification_document: isStudentSubmission ? student_verification_document : null,
+      student_verification_status: isStudentSubmission ? 'pending' : 'none',
+
       // Moderation & Status
       status: 'pending',
       rejection_reason: null,
       view_count: 0,
       is_winner: false,
       winner_category: null,
-      payment_status: payment_intent_id ? 'paid' : 'unpaid',
+      payment_status: isStudentSubmission ? 'paid' : (payment_intent_id ? 'paid' : 'unpaid'),
       stripe_payment_intent_id: payment_intent_id || null,
       created_at: new Date().toISOString()
     };
