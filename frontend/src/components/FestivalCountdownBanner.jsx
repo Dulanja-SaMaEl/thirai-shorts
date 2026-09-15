@@ -50,30 +50,27 @@ export default function FestivalCountdownBanner() {
   }, []);
 
   return (
-    <div className="relative overflow-hidden rounded-3xl bg-surface border border-white/[0.08] p-5 md:p-7 shadow-cinema-card my-6">
-      {/* Background ambient gold aura */}
-      <div className="absolute top-0 right-1/4 w-80 h-80 bg-gold-500/5 rounded-full blur-3xl pointer-events-none" />
-
+    <div className="relative overflow-hidden rounded-xl bg-surface border border-white/[0.06] p-5 md:p-6 my-6">
       <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-6">
         
         {/* Left Side: Festival Premiere & Submission Deadline Info */}
-        <div className="space-y-2.5 text-center lg:text-left">
+        <div className="space-y-2 text-center lg:text-left">
           <div className="inline-flex flex-wrap items-center justify-center lg:justify-start gap-2">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gold-500/10 border border-gold-500/30 text-champagne-300 text-xs font-black uppercase tracking-wider">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-gold-500/10 border border-gold-500/20 text-gold-400 text-xs font-semibold uppercase tracking-wider">
               <Award className="w-3.5 h-3.5 text-gold-400" /> Thirai+ Film Festival 2027
             </span>
 
             {/* Submissions Closing Pill */}
-            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-300 text-xs font-semibold">
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs font-medium">
               <Calendar className="w-3 h-3 text-amber-400" /> Submissions Close: Nov 30, 2026
             </span>
           </div>
 
-          <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">
-            Grand Festival Premiere: <span className="gold-text-gradient font-serif">January 16, 2027</span>
+          <h3 className="text-lg sm:text-xl font-bold text-white tracking-tight">
+            Grand Festival Premiere: <span className="text-gold-400 font-serif">January 16, 2027</span>
           </h3>
 
-          <p className="text-xs text-zinc-400 max-w-lg leading-relaxed">
+          <p className="text-xs text-zinc-400 max-w-lg leading-relaxed font-normal">
             Worldwide short film gala, red carpet screenings, and official award ceremony. Submissions are open until <strong className="text-zinc-200">November 30, 2026</strong> ({submissionsDaysLeft} days remaining).
           </p>
         </div>
@@ -83,41 +80,41 @@ export default function FestivalCountdownBanner() {
           <div className="grid grid-cols-4 gap-2 text-center">
             
             {/* Days */}
-            <div className="bg-[#07080B]/90 border border-white/[0.08] hover:border-gold-500/30 transition-colors rounded-2xl p-2.5 sm:p-3 min-w-[62px] sm:min-w-[72px] shadow-sm">
-              <span className="block text-2xl sm:text-3xl font-black text-white font-mono leading-none">
+            <div className="bg-[#10131b] border border-white/[0.06] rounded-lg p-2.5 sm:p-3 min-w-[58px] sm:min-w-[68px]">
+              <span className="block text-xl sm:text-2xl font-bold text-white font-mono leading-none">
                 {timeLeft.days}
               </span>
-              <span className="block text-[9px] uppercase font-bold text-champagne-400 tracking-wider mt-1.5">
+              <span className="block text-[9px] uppercase font-semibold text-zinc-400 tracking-wider mt-1.5">
                 Days
               </span>
             </div>
 
             {/* Hours */}
-            <div className="bg-[#07080B]/90 border border-white/[0.08] hover:border-gold-500/30 transition-colors rounded-2xl p-2.5 sm:p-3 min-w-[62px] sm:min-w-[72px] shadow-sm">
-              <span className="block text-2xl sm:text-3xl font-black text-white font-mono leading-none">
+            <div className="bg-[#10131b] border border-white/[0.06] rounded-lg p-2.5 sm:p-3 min-w-[58px] sm:min-w-[68px]">
+              <span className="block text-xl sm:text-2xl font-bold text-white font-mono leading-none">
                 {String(timeLeft.hours).padStart(2, '0')}
               </span>
-              <span className="block text-[9px] uppercase font-bold text-champagne-400 tracking-wider mt-1.5">
+              <span className="block text-[9px] uppercase font-semibold text-zinc-400 tracking-wider mt-1.5">
                 Hours
               </span>
             </div>
 
             {/* Minutes */}
-            <div className="bg-[#07080B]/90 border border-white/[0.08] hover:border-gold-500/30 transition-colors rounded-2xl p-2.5 sm:p-3 min-w-[62px] sm:min-w-[72px] shadow-sm">
-              <span className="block text-2xl sm:text-3xl font-black text-white font-mono leading-none">
+            <div className="bg-[#10131b] border border-white/[0.06] rounded-lg p-2.5 sm:p-3 min-w-[58px] sm:min-w-[68px]">
+              <span className="block text-xl sm:text-2xl font-bold text-white font-mono leading-none">
                 {String(timeLeft.minutes).padStart(2, '0')}
               </span>
-              <span className="block text-[9px] uppercase font-bold text-champagne-400 tracking-wider mt-1.5">
+              <span className="block text-[9px] uppercase font-semibold text-zinc-400 tracking-wider mt-1.5">
                 Mins
               </span>
             </div>
 
             {/* Seconds */}
-            <div className="bg-[#07080B]/90 border border-white/[0.08] hover:border-gold-500/30 transition-colors rounded-2xl p-2.5 sm:p-3 min-w-[62px] sm:min-w-[72px] shadow-sm">
-              <span className="block text-2xl sm:text-3xl font-black text-champagne-300 font-mono leading-none">
+            <div className="bg-[#10131b] border border-white/[0.06] rounded-lg p-2.5 sm:p-3 min-w-[58px] sm:min-w-[68px]">
+              <span className="block text-xl sm:text-2xl font-bold text-gold-400 font-mono leading-none">
                 {String(timeLeft.seconds).padStart(2, '0')}
               </span>
-              <span className="block text-[9px] uppercase font-bold text-champagne-400 tracking-wider mt-1.5">
+              <span className="block text-[9px] uppercase font-semibold text-zinc-400 tracking-wider mt-1.5">
                 Secs
               </span>
             </div>
@@ -126,7 +123,7 @@ export default function FestivalCountdownBanner() {
           {/* Direct CTA */}
           <Link
             href="/upload"
-            className="gold-btn px-4 py-3 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-1.5 hover:scale-[1.02] active:scale-[0.98] transition-all text-black shrink-0"
+            className="gold-btn px-4 py-2.5 rounded-md text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 hover:opacity-95 transition-opacity text-black shrink-0"
           >
             <Film className="w-3.5 h-3.5" /> Submit Film <ArrowRight className="w-3.5 h-3.5" />
           </Link>

@@ -105,7 +105,7 @@ export default function HeroCarousel({ movies = [], onWatchMovie, onOpenVoteModa
     <div
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      className="relative w-full rounded-3xl overflow-hidden shadow-cinema-card border border-white/[0.08] bg-[#07080B] min-h-[520px] md:min-h-[620px] lg:min-h-[660px] flex flex-col justify-end group transition-all"
+      className="relative w-full rounded-2xl overflow-hidden border border-white/[0.08] bg-[#07080B] min-h-[500px] md:min-h-[580px] lg:min-h-[620px] flex flex-col justify-end group transition-all"
     >
       {/* Background Poster / Backdrop with Smooth Transition */}
       <div className="absolute inset-0 z-0">
@@ -113,88 +113,77 @@ export default function HeroCarousel({ movies = [], onWatchMovie, onOpenVoteModa
           key={currentMovie.id}
           src={currentMovie.thumbnail_url || '/images/logo-wordmark.png'}
           alt={currentMovie.title}
-          className="w-full h-full object-cover object-center transform scale-105 transition-all duration-1000 ease-out brightness-[0.78] group-hover:scale-100 group-hover:brightness-[0.88]"
+          className="w-full h-full object-cover object-center transform scale-105 transition-all duration-700 ease-out brightness-[0.78] group-hover:scale-100 group-hover:brightness-[0.85]"
         />
 
         {/* Sophisticated Multi-Layer Cinematic Overlays */}
         <div className="absolute inset-0 bg-gradient-to-t from-[#07080B] via-[#07080B]/50 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-r from-[#07080B] via-[#07080B]/75 to-transparent max-w-4xl" />
-        <div className="absolute top-0 inset-x-0 h-40 bg-gradient-to-b from-[#07080B]/80 to-transparent" />
-        {/* Subtle warm ember underglow echoing THIRAI+ mark */}
-        <div className="absolute -bottom-20 -left-20 w-96 h-96 bg-gold-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-[#07080B]/80 to-transparent" />
       </div>
 
       {/* Hero Content Overlay */}
-      <div className="relative z-10 p-6 sm:p-10 md:p-14 max-w-3xl space-y-4">
+      <div className="relative z-10 p-6 sm:p-10 md:p-12 max-w-3xl space-y-3.5">
         
-        {/* Badges Bar */}
-        <div className="flex flex-wrap items-center gap-2">
-          {currentMovie.is_winner ? (
-            <span className="gold-btn px-3.5 py-1.5 rounded-full text-[11px] font-black uppercase tracking-wider flex items-center gap-1.5 shadow-gold-glow">
-              <Trophy className="w-3.5 h-3.5 fill-[#07080B]" />
-              {currentMovie.winner_category || 'Official Winner'}
-            </span>
-          ) : (
-            <span className="px-3.5 py-1.5 rounded-full text-[11px] font-black uppercase tracking-wider bg-gold-500/15 text-gold-300 border border-gold-500/35 flex items-center gap-1.5 backdrop-blur-md">
-              <Sparkles className="w-3.5 h-3.5 text-gold-400" />
-              Official Festival Selection
+        {/* Cinema Metadata Line */}
+        <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-zinc-300">
+          {currentMovie.is_winner && (
+            <span className="bg-gold-500 text-black text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded">
+              {currentMovie.winner_category || 'Festival Winner'}
             </span>
           )}
-
-          <span className="px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold bg-black/60 text-zinc-300 border border-white/[0.08] backdrop-blur-md">
-            4K ULTRA HD
-          </span>
-
+          <span className="text-zinc-400 font-mono">2026</span>
+          <span className="text-zinc-600">•</span>
           {currentMovie.duration && (
-            <span className="px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold bg-black/60 text-zinc-300 border border-white/[0.08] backdrop-blur-md flex items-center gap-1">
-              <Clock className="w-3 h-3 text-gold-400" /> {currentMovie.duration}
-            </span>
+            <>
+              <span className="text-zinc-300 font-mono">{currentMovie.duration}</span>
+              <span className="text-zinc-600">•</span>
+            </>
           )}
-
-          <span className="px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold bg-black/60 text-zinc-300 border border-white/[0.08] backdrop-blur-md flex items-center gap-1">
-            <Eye className="w-3 h-3 text-gold-400" /> {currentMovie.view_count || 1420} streams
-          </span>
-
-          <span className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-gold-500/10 text-gold-300 border border-gold-500/30 backdrop-blur-md flex items-center gap-1">
-            ⭐ {currentMovie.rating || '9.8'} / 10
-          </span>
+          {currentMovie.genre && (
+            <>
+              <span className="text-zinc-300">{currentMovie.genre}</span>
+              <span className="text-zinc-600">•</span>
+            </>
+          )}
+          <span className="text-gold-400 font-semibold font-mono">★ {currentMovie.rating || '9.8'}</span>
         </div>
 
         {/* Title */}
-        <h1 className="text-3xl sm:text-5xl md:text-6xl font-black text-white tracking-tight leading-[1.05] drop-shadow-[0_4px_16px_rgba(0,0,0,0.9)]">
+        <h1 className="text-3xl sm:text-5xl md:text-6xl font-black text-white tracking-tight leading-[1.05]">
           {currentMovie.title}
         </h1>
 
         {/* Description */}
-        <p className="text-xs sm:text-sm md:text-base text-zinc-300 font-normal leading-relaxed line-clamp-3 max-w-2xl drop-shadow">
+        <p className="text-xs sm:text-sm text-zinc-300 font-normal leading-relaxed line-clamp-3 max-w-2xl">
           {currentMovie.description}
         </p>
 
         {/* Action Buttons */}
-        <div className="flex flex-wrap items-center gap-3 pt-2">
+        <div className="flex flex-wrap items-center gap-2.5 pt-2">
           <button
             onClick={() => onWatchMovie && onWatchMovie(currentMovie)}
-            className="gold-btn px-6 sm:px-8 py-3 sm:py-3.5 rounded-2xl text-xs sm:text-sm font-black uppercase tracking-wider flex items-center gap-2.5 shadow-gold-glow hover:scale-[1.02] active:scale-95 transition-all"
+            className="gold-btn px-6 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-2"
           >
-            <Play className="w-4 h-4 fill-current" /> Watch Short Film
+            <Play className="w-4 h-4 fill-current" /> Watch Film
           </button>
 
           {onWatchTrailer && (
             <button
               onClick={() => onWatchTrailer(currentMovie)}
-              className="px-5 sm:px-6 py-3 sm:py-3.5 rounded-2xl bg-white/[0.07] hover:bg-white/[0.14] border border-white/[0.14] hover:border-gold-400/60 text-white text-xs sm:text-sm font-bold flex items-center gap-2 transition-all shadow-sm backdrop-blur-md"
-              title="Watch Trailer completely free (0 Tokens)"
+              className="px-4 py-2.5 rounded-lg bg-white/[0.08] hover:bg-white/[0.14] border border-white/[0.1] text-white text-xs font-semibold flex items-center gap-2 transition-colors"
+              title="Watch Trailer free"
             >
-              <Film className="w-4 h-4 text-gold-400" /> Watch Free Trailer
+              <Film className="w-3.5 h-3.5 text-gold-400" /> Watch Trailer
             </button>
           )}
 
           {onOpenVoteModal && (
             <button
               onClick={() => onOpenVoteModal(currentMovie)}
-              className="px-5 py-3 sm:py-3.5 rounded-2xl bg-black/60 hover:bg-black/90 border border-white/[0.1] hover:border-gold-400 text-zinc-300 hover:text-white text-xs sm:text-sm font-bold flex items-center gap-2 transition-all backdrop-blur-md"
+              className="px-4 py-2.5 rounded-lg bg-black/60 hover:bg-black/90 border border-white/[0.1] text-zinc-300 hover:text-white text-xs font-semibold flex items-center gap-1.5 transition-colors"
             >
-              <Star className="w-4 h-4 text-gold-400" /> Public Vote
+              <Star className="w-3.5 h-3.5 text-gold-400" /> Vote
             </button>
           )}
         </div>
@@ -205,32 +194,32 @@ export default function HeroCarousel({ movies = [], onWatchMovie, onOpenVoteModa
       <button
         onClick={handlePrev}
         aria-label="Previous slide"
-        className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-black/60 hover:bg-black/90 border border-white/[0.12] hover:border-gold-400 text-white flex items-center justify-center transition-all opacity-80 hover:opacity-100 hover:scale-110 shadow-lg backdrop-blur-md"
+        className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-black/60 hover:bg-black/90 border border-white/[0.12] text-white flex items-center justify-center transition-all opacity-70 hover:opacity-100"
       >
-        <ChevronLeft className="w-6 h-6" />
+        <ChevronLeft className="w-5 h-5" />
       </button>
 
       <button
         onClick={handleNext}
         aria-label="Next slide"
-        className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-black/60 hover:bg-black/90 border border-white/[0.12] hover:border-gold-400 text-white flex items-center justify-center transition-all opacity-80 hover:opacity-100 hover:scale-110 shadow-lg backdrop-blur-md"
+        className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-black/60 hover:bg-black/90 border border-white/[0.12] text-white flex items-center justify-center transition-all opacity-70 hover:opacity-100"
       >
-        <ChevronRight className="w-6 h-6" />
+        <ChevronRight className="w-5 h-5" />
       </button>
 
       {/* Bottom Thumbnail / Filmstrip Indicator Strip */}
-      <div className="relative z-10 px-6 sm:px-10 md:px-14 py-4 bg-gradient-to-t from-[#07080B] via-[#07080B]/90 to-transparent flex items-center justify-between gap-4 border-t border-white/[0.06]">
-        <div className="flex items-center gap-2.5 overflow-x-auto py-1 scrollbar-none">
+      <div className="relative z-10 px-6 sm:px-10 md:px-12 py-3 bg-[#07080B]/90 flex items-center justify-between gap-4 border-t border-white/[0.06]">
+        <div className="flex items-center gap-2 overflow-x-auto py-1 scrollbar-none">
           {finalMovies.map((movie, idx) => {
             const isActive = idx === currentIndex;
             return (
               <button
                 key={movie.id || idx}
                 onClick={() => setCurrentIndex(idx)}
-                className={`group/thumb relative h-12 md:h-14 aspect-video rounded-xl overflow-hidden border-2 transition-all duration-300 shrink-0 ${
+                className={`group/thumb relative h-11 md:h-12 aspect-video rounded-lg overflow-hidden border transition-all shrink-0 ${
                   isActive
-                    ? 'border-gold-400 ring-2 ring-gold-400/40 scale-105 shadow-gold-glow'
-                    : 'border-white/[0.08] opacity-50 hover:opacity-100 hover:border-white/30'
+                    ? 'border-gold-400 opacity-100'
+                    : 'border-white/[0.08] opacity-45 hover:opacity-80'
                 }`}
               >
                 <img
@@ -238,8 +227,8 @@ export default function HeroCarousel({ movies = [], onWatchMovie, onOpenVoteModa
                   alt={movie.title}
                   className="w-full h-full object-cover"
                 />
-                <div className="absolute inset-0 bg-black/35 group-hover/thumb:bg-transparent transition-colors" />
-                <span className="absolute bottom-1 left-1.5 right-1.5 text-[9px] font-extrabold text-white line-clamp-1 drop-shadow text-left">
+                <div className="absolute inset-0 bg-black/30 group-hover/thumb:bg-transparent transition-colors" />
+                <span className="absolute bottom-1 left-1.5 right-1.5 text-[9px] font-bold text-white line-clamp-1 text-left">
                   {movie.title}
                 </span>
               </button>

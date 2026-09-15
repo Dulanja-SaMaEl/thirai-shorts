@@ -28,11 +28,11 @@ export default function Footer() {
               Thirai+ is the premier South Asian and international independent short film festival & streaming platform. Empowering visionary filmmakers through blind jury scoring, 4K R2 cloud screening, and global audience discovery.
             </p>
 
-            <div className="pt-2 flex items-center gap-3 text-zinc-500">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gold-500/10 border border-gold-500/20 text-gold-400 font-mono text-[11px] font-semibold">
-                <Sparkles className="w-3 h-3 text-gold-400" /> Season 2026-2027
+            <div className="pt-2 flex items-center gap-2.5 text-zinc-500">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-gold-500/10 border border-gold-500/20 text-gold-400 font-mono text-[11px] font-medium">
+                Season 2026-2027
               </span>
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/[0.04] border border-white/[0.08] text-zinc-300 font-mono text-[11px]">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-white/[0.04] border border-white/[0.08] text-zinc-400 font-mono text-[11px]">
                 <Globe className="w-3 h-3 text-zinc-400" /> Global Screenings
               </span>
             </div>

@@ -172,167 +172,150 @@ export default function SponsorsSection() {
   const guildList = dynamicGuild.length > 0 ? dynamicGuild : DEFAULT_GUILD_SPONSORS;
 
   return (
-    <section aria-label="Festival Sponsors and Industry Partners" className="relative my-10">
+    <section aria-label="Festival Sponsors and Industry Partners" className="space-y-6 pt-2">
       
-      {/* Background ambient lighting */}
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-gold-500/5 to-transparent pointer-events-none rounded-3xl" />
-
-      <div className="relative rounded-3xl bg-surface border border-white/[0.08] p-6 sm:p-8 md:p-10 backdrop-blur-md shadow-cinema-card space-y-8">
-        
-        {/* Header Title & Subtitle */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-white/[0.06] pb-6">
-          <div className="space-y-2">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gold-500/10 border border-gold-500/25 text-champagne-300 text-xs font-mono font-bold tracking-wider">
-              <Sparkles className="w-3.5 h-3.5 text-gold-400" />
-              OFFICIAL FESTIVAL SPONSORS & INDUSTRY PARTNERS
-            </div>
-            <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-              Supported by <span className="gold-text-gradient">Cinema Pioneers</span> & Tech Leaders
-            </h2>
-            <p className="text-xs sm:text-sm text-zinc-400 max-w-2xl leading-relaxed">
-              Thirai+ is proudly championed by international media leaders, post-production pioneers, and cultural institutions empowering the next era of South Asian and global independent short films.
-            </p>
-          </div>
-
-          <a
-            href="#contact"
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-surface-elevated hover:bg-gold-500 hover:text-black border border-white/[0.08] hover:border-gold-400 text-xs font-bold text-zinc-300 transition-all shrink-0 self-start md:self-auto shadow-sm"
-          >
-            Become a Sponsor <ArrowUpRight className="w-4 h-4" />
-          </a>
+      {/* Header Title & Subtitle */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-white/[0.08] pb-4">
+        <div>
+          <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+            Festival Partners & Sponsors
+          </h2>
+          <p className="text-xs text-zinc-400 mt-1 max-w-2xl">
+            Supported by media leaders, post-production pioneers, and cultural institutions empowering independent short cinema.
+          </p>
         </div>
 
-        {/* Headline Tier Sponsor Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {headlineList.map((sponsor) => {
-            const hasLink = Boolean(sponsor.website_url);
-            const CardWrapper = hasLink ? 'a' : 'div';
-            const cardProps = hasLink
-              ? { href: sponsor.website_url, target: '_blank', rel: 'noopener noreferrer' }
+        <a
+          href="#contact"
+          className="text-xs text-zinc-400 hover:text-white flex items-center gap-1 transition-colors self-start md:self-auto"
+        >
+          Become a Partner <ArrowUpRight className="w-3.5 h-3.5" />
+        </a>
+      </div>
+
+      {/* Headline Tier Sponsor Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {headlineList.map((sponsor) => {
+          const hasLink = Boolean(sponsor.website_url);
+          const CardWrapper = hasLink ? 'a' : 'div';
+          const cardProps = hasLink
+            ? { href: sponsor.website_url, target: '_blank', rel: 'noopener noreferrer' }
+            : {};
+
+          return (
+            <CardWrapper
+              key={sponsor.id || sponsor.name}
+              {...cardProps}
+              className="group rounded-lg bg-[#0F131C] border border-white/[0.06] hover:border-white/[0.16] p-4 transition-colors flex flex-col justify-between block text-left"
+            >
+              <div className="space-y-3">
+                {/* Header Icon & Tag */}
+                <div className="flex items-center justify-between">
+                  <div className="w-10 h-10 rounded-md bg-[#07080B] border border-white/[0.08] flex items-center justify-center overflow-hidden p-1.5">
+                    {sponsor.logo_url ? (
+                      <img
+                        src={sponsor.logo_url}
+                        alt={sponsor.name}
+                        className="w-full h-full object-contain"
+                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                      />
+                    ) : sponsor.iconSvg ? (
+                      sponsor.iconSvg
+                    ) : (
+                      <span className="text-xs font-bold text-gold-400 font-mono">
+                        {sponsor.name.slice(0, 2).toUpperCase()}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] text-zinc-400 font-medium">
+                      {sponsor.tag || 'Official Partner'}
+                    </span>
+                    {hasLink && (
+                      <ExternalLink className="w-3 h-3 text-zinc-500 group-hover:text-zinc-300 transition-colors" />
+                    )}
+                  </div>
+                </div>
+
+                {/* Brand Name & Product */}
+                <div>
+                  <h3 className="text-sm font-bold text-white group-hover:text-gold-400 transition-colors">
+                    {sponsor.name}
+                  </h3>
+                  {sponsor.product && (
+                    <span className="text-xs text-zinc-400 block">
+                      {sponsor.product}
+                    </span>
+                  )}
+                </div>
+
+                {/* Role */}
+                <div className="text-[11px] text-zinc-400">
+                  {sponsor.role}
+                </div>
+
+                {/* Description */}
+                {sponsor.description && (
+                  <p className="text-xs text-zinc-400 leading-relaxed line-clamp-3">
+                    {sponsor.description}
+                  </p>
+                )}
+              </div>
+
+              {/* Bottom Subtle Indicator */}
+              <div className="pt-3 mt-3 border-t border-white/[0.06] flex items-center justify-between text-[11px] text-zinc-500">
+                <span className="text-[10px] uppercase font-mono tracking-wider">{sponsor.category || 'Partner'}</span>
+              </div>
+            </CardWrapper>
+          );
+        })}
+      </div>
+
+      {/* Guild Associates & Cultural Partners Strip */}
+      <div className="pt-2">
+        <div className="flex items-center justify-between mb-2.5">
+          <span className="text-[11px] font-semibold text-zinc-400">
+            Cultural Associates & Guild Partners
+          </span>
+          <span className="text-[10px] font-mono text-zinc-500">
+            2026 Season
+          </span>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
+          {guildList.map((guild, idx) => {
+            const hasLink = Boolean(guild.website_url);
+            const GuildWrapper = hasLink ? 'a' : 'div';
+            const guildProps = hasLink
+              ? { href: guild.website_url, target: '_blank', rel: 'noopener noreferrer' }
               : {};
 
             return (
-              <CardWrapper
-                key={sponsor.id || sponsor.name}
-                {...cardProps}
-                className="group relative rounded-2xl bg-surface-card border border-white/[0.07] hover:border-gold-500/40 p-5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-cinema-card flex flex-col justify-between block text-left"
+              <GuildWrapper
+                key={guild.id || idx}
+                {...guildProps}
+                className="bg-[#0D1017] border border-white/[0.06] hover:border-white/[0.14] rounded-md p-2.5 text-center space-y-1 transition-colors group block"
               >
-                <div className="space-y-3">
-                  {/* Header Icon & Tag */}
-                  <div className="flex items-center justify-between">
-                    <div className="w-12 h-12 rounded-xl bg-[#07080B] border border-white/[0.08] flex items-center justify-center group-hover:scale-105 group-hover:border-gold-400/50 transition-all shadow-sm overflow-hidden p-2">
-                      {sponsor.logo_url ? (
-                        <img
-                          src={sponsor.logo_url}
-                          alt={sponsor.name}
-                          className="w-full h-full object-contain"
-                          onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                        />
-                      ) : sponsor.iconSvg ? (
-                        sponsor.iconSvg
-                      ) : (
-                        <span className="text-sm font-black text-gold-400 font-mono">
-                          {sponsor.name.slice(0, 2).toUpperCase()}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="px-2.5 py-0.5 rounded-full bg-gold-500/10 border border-gold-500/20 text-champagne-300 text-[10px] font-mono font-semibold">
-                        {sponsor.tag || 'Official Partner'}
-                      </span>
-                      {hasLink && (
-                        <ExternalLink className="w-3 h-3 text-zinc-500 group-hover:text-gold-400 transition-colors" />
-                      )}
-                    </div>
+                {guild.logo_url && (
+                  <div className="h-6 w-auto mx-auto mb-1 flex items-center justify-center">
+                    <img src={guild.logo_url} alt={guild.name} className="max-h-6 max-w-full object-contain" />
                   </div>
-
-                  {/* Brand Name & Product */}
-                  <div>
-                    <h3 className="text-base font-extrabold text-white group-hover:text-champagne-300 transition-colors">
-                      {sponsor.name}
-                    </h3>
-                    {sponsor.product && (
-                      <span className="text-xs font-semibold text-zinc-400 block">
-                        {sponsor.product}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Role Pill */}
-                  <div className="text-[11px] font-mono text-champagne-300/90 bg-[#07080B]/70 px-2.5 py-1 rounded-lg border border-white/[0.06]">
-                    {sponsor.role}
-                  </div>
-
-                  {/* Description */}
-                  {sponsor.description && (
-                    <p className="text-xs text-zinc-400 leading-relaxed line-clamp-3">
-                      {sponsor.description}
-                    </p>
+                )}
+                <div className="flex items-center justify-center gap-1">
+                  <span className="block text-xs font-semibold text-white group-hover:text-gold-400 transition-colors line-clamp-1">
+                    {guild.name}
+                  </span>
+                  {hasLink && (
+                    <ExternalLink className="w-2.5 h-2.5 text-zinc-500 group-hover:text-zinc-300 transition-colors" />
                   )}
                 </div>
-
-                {/* Bottom Subtle Indicator */}
-                <div className="pt-4 mt-3 border-t border-white/[0.06] flex items-center justify-between text-[11px] text-zinc-500">
-                  <span className="text-[10px] uppercase font-mono tracking-wider">{sponsor.category || 'Partner'}</span>
-                  <span className="text-champagne-400 text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
-                    Verified Partner ✓
-                  </span>
-                </div>
-              </CardWrapper>
+                <span className="block text-[10px] text-zinc-500 line-clamp-1">
+                  {guild.role}
+                </span>
+              </GuildWrapper>
             );
           })}
         </div>
-
-        {/* Guild Associates & Cultural Partners Strip */}
-        <div className="pt-2 border-t border-white/[0.06]">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-400">
-              Official Guild Associates & Cultural Entities
-            </span>
-            <span className="text-[10px] font-mono text-champagne-400">
-              2026-2027 Season
-            </span>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-            {guildList.map((guild, idx) => {
-              const hasLink = Boolean(guild.website_url);
-              const GuildWrapper = hasLink ? 'a' : 'div';
-              const guildProps = hasLink
-                ? { href: guild.website_url, target: '_blank', rel: 'noopener noreferrer' }
-                : {};
-
-              return (
-                <GuildWrapper
-                  key={guild.id || idx}
-                  {...guildProps}
-                  className="bg-[#07080B]/60 hover:bg-[#07080B] border border-white/[0.07] hover:border-gold-500/35 rounded-xl p-3 text-center space-y-1 transition-all group block"
-                >
-                  {guild.logo_url && (
-                    <div className="h-7 w-auto mx-auto mb-1 flex items-center justify-center">
-                      <img src={guild.logo_url} alt={guild.name} className="max-h-7 max-w-full object-contain" />
-                    </div>
-                  )}
-                  <div className="flex items-center justify-center gap-1">
-                    <span className="block text-xs font-bold text-white group-hover:text-champagne-300 transition-colors line-clamp-1">
-                      {guild.name}
-                    </span>
-                    {hasLink && (
-                      <ExternalLink className="w-2.5 h-2.5 text-zinc-500 group-hover:text-gold-400 transition-colors" />
-                    )}
-                  </div>
-                  <span className="block text-[10px] text-zinc-400 line-clamp-1">
-                    {guild.role}
-                  </span>
-                  <span className="inline-block text-[9px] font-mono px-2 py-0.5 rounded-full bg-surface-elevated border border-white/[0.06] text-champagne-400">
-                    {guild.tag || guild.badge || 'Partner'}
-                  </span>
-                </GuildWrapper>
-              );
-            })}
-          </div>
-        </div>
-
       </div>
     </section>
   );

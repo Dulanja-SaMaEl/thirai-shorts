@@ -21,13 +21,13 @@ import api from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 
 const GENRE_CATEGORIES = [
-  { id: 'all', label: 'All Selections' },
-  { id: 'winners', label: '🏆 Award Winners' },
+  { id: 'all', label: 'All Films' },
+  { id: 'winners', label: 'Award Winners' },
   { id: 'tamil', label: 'Tamil Cinema' },
   { id: 'sinhala', label: 'Sinhala Cinema' },
   { id: 'drama', label: 'Drama' },
-  { id: 'thriller', label: 'Thriller & Mystery' },
-  { id: 'experimental', label: 'Experimental & Arts' },
+  { id: 'thriller', label: 'Thriller' },
+  { id: 'experimental', label: 'Experimental' },
 ];
 
 export default function HomePage() {
@@ -167,7 +167,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 py-4 sm:py-8 space-y-20 sm:space-y-28">
+    <div className="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 py-4 sm:py-6 space-y-14 sm:space-y-18">
       {/* Netflix-Style Cinematic T+ Intro Splash */}
       <NetflixIntro />
       
@@ -191,51 +191,47 @@ export default function HomePage() {
       <FestivalCountdownBanner />
 
       {/* 3. Official Selections & Discovery Engine */}
-      <section id="movies" className="space-y-8 scroll-mt-24">
+      <section id="movies" className="space-y-6 scroll-mt-24">
         {/* Section Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-white/[0.08] pb-6">
-          <div className="space-y-2">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gold-500/10 border border-gold-500/30 text-gold-400 text-xs font-bold uppercase tracking-widest">
-              <Sparkles className="w-3.5 h-3.5" /> Festival Screening Lineup
-            </div>
-            <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
-              Official Selections <span className="gold-text-gradient">& Award Contenders</span>
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-white/[0.08] pb-5">
+          <div className="space-y-1">
+            <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+              Official Selection
             </h2>
-            <p className="text-xs sm:text-sm text-zinc-400 max-w-xl font-normal">
-              Explore officially curated short films from across South Asia and international independent creators.
+            <p className="text-xs sm:text-sm text-zinc-400 max-w-xl">
+              Curated short films in competition across South Asia and international independent creators.
             </p>
           </div>
 
           {/* Search Input & Sort Dropdown */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
             {/* Live Search Bar */}
             <div className="relative">
-              <Search className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search films, directors..."
-                className="w-full sm:w-60 pl-9.5 pr-8 py-2.5 rounded-xl bg-surface-card border border-white/[0.08] focus:border-gold-500/50 text-xs text-white placeholder-zinc-500 focus:outline-none transition-colors"
+                className="w-full sm:w-56 pl-8.5 pr-8 py-2 rounded-md bg-[#131722] border border-white/[0.08] focus:border-gold-500/50 text-xs text-white placeholder-zinc-500 focus:outline-none transition-colors"
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
                   className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white p-1"
                 >
-                  <X className="w-3.5 h-3.5" />
+                  <X className="w-3 h-3" />
                 </button>
               )}
             </div>
 
             {/* Sort Filter Dropdown */}
-            <div className="flex items-center gap-2 bg-surface-card border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-xs text-zinc-300 shrink-0">
-              <TrendingUp className="w-4 h-4 text-gold-400 shrink-0" />
+            <div className="flex items-center gap-2 bg-[#131722] border border-white/[0.08] rounded-md px-3 py-2 text-xs text-zinc-300 shrink-0">
               <span className="font-medium text-zinc-500">Sort:</span>
               <select
                 value={filterSort}
                 onChange={(e) => setFilterSort(e.target.value)}
-                className="bg-transparent text-gold-400 font-bold focus:outline-none cursor-pointer"
+                className="bg-transparent text-white font-semibold focus:outline-none cursor-pointer"
               >
                 <option value="newest" className="bg-[#0D1017] text-white">Newest Premieres</option>
                 <option value="popular" className="bg-[#0D1017] text-white">Most Screened</option>
@@ -245,17 +241,17 @@ export default function HomePage() {
         </div>
 
         {/* Category Filter Chips Bar */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
           {GENRE_CATEGORIES.map((cat) => {
             const isSelected = activeCategory === cat.id;
             return (
               <button
                 key={cat.id}
                 onClick={() => setActiveCategory(cat.id)}
-                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 whitespace-nowrap shrink-0 ${
+                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors whitespace-nowrap shrink-0 ${
                   isSelected
-                    ? 'bg-gold-500/15 text-gold-300 border border-gold-500/35 shadow-[0_0_15px_rgba(229,169,60,0.15)]'
-                    : 'bg-surface-card hover:bg-white/[0.06] border border-white/[0.08] text-zinc-300 hover:text-white'
+                    ? 'bg-gold-500 text-black'
+                    : 'bg-[#131722] hover:bg-white/[0.06] text-zinc-400 hover:text-white'
                 }`}
               >
                 {cat.label}
@@ -268,20 +264,18 @@ export default function HomePage() {
         {(searchQuery || activeCategory !== 'all') && (
           <div className="flex items-center justify-between text-xs text-zinc-400 py-1">
             <span>
-              Showing <strong className="text-white font-mono">{filteredMovies.length}</strong> of {movies.length} selections
+              Showing <strong className="text-white font-mono">{filteredMovies.length}</strong> of {movies.length} films
               {searchQuery && <span> matching "{searchQuery}"</span>}
             </span>
-            {(searchQuery || activeCategory !== 'all') && (
-              <button
-                onClick={() => {
-                  setSearchQuery('');
-                  setActiveCategory('all');
-                }}
-                className="text-gold-400 hover:text-gold-300 font-semibold underline underline-offset-4"
-              >
-                Clear Filters
-              </button>
-            )}
+            <button
+              onClick={() => {
+                setSearchQuery('');
+                setActiveCategory('all');
+              }}
+              className="text-gold-400 hover:text-gold-300 font-semibold underline underline-offset-4"
+            >
+              Clear Filters
+            </button>
           </div>
         )}
 
@@ -289,26 +283,26 @@ export default function HomePage() {
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
             {[1, 2, 3, 4, 5, 6].map((n) => (
-              <div key={n} className="h-96 bg-surface-card rounded-2xl animate-pulse border border-white/[0.06]" />
+              <div key={n} className="h-80 bg-[#131722] rounded-lg animate-pulse border border-white/[0.04]" />
             ))}
           </div>
         ) : filteredMovies.length === 0 ? (
-          <div className="text-center py-20 bg-surface-card rounded-3xl border border-white/[0.08] space-y-3">
-            <AlertCircle className="w-12 h-12 text-gold-400 mx-auto" />
-            <h3 className="text-xl font-bold text-white">No Movies Found</h3>
+          <div className="text-center py-16 bg-[#131722] rounded-lg border border-white/[0.06] space-y-3">
+            <AlertCircle className="w-10 h-10 text-zinc-500 mx-auto" />
+            <h3 className="text-lg font-bold text-white">No Films Found</h3>
             <p className="text-xs text-zinc-400 max-w-sm mx-auto leading-relaxed">
               {searchQuery
                 ? `No short films matched your search for "${searchQuery}". Try a different title or clear your filters.`
-                : 'No films are currently listed under this genre. Be the first director to submit!'}
+                : 'No films are currently listed under this category.'}
             </p>
             <button
               onClick={() => {
                 setSearchQuery('');
                 setActiveCategory('all');
               }}
-              className="mt-2 px-5 py-2.5 rounded-xl bg-white/[0.08] hover:bg-white/[0.14] text-xs font-bold text-white transition-colors"
+              className="mt-2 px-4 py-2 rounded-md bg-white/[0.08] hover:bg-white/[0.14] text-xs font-semibold text-white transition-colors"
             >
-              Reset Discovery Filter
+              Reset Filters
             </button>
           </div>
         ) : (

@@ -949,38 +949,34 @@ export default function AwardShowcase({ onOpenPlayerModal }) {
     <section id="nominations" className="relative w-full my-12 scroll-mt-24 space-y-8">
       
       {/* Golden Section Banner */}
-      <div className="relative rounded-3xl p-6 sm:p-10 bg-gradient-to-b from-zinc-950 via-zinc-950 to-black border border-gold-500/40 shadow-[0_0_50px_rgba(255,215,0,0.12)] overflow-hidden">
-        {/* Ambient Glows */}
-        <div className="absolute top-0 right-1/4 w-96 h-96 bg-gold-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-10 left-10 w-80 h-80 bg-gold-600/10 rounded-full blur-3xl pointer-events-none" />
-
-        <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-end justify-between gap-6 border-b border-gold-500/20 pb-8">
+      <div className="relative rounded-xl p-6 sm:p-8 bg-[#0e1118] border border-white/[0.08] overflow-hidden">
+        <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-end justify-between gap-6 border-b border-white/[0.06] pb-6">
           <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gold-500/10 border border-gold-500/30 text-gold-400 font-extrabold text-xs uppercase tracking-widest mb-3">
-              <Trophy className="w-3.5 h-3.5 fill-gold-400" /> Official Festival Nominations
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-gold-500/10 border border-gold-500/20 text-gold-400 font-bold text-xs uppercase tracking-wider mb-3">
+              <Trophy className="w-3.5 h-3.5" /> Official Festival Nominations
             </div>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-tight">
-              Thirai+ Festival <span className="gold-text-gradient">Official Nominations</span>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white tracking-tight leading-tight">
+              Thirai+ Festival <span className="text-gold-400">Official Nominations</span>
             </h2>
-            <p className="text-zinc-400 text-xs sm:text-sm mt-3 leading-relaxed">
-              Celebrating cinematic distinction across <strong>22 official categories</strong>. Each category showcases <strong>3 shortlisted nominated films</strong>. Nominations will be visible & unveiled after <strong>January 1st, 2027</strong>.
+            <p className="text-zinc-400 text-xs sm:text-sm mt-2 leading-relaxed">
+              Celebrating cinematic distinction across <strong>22 official categories</strong>. Each category showcases <strong>3 shortlisted nominated films</strong>. Nominations will be unveiled after <strong>January 1st, 2027</strong>.
             </p>
           </div>
 
           {/* Quick Stats & Curator Toggle Pill */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
-            <div className="flex items-center gap-4 bg-black/70 border border-gold-500/30 p-4 rounded-2xl">
+            <div className="flex items-center gap-3 bg-[#080a0f] border border-white/[0.08] p-3 rounded-lg">
               <div className="text-center px-3 border-r border-zinc-800">
-                <div className="text-2xl font-black text-gold-400 font-mono">22</div>
-                <div className="text-[10px] uppercase font-bold text-zinc-400">Categories</div>
+                <div className="text-xl font-bold text-gold-400 font-mono">22</div>
+                <div className="text-[9px] uppercase font-semibold text-zinc-400">Categories</div>
               </div>
               <div className="text-center px-3 border-r border-zinc-800">
-                <div className="text-2xl font-black text-white font-mono">66</div>
-                <div className="text-[10px] uppercase font-bold text-zinc-400">3 Films / Cat</div>
+                <div className="text-xl font-bold text-white font-mono">66</div>
+                <div className="text-[9px] uppercase font-semibold text-zinc-400">3 Films / Cat</div>
               </div>
               <div className="text-center px-3">
-                <div className="text-2xl font-black text-gold-300 font-mono">Jan 1</div>
-                <div className="text-[10px] uppercase font-bold text-zinc-400">Unveil Date</div>
+                <div className="text-xl font-bold text-gold-400 font-mono">Jan 1</div>
+                <div className="text-[9px] uppercase font-semibold text-zinc-400">Unveil Date</div>
               </div>
             </div>
 
@@ -988,21 +984,21 @@ export default function AwardShowcase({ onOpenPlayerModal }) {
             {!isAfterJan1 && (
               <button
                 onClick={() => setCuratorPreview(!curatorPreview)}
-                className={`px-4 py-3 rounded-2xl border text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-gold-glow ${
+                className={`px-3.5 py-2.5 rounded-md border text-xs font-semibold transition-colors flex items-center justify-center gap-2 ${
                   curatorPreview
-                    ? 'bg-gold-500/20 text-gold-300 border-gold-500/60'
-                    : 'bg-zinc-900 border-zinc-700 text-zinc-300 hover:text-white hover:border-gold-500/40'
+                    ? 'bg-gold-500/20 text-gold-300 border-gold-500/40'
+                    : 'bg-[#141824] border-white/[0.08] text-zinc-300 hover:text-white hover:border-gold-500/30'
                 }`}
                 title="Toggle curator inspection to preview the 3 nominated films per category"
               >
                 {curatorPreview ? (
                   <>
-                    <Unlock className="w-4 h-4 text-gold-400" />
+                    <Unlock className="w-3.5 h-3.5 text-gold-400" />
                     <span>Curator Preview: Active</span>
                   </>
                 ) : (
                   <>
-                    <Eye className="w-4 h-4 text-gold-400" />
+                    <Eye className="w-3.5 h-3.5 text-gold-400" />
                     <span>Preview 3 Nominees</span>
                   </>
                 )}
@@ -1012,15 +1008,15 @@ export default function AwardShowcase({ onOpenPlayerModal }) {
         </div>
 
         {/* Filter Category Tabs */}
-        <div className="relative z-10 pt-6 flex items-center gap-2 overflow-x-auto no-scrollbar">
+        <div className="relative z-10 pt-5 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
           {filterTabs.map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveGroup(tab.id)}
-              className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 ${
+              className={`px-3.5 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition-colors flex items-center gap-1.5 ${
                 activeGroup === tab.id
-                  ? 'bg-gold-gradient text-black shadow-gold-glow font-black'
-                  : 'bg-black/60 border border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700'
+                  ? 'bg-gold-500 text-black font-semibold'
+                  : 'bg-[#141824] border border-white/[0.06] text-zinc-400 hover:text-white hover:border-white/[0.12]'
               }`}
             >
               {tab.label}
@@ -1031,54 +1027,52 @@ export default function AwardShowcase({ onOpenPlayerModal }) {
 
       {/* Date Gating: Before Jan 1st Notice & Live Countdown Banner */}
       {!shouldShowNominees && (
-        <div className="relative rounded-3xl p-8 sm:p-12 bg-surface-card border-2 border-dashed border-gold-500/40 text-center space-y-6 shadow-gold-glow">
-          <div className="w-16 h-16 rounded-2xl bg-gold-gradient p-0.5 shadow-gold-glow mx-auto flex items-center justify-center">
-            <div className="w-full h-full bg-black rounded-[14px] flex items-center justify-center">
-              <Lock className="w-8 h-8 text-gold-400 animate-pulse" />
-            </div>
+        <div className="relative rounded-xl p-6 sm:p-10 bg-[#0e1118] border border-white/[0.08] text-center space-y-5">
+          <div className="w-12 h-12 rounded-lg bg-gold-500/10 border border-gold-500/20 mx-auto flex items-center justify-center text-gold-400">
+            <Lock className="w-5 h-5" />
           </div>
 
           <div className="max-w-xl mx-auto space-y-2">
-            <span className="inline-block text-[11px] font-mono font-bold text-gold-400 uppercase tracking-widest bg-gold-500/10 px-3 py-1 rounded-full border border-gold-500/30">
+            <span className="inline-block text-[10px] font-mono font-bold text-gold-400 uppercase tracking-wider bg-gold-500/10 px-2.5 py-1 rounded border border-gold-500/20">
               Official Unveil Announcement
             </span>
-            <h3 className="text-2xl sm:text-3xl font-black text-white">
+            <h3 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
               Official Nominations Unveiled After January 1st
             </h3>
-            <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed">
+            <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed font-normal">
               Jury evaluations and community voting are currently underway. The <strong>3 official nominated short films</strong> for each of our 22 categories will be publicly unveiled on <strong>January 1, 2027</strong>.
             </p>
           </div>
 
           {/* Countdown Clock */}
-          <div className="flex items-center justify-center gap-3 sm:gap-6 pt-2">
-            <div className="bg-black/80 border border-gold-500/30 rounded-2xl p-3 sm:p-4 min-w-[70px] sm:min-w-[85px]">
-              <div className="text-2xl sm:text-3xl font-black text-gold-400 font-mono">{timeLeft.days}</div>
-              <div className="text-[9px] sm:text-[10px] uppercase font-bold text-zinc-400">Days</div>
+          <div className="flex items-center justify-center gap-2 sm:gap-4 pt-1">
+            <div className="bg-[#080a0f] border border-white/[0.06] rounded-lg p-2.5 sm:p-3 min-w-[60px] sm:min-w-[72px]">
+              <div className="text-xl sm:text-2xl font-bold text-gold-400 font-mono">{timeLeft.days}</div>
+              <div className="text-[9px] uppercase font-semibold text-zinc-400">Days</div>
             </div>
-            <div className="text-gold-500 font-black text-xl">:</div>
-            <div className="bg-black/80 border border-gold-500/30 rounded-2xl p-3 sm:p-4 min-w-[70px] sm:min-w-[85px]">
-              <div className="text-2xl sm:text-3xl font-black text-white font-mono">{String(timeLeft.hours).padStart(2, '0')}</div>
-              <div className="text-[9px] sm:text-[10px] uppercase font-bold text-zinc-400">Hours</div>
+            <div className="text-gold-500/60 font-bold text-lg">:</div>
+            <div className="bg-[#080a0f] border border-white/[0.06] rounded-lg p-2.5 sm:p-3 min-w-[60px] sm:min-w-[72px]">
+              <div className="text-xl sm:text-2xl font-bold text-white font-mono">{String(timeLeft.hours).padStart(2, '0')}</div>
+              <div className="text-[9px] uppercase font-semibold text-zinc-400">Hours</div>
             </div>
-            <div className="text-gold-500 font-black text-xl">:</div>
-            <div className="bg-black/80 border border-gold-500/30 rounded-2xl p-3 sm:p-4 min-w-[70px] sm:min-w-[85px]">
-              <div className="text-2xl sm:text-3xl font-black text-white font-mono">{String(timeLeft.minutes).padStart(2, '0')}</div>
-              <div className="text-[9px] sm:text-[10px] uppercase font-bold text-zinc-400">Mins</div>
+            <div className="text-gold-500/60 font-bold text-lg">:</div>
+            <div className="bg-[#080a0f] border border-white/[0.06] rounded-lg p-2.5 sm:p-3 min-w-[60px] sm:min-w-[72px]">
+              <div className="text-xl sm:text-2xl font-bold text-white font-mono">{String(timeLeft.minutes).padStart(2, '0')}</div>
+              <div className="text-[9px] uppercase font-semibold text-zinc-400">Mins</div>
             </div>
-            <div className="text-gold-500 font-black text-xl">:</div>
-            <div className="bg-black/80 border border-gold-500/30 rounded-2xl p-3 sm:p-4 min-w-[70px] sm:min-w-[85px]">
-              <div className="text-2xl sm:text-3xl font-black text-gold-400 font-mono">{String(timeLeft.seconds).padStart(2, '0')}</div>
-              <div className="text-[9px] sm:text-[10px] uppercase font-bold text-zinc-400">Secs</div>
+            <div className="text-gold-500/60 font-bold text-lg">:</div>
+            <div className="bg-[#080a0f] border border-white/[0.06] rounded-lg p-2.5 sm:p-3 min-w-[60px] sm:min-w-[72px]">
+              <div className="text-xl sm:text-2xl font-bold text-gold-400 font-mono">{String(timeLeft.seconds).padStart(2, '0')}</div>
+              <div className="text-[9px] uppercase font-semibold text-zinc-400">Secs</div>
             </div>
           </div>
 
           <div className="pt-2">
             <button
               onClick={() => setCuratorPreview(true)}
-              className="gold-btn px-6 py-3 rounded-xl text-xs uppercase tracking-wider font-bold inline-flex items-center gap-2 shadow-gold-glow"
+              className="gold-btn px-4 py-2.5 rounded-md text-xs uppercase tracking-wider font-bold inline-flex items-center gap-2 text-black hover:opacity-95"
             >
-              <Eye className="w-4 h-4" /> Preview 3 Nominees Per Category (Curator Mode)
+              <Eye className="w-4 h-4" /> Preview 3 Nominees Per Category
             </button>
           </div>
         </div>
@@ -1086,109 +1080,107 @@ export default function AwardShowcase({ onOpenPlayerModal }) {
 
       {/* Nominations Showcase Grid: 22 Categories, Each Showcasing 3 Nominated Films */}
       {shouldShowNominees && (
-        <div className="space-y-8">
+        <div className="space-y-6">
           {curatorPreview && !isAfterJan1 && (
-            <div className="flex items-center justify-between p-4 rounded-2xl bg-gold-500/10 border border-gold-500/30 text-xs text-gold-300">
-              <div className="flex items-center gap-2 font-semibold">
-                <Sparkles className="w-4 h-4 text-gold-400" />
+            <div className="flex items-center justify-between p-3.5 rounded-lg bg-gold-500/10 border border-gold-500/20 text-xs text-gold-300">
+              <div className="flex items-center gap-2 font-medium">
+                <Sparkles className="w-3.5 h-3.5 text-gold-400 shrink-0" />
                 <span>Curator Preview Active: Inspecting the 3 official nominated films per category before January 1st unveil.</span>
               </div>
               <button
                 onClick={() => setCuratorPreview(false)}
-                className="text-[11px] underline hover:text-white font-bold"
+                className="text-[11px] underline hover:text-white font-bold ml-4 shrink-0"
               >
                 Close Preview
               </button>
             </div>
           )}
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {filteredCategories.map((category) => (
               <div
                 key={category.name}
-                className="relative rounded-3xl bg-zinc-950/80 border border-gold-500/30 p-6 space-y-5 hover:border-gold-400/80 transition-all shadow-gold-glow flex flex-col justify-between"
+                className="relative rounded-xl bg-[#0e1118] border border-white/[0.08] p-5 space-y-4 hover:border-white/[0.14] transition-colors flex flex-col justify-between"
               >
                 {/* Category Header */}
                 <div>
                   <div className="flex items-start justify-between gap-3 mb-2">
                     <div className="flex items-center gap-2.5">
-                      <div className="w-9 h-9 rounded-xl bg-gold-gradient p-0.5 shrink-0 flex items-center justify-center">
-                        <div className="w-full h-full bg-black rounded-[10px] flex items-center justify-center">
-                          <Trophy className="w-4 h-4 text-gold-400" />
-                        </div>
+                      <div className="w-8 h-8 rounded-md bg-gold-500/10 border border-gold-500/20 shrink-0 flex items-center justify-center text-gold-400">
+                        <Trophy className="w-4 h-4" />
                       </div>
                       <div>
-                        <span className="text-[10px] uppercase font-extrabold text-gold-400 tracking-wider block">
-                          Official Nomination Category
+                        <span className="text-[10px] uppercase font-bold text-gold-400 tracking-wider block">
+                          Official Category
                         </span>
-                        <h3 className="text-base sm:text-lg font-black text-white leading-tight">
+                        <h3 className="text-base font-bold text-white leading-tight">
                           {category.name}
                         </h3>
                       </div>
                     </div>
 
-                    <span className="px-2.5 py-1 rounded-full bg-gold-500/10 border border-gold-500/40 text-gold-400 text-[10px] font-mono font-bold shrink-0">
+                    <span className="px-2 py-0.5 rounded bg-white/[0.04] border border-white/[0.08] text-zinc-400 text-[10px] font-mono font-medium shrink-0">
                       3 Nominees
                     </span>
                   </div>
 
-                  <p className="text-xs text-zinc-400 leading-relaxed mt-1 mb-4">
+                  <p className="text-xs text-zinc-400 leading-relaxed mt-1 mb-3 font-normal">
                     {category.description}
                   </p>
 
                   {/* 3 Nominated Films Grid */}
-                  <div className="space-y-3">
-                    <div className="text-[10px] uppercase font-extrabold text-zinc-500 tracking-wider flex items-center gap-1.5">
-                      <Clapperboard className="w-3.5 h-3.5 text-gold-400" /> Shortlisted Nominated Films (3)
+                  <div className="space-y-2.5">
+                    <div className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider flex items-center gap-1.5">
+                      <Clapperboard className="w-3 h-3 text-gold-400" /> Shortlisted Nominated Films
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                       {category.nominees.map((nominee, idx) => (
                         <div
                           key={nominee.id || idx}
-                          className={`group relative rounded-2xl overflow-hidden border transition-all flex flex-col justify-between p-3 ${
+                          className={`group relative rounded-lg overflow-hidden border transition-colors flex flex-col justify-between p-2.5 ${
                             nominee.is_winner
-                              ? 'bg-gold-500/10 border-gold-500/60 shadow-gold-glow'
-                              : 'bg-surface-card/60 border-zinc-800 hover:border-zinc-700'
+                              ? 'bg-gold-500/[0.06] border-gold-500/40'
+                              : 'bg-[#12151f] border-white/[0.06] hover:border-white/[0.12]'
                           }`}
                         >
                           {/* Nominee Thumbnail */}
-                          <div className="relative aspect-video w-full rounded-xl overflow-hidden bg-black border border-zinc-800 mb-2.5">
+                          <div className="relative aspect-video w-full rounded-md overflow-hidden bg-black border border-white/[0.06] mb-2">
                             <img
                               src={nominee.thumbnail_url || '/images/logo-wordmark.png'}
                               alt={nominee.title}
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
 
                             {/* Badge */}
-                            <span className={`absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded-md text-[9px] font-bold uppercase ${
+                            <span className={`absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded text-[9px] font-semibold uppercase ${
                               nominee.is_winner
-                                ? 'bg-gold-500 text-black shadow-gold-glow'
-                                : 'bg-black/70 text-zinc-300 border border-zinc-700'
+                                ? 'bg-gold-500 text-black font-bold'
+                                : 'bg-black/70 text-zinc-300 border border-white/[0.1]'
                             }`}>
-                              {nominee.is_winner ? '🏆 Laureled' : `Nominee #${idx + 1}`}
+                              {nominee.is_winner ? 'Winner' : `Nominee ${idx + 1}`}
                             </span>
 
                             {/* Floating Play Button */}
                             <button
                               onClick={() => onOpenPlayerModal && onOpenPlayerModal(nominee)}
-                              className="absolute inset-0 m-auto w-8 h-8 rounded-full bg-gold-gradient text-black flex items-center justify-center shadow-gold-glow opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all"
+                              className="absolute inset-0 m-auto w-7 h-7 rounded-full bg-gold-500 text-black flex items-center justify-center opacity-85 group-hover:opacity-100 group-hover:scale-105 transition-all"
                               title="Watch Stream"
                             >
-                              <Play className="w-3.5 h-3.5 fill-black ml-0.5" />
+                              <Play className="w-3 h-3 fill-black ml-0.5" />
                             </button>
                           </div>
 
                           {/* Nominee Metadata */}
-                          <div className="space-y-1">
-                            <h4 className="text-xs font-bold text-white line-clamp-1 group-hover:text-gold-300 transition-colors" title={nominee.title}>
+                          <div className="space-y-0.5">
+                            <h4 className="text-xs font-bold text-white line-clamp-1 group-hover:text-gold-400 transition-colors" title={nominee.title}>
                               {nominee.title}
                             </h4>
-                            <p className="text-[10px] text-zinc-400 line-clamp-1">
+                            <p className="text-[10px] text-zinc-400 line-clamp-1 font-normal">
                               {nominee.director_name}
                             </p>
-                            <div className="flex items-center gap-1.5 text-[9px] text-zinc-500 font-medium">
+                            <div className="flex items-center gap-1.5 text-[9px] text-zinc-500">
                               <span>{nominee.genre}</span>
                               {nominee.running_time && (
                                 <>
@@ -1200,13 +1192,13 @@ export default function AwardShowcase({ onOpenPlayerModal }) {
                           </div>
 
                           {/* Watch / Laurel Button */}
-                          <div className="mt-2.5 pt-2 border-t border-zinc-800/80 flex items-center justify-between">
-                            <span className="text-[9px] font-bold text-gold-400">
-                              {nominee.is_winner ? 'Winner Laurel' : 'Official Shortlist'}
+                          <div className="mt-2 pt-1.5 border-t border-white/[0.06] flex items-center justify-between">
+                            <span className="text-[9px] font-semibold text-gold-400">
+                              {nominee.is_winner ? 'Laurel Winner' : 'Nominated'}
                             </span>
                             <button
                               onClick={() => onOpenPlayerModal && onOpenPlayerModal(nominee)}
-                              className="text-[10px] font-bold text-zinc-300 hover:text-gold-300 flex items-center gap-0.5 transition-colors"
+                              className="text-[10px] font-semibold text-zinc-300 hover:text-gold-400 flex items-center gap-0.5 transition-colors"
                             >
                               Watch <ChevronRight className="w-3 h-3" />
                             </button>
@@ -1218,11 +1210,11 @@ export default function AwardShowcase({ onOpenPlayerModal }) {
                 </div>
 
                 {/* Footer with Category Status */}
-                <div className="pt-3 border-t border-zinc-850 flex items-center justify-between text-[11px] text-zinc-400">
-                  <span className="inline-flex items-center gap-1 text-gold-400 font-semibold">
-                    <CheckCircle2 className="w-3.5 h-3.5" /> 3 Nominated Films Unveiled
+                <div className="pt-2.5 border-t border-white/[0.06] flex items-center justify-between text-[10px] text-zinc-400">
+                  <span className="inline-flex items-center gap-1 text-gold-400 font-medium">
+                    <CheckCircle2 className="w-3 h-3" /> 3 Nominated Films Shortlisted
                   </span>
-                  <span className="font-mono text-zinc-500 text-[10px]">
+                  <span className="font-mono text-zinc-500">
                     2026/2027 Season
                   </span>
                 </div>

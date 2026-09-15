@@ -89,42 +89,40 @@ export default function CommunityTimer() {
   const title = timerSetting.title || 'Festival Choice Community Voting';
 
   return (
-    <div className={`w-full border rounded-2xl p-4 md:p-5 my-6 shadow-gold-glow flex flex-col md:flex-row items-center justify-between gap-4 transition-all ${
+    <div className={`w-full border rounded-lg p-4 md:p-5 my-6 flex flex-col md:flex-row items-center justify-between gap-4 transition-all ${
       countdownMode === 'upcoming'
-        ? 'bg-gradient-to-r from-blue-950/40 via-indigo-950/30 to-purple-950/40 border-indigo-500/40'
+        ? 'bg-[#0f1422] border-indigo-500/30'
         : countdownMode === 'ended'
-        ? 'bg-gradient-to-r from-zinc-900/80 via-zinc-850 to-zinc-900/80 border-zinc-700/60'
-        : 'bg-gradient-to-r from-amber-500/10 via-gold-500/20 to-orange-500/10 border-gold-500/40'
+        ? 'bg-[#12141a] border-zinc-800'
+        : 'bg-[#141720] border-gold-500/30'
     }`}>
       {/* Event Details */}
       <div className="flex items-center gap-3.5">
-        <div className="w-11 h-11 rounded-2xl bg-gold-gradient p-0.5 flex items-center justify-center shadow-gold-glow shrink-0">
-          <div className="w-full h-full bg-black rounded-[14px] flex items-center justify-center">
-            {countdownMode === 'upcoming' ? (
-              <Calendar className="w-5 h-5 text-indigo-400 animate-pulse" />
-            ) : countdownMode === 'ended' ? (
-              <CheckCircle2 className="w-5 h-5 text-zinc-400" />
-            ) : (
-              <Sparkles className="w-5 h-5 text-gold-400 animate-pulse" />
-            )}
-          </div>
+        <div className="w-9 h-9 rounded-md bg-gold-500/10 border border-gold-500/20 flex items-center justify-center shrink-0">
+          {countdownMode === 'upcoming' ? (
+            <Calendar className="w-4 h-4 text-indigo-400" />
+          ) : countdownMode === 'ended' ? (
+            <CheckCircle2 className="w-4 h-4 text-zinc-400" />
+          ) : (
+            <Sparkles className="w-4 h-4 text-gold-400" />
+          )}
         </div>
         <div>
           <div className="flex flex-wrap items-center gap-2">
-            <h4 className="text-base font-extrabold text-white">
+            <h4 className="text-sm sm:text-base font-bold text-white">
               {title}
             </h4>
-            <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider ${
+            <span className={`text-[10px] px-2 py-0.5 rounded font-semibold uppercase tracking-wider ${
               countdownMode === 'upcoming'
-                ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/40'
+                ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30'
                 : countdownMode === 'ended'
-                ? 'bg-rose-500/20 text-rose-400 border border-rose-500/40'
-                : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                ? 'bg-rose-500/15 text-rose-400 border border-rose-500/30'
+                : 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
             }`}>
-              {countdownMode === 'upcoming' ? '● SCHEDULED / UPCOMING' : countdownMode === 'ended' ? '○ VOTING CONCLUDED' : '● LIVE NOW'}
+              {countdownMode === 'upcoming' ? 'Scheduled' : countdownMode === 'ended' ? 'Concluded' : 'Live Now'}
             </span>
           </div>
-          <p className="text-xs text-zinc-300 mt-1">
+          <p className="text-xs text-zinc-400 mt-1">
             {countdownMode === 'upcoming'
               ? `Community rating will open on ${new Date(timerSetting.start_time).toLocaleString()}. Get ready to vote!`
               : countdownMode === 'ended'
@@ -135,34 +133,34 @@ export default function CommunityTimer() {
       </div>
 
       {/* Countdown Timer Display */}
-      <div className="flex items-center gap-3 bg-black/85 border border-gold-500/30 px-5 py-3 rounded-2xl shrink-0 shadow-lg">
+      <div className="flex items-center gap-3 bg-[#0a0c12] border border-white/[0.08] px-4 py-2.5 rounded-md shrink-0">
         <Clock className={`w-4 h-4 ${countdownMode === 'upcoming' ? 'text-indigo-400' : countdownMode === 'ended' ? 'text-zinc-500' : 'text-gold-400'}`} />
         
         {countdownMode === 'ended' ? (
-          <span className="text-xs font-bold text-rose-400 uppercase tracking-wider">Voting Ended</span>
+          <span className="text-xs font-semibold text-rose-400 uppercase tracking-wider">Voting Ended</span>
         ) : (
-          <div className="flex items-center gap-2 font-mono text-base font-extrabold text-gold-300">
+          <div className="flex items-center gap-2 font-mono text-sm sm:text-base font-bold text-gold-400">
             {timeLeft.days > 0 && (
               <>
                 <div className="flex flex-col items-center">
-                  <span className="text-lg leading-none">{String(timeLeft.days).padStart(2, '0')}</span>
+                  <span className="text-base leading-none">{String(timeLeft.days).padStart(2, '0')}</span>
                   <span className="text-[9px] text-zinc-500 font-sans uppercase">Days</span>
                 </div>
                 <span className="text-zinc-600">:</span>
               </>
             )}
             <div className="flex flex-col items-center">
-              <span className="text-lg leading-none">{String(timeLeft.hours).padStart(2, '0')}</span>
+              <span className="text-base leading-none">{String(timeLeft.hours).padStart(2, '0')}</span>
               <span className="text-[9px] text-zinc-500 font-sans uppercase">Hrs</span>
             </div>
             <span className="text-zinc-600">:</span>
             <div className="flex flex-col items-center">
-              <span className="text-lg leading-none">{String(timeLeft.minutes).padStart(2, '0')}</span>
+              <span className="text-base leading-none">{String(timeLeft.minutes).padStart(2, '0')}</span>
               <span className="text-[9px] text-zinc-500 font-sans uppercase">Min</span>
             </div>
             <span className="text-zinc-600">:</span>
             <div className="flex flex-col items-center">
-              <span className="text-lg leading-none">{String(timeLeft.seconds).padStart(2, '0')}</span>
+              <span className="text-base leading-none">{String(timeLeft.seconds).padStart(2, '0')}</span>
               <span className="text-[9px] text-zinc-500 font-sans uppercase">Sec</span>
             </div>
           </div>

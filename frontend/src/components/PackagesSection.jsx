@@ -77,143 +77,103 @@ export default function PackagesSection({ onSubscribed }) {
     <section id="packages" className="space-y-8 scroll-mt-24">
       
       {/* Header Section */}
-      <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-4 border-b border-gold-500/20 pb-4">
+      <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-4 border-b border-white/[0.08] pb-4">
         <div>
-          <div className="flex items-center gap-2">
-            <Crown className="w-6 h-6 text-gold-400" />
-            <h2 className="text-2xl font-extrabold text-white">{t('passes.title', 'VIP Audience Packages & Passes')}</h2>
-          </div>
+          <h2 className="text-2xl font-bold text-white">{t('passes.title', 'Festival Passes & Access')}</h2>
           <p className="text-xs text-zinc-400 mt-1">
             {t('passes.subtitle', 'Unlock unlimited short film streaming, 4K playback, and community jury voting privileges.')}
           </p>
         </div>
 
-        {/* Currency Conversion Note Pill */}
-        <div className="px-3.5 py-1.5 rounded-xl bg-black/60 border border-zinc-800 text-[11px] text-zinc-400 flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span>Estimated LKR calculated at approx. <strong>1 USD ≈ 310 LKR</strong></span>
+        {/* Currency Conversion Note */}
+        <div className="text-[11px] text-zinc-400">
+          <span>1 USD ≈ 310 LKR</span>
         </div>
       </div>
 
-      {/* 50% OFF Launch Offer Callout Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#171B26] via-[#0E1119] to-[#07080B] border border-gold-500/35 p-6 sm:p-10 shadow-cinema-card">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-gold-500/10 rounded-full blur-3xl pointer-events-none" />
-
-        <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
-          <div className="space-y-3.5 max-w-2xl">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-gold-500/15 border border-gold-400/40 text-gold-300 text-xs font-black uppercase tracking-wider">
-              <Flame className="w-3.5 h-3.5 text-gold-400 fill-gold-400" /> Limited Early Bird Launch Offer
-            </div>
-
-            <h3 className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-tight leading-tight">
-              First 1–50 Members Get <span className="gold-text-gradient">50% OFF</span> on Any VIP Pass
-            </h3>
-
-            {/* Prominent Dec 31 Deadline Highlight Badge */}
-            <div className="flex flex-wrap items-center gap-3 pt-1">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-gold-500/10 border border-gold-400/50 text-white font-extrabold text-xs sm:text-sm">
-                <Clock className="w-4 h-4 text-gold-400 shrink-0" />
-                <span>Annual Pass: <strong className="text-gold-300 font-mono text-base">$39.99</strong> only until <span className="text-gold-400 underline underline-offset-4">December 31st</span>!</span>
-              </div>
-              <span className="text-xs text-zinc-400">Regular price $79.99/year after promo</span>
-            </div>
-
-            <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed font-normal">
-              Celebrate the premiere season of Thirai+ Shorts. Free trailers can be watched by anyone without tokens. Lock in your 50% discount to enjoy unlimited festival streaming.
-            </p>
+      {/* Early Bird Launch Offer Banner */}
+      <div className="rounded-xl bg-[#0D1017] border border-white/[0.08] p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-gold-400">Early Bird Festival Offer</span>
+          <h3 className="text-lg sm:text-xl font-bold text-white">Save 50% on the Annual Cinema Pass</h3>
+          <p className="text-xs text-zinc-400 max-w-xl">
+            Full-year access to all festival short films, director statements, and competition voting. Special promotional rate available until December 31st.
+          </p>
+        </div>
+        <div className="shrink-0 flex items-center gap-3">
+          <div className="text-right">
+            <span className="text-xs text-zinc-500 line-through font-mono">$79.99</span>
+            <span className="block text-2xl font-bold text-white font-mono">$39.99<span className="text-xs text-zinc-400 font-normal">/yr</span></span>
           </div>
-
-          {/* Spots Remaining Indicator */}
-          <div className="bg-[#07080B]/90 border border-white/[0.08] rounded-2xl p-5 text-center shrink-0 w-full lg:w-64 space-y-3 shadow-lg">
-            <div className="flex items-center justify-between text-xs font-bold">
-              <span className="text-zinc-400 uppercase tracking-wider">Early Spots:</span>
-              <span className="text-gold-400 font-mono text-sm">38 / 50 Claimed</span>
-            </div>
-            {/* Progress Bar */}
-            <div className="w-full h-2 bg-zinc-800 rounded-full overflow-hidden p-0.5 border border-white/[0.06]">
-              <div className="h-full bg-gold-gradient rounded-full w-[76%] transition-all" />
-            </div>
-            <span className="block text-xs font-bold text-amber-400 uppercase tracking-wider">
-              🔥 Only 12 Passes Left at this rate!
-            </span>
-          </div>
+          <button
+            onClick={() => handleSubscribe('yearly')}
+            className="gold-btn px-4 py-2.5 rounded-md text-xs font-bold uppercase tracking-wider"
+          >
+            Claim Pass
+          </button>
         </div>
       </div>
 
       {/* Notifications */}
       {successMsg && (
-        <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs flex items-center gap-2 shadow-gold-glow">
-          <CheckCircle2 className="w-5 h-5 shrink-0" />
+        <div className="p-3.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs flex items-center gap-2">
+          <CheckCircle2 className="w-4 h-4 shrink-0" />
           <span className="font-semibold">{successMsg}</span>
         </div>
       )}
 
       {errorMsg && (
-        <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
-          <AlertCircle className="w-5 h-5 shrink-0" />
+        <div className="p-3.5 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 shrink-0" />
           <span>{errorMsg}</span>
         </div>
       )}
 
-      {/* Main 3-Column Pass Comparison Grid: Free Pass, Only Viewer Pass ($4.99/mo), Annual VIP Pass ($39.99/yr) */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Main 3-Column Pass Comparison Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
         {/* 1. Free Audience Pass */}
-        <div className="relative rounded-3xl p-6 md:p-8 flex flex-col justify-between bg-surface-card border border-zinc-800 hover:border-zinc-700 transition-all">
+        <div className="rounded-xl p-6 flex flex-col justify-between bg-[#0D1017] border border-white/[0.08] transition-colors">
           <div>
-            <div className="flex items-center justify-between gap-2 mb-4">
-              <span className="px-3 py-1 rounded-full text-[10px] uppercase tracking-wider font-extrabold bg-zinc-800 text-zinc-300 border border-zinc-700">
+            <div className="flex items-center justify-between gap-2 mb-3">
+              <span className="text-[10px] uppercase tracking-wider font-bold text-zinc-400">
                 Included Free
               </span>
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-zinc-800 text-zinc-400 text-[10px] font-bold uppercase">
-                Standard Tier
-              </span>
             </div>
 
-            <div className="space-y-2">
-              <h3 className="text-xl font-black text-white">{t('passes.freePassTitle', 'Free Audience Pass')}</h3>
+            <div className="space-y-1.5">
+              <h3 className="text-lg font-bold text-white">{t('passes.freePassTitle', 'Free Audience Pass')}</h3>
               <div className="flex items-baseline gap-2">
-                <span className="text-4xl sm:text-5xl font-black text-white font-mono">$0</span>
-                <span className="text-xs text-zinc-400 font-semibold">{t('passes.freeForever', 'Free Forever')}</span>
+                <span className="text-3xl font-bold text-white font-mono">$0</span>
+                <span className="text-xs text-zinc-400">{t('passes.freeForever', 'Free Forever')}</span>
               </div>
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-zinc-400 font-medium">
-                <span>{t('passes.freePassDesc', 'Registration gift with account')}</span>
-              </div>
+              <p className="text-xs text-zinc-400">
+                {t('passes.freePassDesc', 'Registration gift with account')}
+              </p>
             </div>
 
-            <ul className="space-y-2.5 my-6 py-4 border-y border-zinc-800/80">
-              <li className="flex items-center gap-2.5 text-xs text-zinc-300">
-                <div className="w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
-                  <Check className="w-3 h-3" />
-                </div>
-                <span><strong>2 Free Viewing Tokens</strong> granted on signup</span>
+            <ul className="space-y-2 my-5 py-4 border-y border-white/[0.06]">
+              <li className="flex items-center gap-2 text-xs text-zinc-300">
+                <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                <span><strong>2 Free Viewing Tokens</strong> on registration</span>
               </li>
-              <li className="flex items-center gap-2.5 text-xs text-zinc-300">
-                <div className="w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
-                  <Check className="w-3 h-3" />
-                </div>
-                <span><strong>Free Movie Trailers:</strong> Watch trailers for any film without costing tokens</span>
+              <li className="flex items-center gap-2 text-xs text-zinc-300">
+                <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                <span><strong>Movie Trailers:</strong> Watch trailers for any film free</span>
               </li>
-              <li className="flex items-center gap-2.5 text-xs text-zinc-300">
-                <div className="w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
-                  <Check className="w-3 h-3" />
-                </div>
+              <li className="flex items-center gap-2 text-xs text-zinc-300">
+                <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                 <span>Unlock any 2 short films of your choice</span>
               </li>
-              <li className="flex items-center gap-2.5 text-xs text-zinc-300">
-                <div className="w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
-                  <Check className="w-3 h-3" />
-                </div>
-                <span>Festival Community public voting rights</span>
-              </li>
-              <li className="flex items-center gap-2.5 text-xs text-zinc-500 line-through">
-                <span>Unlimited streaming (Pass required after 2 tokens)</span>
+              <li className="flex items-center gap-2 text-xs text-zinc-300">
+                <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                <span>Community public voting rights</span>
               </li>
             </ul>
           </div>
 
-          <div className="p-3.5 rounded-2xl bg-zinc-900/80 border border-zinc-800 text-center text-xs text-zinc-400 font-semibold">
-            {user ? '✓ Currently Active with Your Account' : 'Included automatically when you sign up'}
+          <div className="p-3 rounded-md bg-white/[0.04] text-center text-xs text-zinc-400">
+            {user ? 'Active with your account' : 'Included automatically on sign up'}
           </div>
         </div>
 
@@ -238,46 +198,34 @@ export default function PackagesSection({ onSubscribed }) {
                 <span className="text-4xl sm:text-5xl font-black text-white font-mono">
                   $4.99
                 </span>
-                <span className="text-xs text-zinc-400 font-semibold">{t('passes.perMonth', '/ month')}</span>
+                <span className="text-xs text-zinc-400">{t('passes.perMonth', '/ month')}</span>
               </div>
 
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-gold-500/10 border border-gold-500/30 text-xs text-gold-300 font-semibold">
-                <span>Approx.</span>
-                <span className="text-gold-400 font-bold font-mono">Rs. 1,550 LKR</span>
-                <span className="text-zinc-400 font-light text-[10px]">{t('passes.perMonth', '/ month')}</span>
+              <div className="text-xs text-zinc-400">
+                <span>Approx. <strong className="text-zinc-300 font-mono">Rs. 1,550 LKR</strong> / month</span>
               </div>
             </div>
 
-            <ul className="space-y-2.5 my-6 py-4 border-y border-zinc-800/80">
-              <li className="flex items-center gap-2.5 text-xs text-zinc-300">
-                <div className="w-4 h-4 rounded-full bg-gold-500/20 text-gold-400 flex items-center justify-center shrink-0">
-                  <Check className="w-3 h-3" />
-                </div>
-                <span><strong>Unlimited short movie streaming</strong></span>
+            <ul className="space-y-2 my-5 py-4 border-y border-white/[0.06]">
+              <li className="flex items-center gap-2 text-xs text-zinc-300">
+                <Check className="w-3.5 h-3.5 text-gold-400 shrink-0" />
+                <span><strong>Unlimited short film streaming</strong></span>
               </li>
-              <li className="flex items-center gap-2.5 text-xs text-zinc-300">
-                <div className="w-4 h-4 rounded-full bg-gold-500/20 text-gold-400 flex items-center justify-center shrink-0">
-                  <Check className="w-3 h-3" />
-                </div>
-                <span><strong>Zero token deduction</strong> on any short film</span>
+              <li className="flex items-center gap-2 text-xs text-zinc-300">
+                <Check className="w-3.5 h-3.5 text-gold-400 shrink-0" />
+                <span>Zero token deduction on any film</span>
               </li>
-              <li className="flex items-center gap-2.5 text-xs text-zinc-300">
-                <div className="w-4 h-4 rounded-full bg-gold-500/20 text-gold-400 flex items-center justify-center shrink-0">
-                  <Check className="w-3 h-3" />
-                </div>
-                <span>Ultra HD 4K cinema playback stream</span>
+              <li className="flex items-center gap-2 text-xs text-zinc-300">
+                <Check className="w-3.5 h-3.5 text-gold-400 shrink-0" />
+                <span>Ultra HD 4K playback stream</span>
               </li>
-              <li className="flex items-center gap-2.5 text-xs text-zinc-300">
-                <div className="w-4 h-4 rounded-full bg-gold-500/20 text-gold-400 flex items-center justify-center shrink-0">
-                  <Check className="w-3 h-3" />
-                </div>
-                <span>Festival community jury voting rights</span>
+              <li className="flex items-center gap-2 text-xs text-zinc-300">
+                <Check className="w-3.5 h-3.5 text-gold-400 shrink-0" />
+                <span>Community jury voting rights</span>
               </li>
-              <li className="flex items-center gap-2.5 text-xs text-zinc-300">
-                <div className="w-4 h-4 rounded-full bg-gold-500/20 text-gold-400 flex items-center justify-center shrink-0">
-                  <Check className="w-3 h-3" />
-                </div>
-                <span>{t('passes.cancelAnytime', 'Cancel anytime with 1-click')}</span>
+              <li className="flex items-center gap-2 text-xs text-zinc-300">
+                <Check className="w-3.5 h-3.5 text-gold-400 shrink-0" />
+                <span>{t('passes.cancelAnytime', 'Cancel anytime')}</span>
               </li>
             </ul>
           </div>
@@ -285,10 +233,10 @@ export default function PackagesSection({ onSubscribed }) {
           <button
             onClick={() => handleSubscribe('monthly')}
             disabled={isSubActive && (currentTier === 'monthly' || currentTier === 'viewer_monthly') || loadingPkg === 'monthly'}
-            className={`w-full py-4 rounded-2xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${
+            className={`w-full py-2.5 rounded-md text-xs font-bold uppercase tracking-wider transition-colors ${
               isSubActive && (currentTier === 'monthly' || currentTier === 'viewer_monthly')
-                ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed border border-zinc-700'
-                : 'bg-zinc-900 border border-gold-500/50 hover:bg-gold-500/20 text-gold-300 hover:text-white'
+                ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
+                : 'bg-white/[0.08] hover:bg-white/[0.14] text-white border border-white/[0.1]'
             }`}
           >
             {loadingPkg === 'monthly' ? (
@@ -296,87 +244,62 @@ export default function PackagesSection({ onSubscribed }) {
             ) : isSubActive && (currentTier === 'monthly' || currentTier === 'viewer_monthly') ? (
               t('passes.currentActivePass', 'Current Active Pass')
             ) : (
-              <>
-                <Zap className="w-4 h-4 fill-current" /> {t('passes.claimViewerPass', 'Claim Viewer Pass — $4.99/mo')}
-              </>
+              t('passes.claimViewerPass', 'Get Viewer Pass — $4.99/mo')
             )}
           </button>
         </div>
 
-        {/* 3. Annual VIP Cinema Pass (YEAR PASS) - $39.99 / year (Best Value & Dec 31st Special) */}
-        <div className="relative rounded-3xl p-6 md:p-8 flex flex-col justify-between bg-surface-card border-2 border-gold-500 shadow-gold-glow-lg transition-all">
-          <div className="absolute -top-3.5 right-6 px-3 py-1 rounded-full bg-gold-gradient text-black text-[10px] font-black uppercase tracking-wider shadow-gold-glow">
-            {t('passes.dec31Special', 'Dec 31st Special • Save 50%')}
+        {/* 3. Annual VIP Cinema Pass - $39.99 / year */}
+        <div className="rounded-xl p-6 flex flex-col justify-between bg-[#0D1017] border-2 border-gold-500/50 relative">
+          <div className="absolute -top-3 right-5 px-2.5 py-0.5 rounded bg-gold-500 text-black text-[10px] font-bold uppercase tracking-wider">
+            Best Value
           </div>
 
           <div>
-            <div className="flex items-center justify-between gap-2 mb-4">
-              <span className="px-3 py-1 rounded-full text-[10px] uppercase tracking-wider font-extrabold bg-gold-gradient text-black shadow-gold-glow">
-                {t('passes.yearPassBadge', 'Year Pass • Best Value')}
+            <div className="flex items-center justify-between gap-2 mb-3">
+              <span className="text-[10px] uppercase tracking-wider font-bold text-gold-400">
+                Annual Pass
               </span>
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-[10px] font-black uppercase">
-                <Clock className="w-3 h-3" /> Until Dec 31st
-              </span>
+              <span className="text-[10px] text-zinc-400 font-mono">Until Dec 31</span>
             </div>
 
-            <div className="space-y-2">
-              <h3 className="text-xl font-black text-white">{t('passes.annualPassTitle', 'Annual VIP Cinema Pass')}</h3>
-              <div className="flex items-baseline gap-2.5">
-                <span className="text-base text-zinc-500 line-through font-mono">
+            <div className="space-y-1.5">
+              <h3 className="text-lg font-bold text-white">{t('passes.annualPassTitle', 'Annual Cinema Pass')}</h3>
+              <div className="flex items-baseline gap-2">
+                <span className="text-sm text-zinc-500 line-through font-mono">
                   $79.99
                 </span>
-                <span
-                  style={{ color: '#FFFFFF' }}
-                  className="text-4xl sm:text-5xl font-black text-white font-mono"
-                >
+                <span className="text-3xl font-bold text-white font-mono">
                   $39.99
                 </span>
-                <span className="text-xs text-zinc-400 font-semibold">{t('passes.perYear', '/ year')}</span>
+                <span className="text-xs text-zinc-400">{t('passes.perYear', '/ year')}</span>
               </div>
 
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-gold-500/20 border border-gold-500/50 text-xs text-gold-300 font-bold">
-                <span>Approx.</span>
-                <span className="text-gold-400 font-mono">Rs. 12,400 LKR</span>
-                <span className="text-zinc-400 font-normal text-[10px]">{t('passes.perYear', '/ year')}</span>
+              <div className="text-xs text-zinc-400">
+                <span>Approx. <strong className="text-zinc-300 font-mono">Rs. 12,400 LKR</strong> / year</span>
               </div>
             </div>
 
-            <ul className="space-y-2.5 my-6 py-4 border-y border-gold-500/30">
-              <li className="flex items-center gap-2.5 text-xs text-zinc-200 font-medium">
-                <div className="w-4 h-4 rounded-full bg-gold-500/20 text-gold-400 flex items-center justify-center shrink-0">
-                  <Check className="w-3 h-3" />
-                </div>
+            <ul className="space-y-2 my-5 py-4 border-y border-white/[0.06]">
+              <li className="flex items-center gap-2 text-xs text-zinc-300">
+                <Check className="w-3.5 h-3.5 text-gold-400 shrink-0" />
                 <span><strong>12 months of unlimited movie streaming</strong></span>
               </li>
-              <li className="flex items-center gap-2.5 text-xs text-zinc-200 font-medium">
-                <div className="w-4 h-4 rounded-full bg-gold-500/20 text-gold-400 flex items-center justify-center shrink-0">
-                  <Check className="w-3 h-3" />
-                </div>
-                <span>Priority access to Award Winner showcases</span>
+              <li className="flex items-center gap-2 text-xs text-zinc-300">
+                <Check className="w-3.5 h-3.5 text-gold-400 shrink-0" />
+                <span>Access to all official Award Showcases</span>
               </li>
-              <li className="flex items-center gap-2.5 text-xs text-zinc-200 font-medium">
-                <div className="w-4 h-4 rounded-full bg-gold-500/20 text-gold-400 flex items-center justify-center shrink-0">
-                  <Check className="w-3 h-3" />
-                </div>
-                <span>Exclusive director statements & full press kits</span>
+              <li className="flex items-center gap-2 text-xs text-zinc-300">
+                <Check className="w-3.5 h-3.5 text-gold-400 shrink-0" />
+                <span>Director statements & complete press kits</span>
               </li>
-              <li className="flex items-center gap-2.5 text-xs text-zinc-200 font-medium">
-                <div className="w-4 h-4 rounded-full bg-gold-500/20 text-gold-400 flex items-center justify-center shrink-0">
-                  <Check className="w-3 h-3" />
-                </div>
+              <li className="flex items-center gap-2 text-xs text-zinc-300">
+                <Check className="w-3.5 h-3.5 text-gold-400 shrink-0" />
                 <span>Grand Jury Choice community voting power</span>
               </li>
-              <li className="flex items-center gap-2.5 text-xs text-zinc-200 font-medium">
-                <div className="w-4 h-4 rounded-full bg-gold-500/20 text-gold-400 flex items-center justify-center shrink-0">
-                  <Check className="w-3 h-3" />
-                </div>
-                <span>Official Festival Digital Pass & Certificate</span>
-              </li>
-              <li className="flex items-center gap-2.5 text-xs text-zinc-200 font-medium">
-                <div className="w-4 h-4 rounded-full bg-gold-500/20 text-gold-400 flex items-center justify-center shrink-0">
-                  <Check className="w-3 h-3" />
-                </div>
-                <span>Save $40.00 compared to standard yearly</span>
+              <li className="flex items-center gap-2 text-xs text-zinc-300">
+                <Check className="w-3.5 h-3.5 text-gold-400 shrink-0" />
+                <span>Official Festival Digital Certificate</span>
               </li>
             </ul>
           </div>
@@ -384,20 +307,18 @@ export default function PackagesSection({ onSubscribed }) {
           <button
             onClick={() => handleSubscribe('yearly')}
             disabled={isSubActive && (currentTier === 'yearly' || currentTier === 'viewer_yearly') || loadingPkg === 'yearly'}
-            className={`w-full py-4 rounded-2xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${
+            className={`w-full py-2.5 rounded-md text-xs font-bold uppercase tracking-wider transition-colors ${
               isSubActive && (currentTier === 'yearly' || currentTier === 'viewer_yearly')
-                ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed border border-zinc-700'
-                : 'gold-btn shadow-gold-glow hover:scale-105 active:scale-95'
+                ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
+                : 'gold-btn'
             }`}
           >
             {loadingPkg === 'yearly' ? (
-              'Activating Year Pass...'
+              'Activating...'
             ) : isSubActive && (currentTier === 'yearly' || currentTier === 'viewer_yearly') ? (
               t('passes.currentActivePass', 'Current Active Pass')
             ) : (
-              <>
-                <Zap className="w-4 h-4 fill-current" /> {t('passes.claimYearPass', 'Claim Year Pass — $39.99/yr')}
-              </>
+              t('passes.claimYearPass', 'Get Annual Pass — $39.99/yr')
             )}
           </button>
         </div>
@@ -405,63 +326,61 @@ export default function PackagesSection({ onSubscribed }) {
       </div>
 
       {/* 4. Film Submitter Special Privilege Section ($2.99 / month) */}
-      <div className="relative rounded-3xl p-6 md:p-8 bg-gradient-to-r from-zinc-950 via-surface-card to-zinc-950 border-2 border-gold-400/80 shadow-gold-glow overflow-hidden">
-        <div className="absolute top-0 right-1/4 w-80 h-80 bg-gold-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="rounded-xl p-6 bg-[#0D1017] border border-white/[0.08]">
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+          <div className="space-y-2.5 max-w-2xl">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-gold-400 block">
+              {t('passes.approvedFilmmakerBadge', 'Approved Filmmaker Pass')}
+            </span>
 
-        <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
-          <div className="space-y-3 max-w-2xl">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-gold-gradient text-black text-[10px] font-black uppercase tracking-wider shadow-gold-glow">
-              <Clapperboard className="w-3.5 h-3.5" /> {t('passes.approvedFilmmakerBadge', 'Approved Filmmaker Exclusive Pass')}
-            </div>
-
-            <h3 className="text-xl sm:text-2xl md:text-3xl font-black text-white tracking-tight">
-              {t('passes.submitterPassTitle', 'Submitter Pass')}: <span className="text-gold-300 font-mono text-2xl sm:text-3xl font-black">$2.99</span> <span className="text-xs font-normal text-zinc-400">{t('passes.perMonth', '/ month')}</span>
+            <h3 className="text-xl font-bold text-white">
+              {t('passes.submitterPassTitle', 'Submitter Rate')}: <span className="font-mono text-xl font-bold text-gold-400">$2.99</span> <span className="text-xs text-zinc-400 font-normal">/ month</span>
             </h3>
 
-            <div className="p-3.5 rounded-2xl bg-gold-500/10 border border-gold-500/30 text-xs text-gold-300 leading-relaxed">
-              {t('passes.submitterRuleNotice', 'Official Filmmaker Rule: If you have submitted your short film for T+ film festival and got approved, you can gain access to view pass at just $2.99 monthly to stream unlimited movies and vote.')}
-            </div>
+            <p className="text-xs text-zinc-400 leading-relaxed">
+              {t('passes.submitterRuleNotice', 'Filmmakers with an approved short film in competition qualify for full platform access at $2.99 monthly.')}
+            </p>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs text-zinc-300 pt-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-zinc-300 pt-1">
               <div className="flex items-center gap-2">
-                <Check className="w-4 h-4 text-gold-400 shrink-0" />
+                <Check className="w-3.5 h-3.5 text-gold-400 shrink-0" />
                 <span>Unlimited streaming (zero token cost)</span>
               </div>
               <div className="flex items-center gap-2">
-                <Check className="w-4 h-4 text-gold-400 shrink-0" />
-                <span>Festival community rating & voting</span>
+                <Check className="w-3.5 h-3.5 text-gold-400 shrink-0" />
+                <span>Community rating & voting privileges</span>
               </div>
               <div className="flex items-center gap-2">
-                <Check className="w-4 h-4 text-gold-400 shrink-0" />
-                <span>Official Film Submitter profile badge</span>
+                <Check className="w-3.5 h-3.5 text-gold-400 shrink-0" />
+                <span>Director analytics dashboard access</span>
               </div>
               <div className="flex items-center gap-2">
-                <Check className="w-4 h-4 text-gold-400 shrink-0" />
-                <span>Save 40% compared to standard viewer pass</span>
+                <Check className="w-3.5 h-3.5 text-gold-400 shrink-0" />
+                <span>Save 40% vs. standard monthly pass</span>
               </div>
             </div>
           </div>
 
           {/* Submitter Action Controls */}
-          <div className="bg-black/90 border border-gold-500/40 rounded-2xl p-5 shrink-0 w-full lg:w-80 space-y-3 shadow-gold-glow text-center">
-            <span className="text-[10px] uppercase font-bold text-zinc-400 tracking-wider block">
-              Filmmaker Status & Access:
+          <div className="bg-[#07080B] border border-white/[0.08] rounded-lg p-5 shrink-0 w-full lg:w-72 space-y-2.5 text-center">
+            <span className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider block">
+              Filmmaker Status
             </span>
 
             {user ? (
               isApprovedFilmmaker ? (
-                <div className="space-y-3">
-                  <div className="flex items-center justify-center gap-1.5 text-xs font-bold text-emerald-400 bg-emerald-500/10 py-1.5 px-3 rounded-xl border border-emerald-500/30">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                    <span>Approved Film Verified!</span>
+                <div className="space-y-2.5">
+                  <div className="flex items-center justify-center gap-1.5 text-xs font-semibold text-emerald-400 bg-emerald-500/10 py-1.5 px-3 rounded-md">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                    <span>Approved Film Verified</span>
                   </div>
                   <button
                     onClick={() => handleSubscribe('submitter_monthly')}
                     disabled={isSubActive && currentTier === 'submitter_monthly' || loadingPkg === 'submitter_monthly'}
-                    className={`w-full py-3.5 rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${
+                    className={`w-full py-2.5 rounded-md text-xs font-bold uppercase tracking-wider transition-colors ${
                       isSubActive && currentTier === 'submitter_monthly'
-                        ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed border border-zinc-700'
-                        : 'gold-btn shadow-gold-glow hover:scale-105 active:scale-95'
+                        ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
+                        : 'gold-btn'
                     }`}
                   >
                     {loadingPkg === 'submitter_monthly' ? (
@@ -469,39 +388,31 @@ export default function PackagesSection({ onSubscribed }) {
                     ) : isSubActive && currentTier === 'submitter_monthly' ? (
                       t('passes.currentActivePass', 'Current Active Pass')
                     ) : (
-                      <>
-                        <Zap className="w-4 h-4 fill-current" /> {t('passes.claimSubmitterPass', 'Claim Submitter Pass — $2.99/mo')}
-                      </>
+                      'Claim Submitter Pass ($2.99/mo)'
                     )}
                   </button>
                 </div>
               ) : (
                 <div className="space-y-2">
-                  <div className="flex items-center justify-center gap-1.5 text-xs font-semibold text-amber-400 bg-amber-500/10 py-1.5 px-3 rounded-xl border border-amber-500/30">
-                    <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
-                    <span>Requires Approved Submission</span>
-                  </div>
-                  <p className="text-[11px] text-zinc-400">
-                    Submit your short film to the festival to unlock the $2.99 rate.
-                  </p>
+                  <span className="text-xs text-zinc-400 block">Requires Approved Film Submission</span>
                   <Link
                     href="/upload"
-                    className="w-full py-3 px-4 rounded-xl bg-zinc-900 border border-gold-500/40 hover:border-gold-400 text-gold-300 hover:text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-colors"
+                    className="w-full py-2 px-3 rounded-md bg-white/[0.08] hover:bg-white/[0.14] text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
                   >
-                    <Clapperboard className="w-4 h-4 text-gold-400" /> Submit Film to Qualify
+                    Submit Film to Qualify
                   </Link>
                 </div>
               )
             ) : (
-              <div className="space-y-3">
-                <p className="text-xs text-zinc-300">
-                  Filmmakers with approved films get view access at <strong>$2.99/mo</strong>.
+              <div className="space-y-2">
+                <p className="text-xs text-zinc-400">
+                  Approved filmmakers receive access at <strong>$2.99/mo</strong>.
                 </p>
                 <Link
                   href="/login?redirect=/#packages"
-                  className="w-full py-3.5 px-4 rounded-xl bg-zinc-900 border border-gold-500/40 hover:border-gold-400 text-gold-300 hover:text-white text-xs font-bold flex items-center justify-center gap-2 transition-colors"
+                  className="w-full py-2 px-3 rounded-md bg-white/[0.08] hover:bg-white/[0.14] text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
                 >
-                  <Lock className="w-4 h-4 text-gold-400" /> Sign In as Submitter — $2.99/mo
+                  Sign In as Filmmaker
                 </Link>
               </div>
             )}
