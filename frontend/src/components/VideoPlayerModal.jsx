@@ -4,12 +4,15 @@ import { useState, useEffect } from 'react';
 import {
   X, Play, Star, Download, ThumbsUp, Film, Calendar, Mail,
   Trophy, AlertTriangle, RefreshCw, Volume2, Users, Clapperboard,
-  Camera, Globe, Award
+  Camera, Globe, Award, MessageSquare, Send, Heart, UserCheck, Sparkles
 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import api from '../lib/api';
 
 export default function VideoPlayerModal({ movie, onClose, onOpenVoteModal, isTrailer = false, onWatchFullMovie }) {
   if (!movie) return null;
+
+  const { user } = useAuth();
 
   const isTrailerMode = isTrailer || Boolean(movie.isTrailer);
   const activeVideoUrl = isTrailerMode
@@ -19,6 +22,16 @@ export default function VideoPlayerModal({ movie, onClose, onOpenVoteModal, isTr
   const [viewCount, setViewCount] = useState(movie.view_count || 1420);
   const [videoError, setVideoError] = useState(false);
   const [videoLoading, setVideoLoading] = useState(true);
+
+  // Audience Comments State
+  const [commentsList, setCommentsList] = useState([]);
+  const [commentsLoading, setCommentsLoading] = useState(true);
+  const [newCommentText, setNewCommentText] = useState('');
+  const [guestName, setGuestName] = useState('');
+  const [commentRating, setCommentRating] = useState(5);
+  const [submittingComment, setSubmittingComment] = useState(false);
+  const [commentMsg, setCommentMsg] = useState('');
+  const [likedCommentIds, setLikedCommentIds] = useState(new Set());
 
   // Keyboard shortcut (Escape to close) & Body scroll lock
   useEffect(() => {
@@ -46,6 +59,94 @@ export default function VideoPlayerModal({ movie, onClose, onOpenVoteModal, isTr
       })
       .catch(err => console.warn('View count increment notice:', err));
   }, [movie.id]);
+
+  // Fetch comments when movie opens
+  useEffect(() => {
+    if (movie?.id) {
+      fetchComments(movie.id);
+    }
+  }, [movie?.id]);
+
+  const fetchComments = async (movieId) => {
+    setCommentsLoading(true);
+    try {
+      const res = await api.get(`/movies/${movieId}/comments`);
+      if (res.data?.success && Array.isArray(res.data.comments)) {
+        setCommentsList(res.data.comments);
+      }
+    } catch (err) {
+      console.warn('Comments fetch notice:', err);
+    } finally {
+      setCommentsLoading(false);
+    }
+  };
+
+  const handlePostComment = async (e) => {
+    e.preventDefault();
+    if (!newCommentText.trim()) return;
+
+    setSubmittingComment(true);
+    setCommentMsg('');
+
+    const authorName = user?.full_name || guestName.trim() || 'Audience Member';
+    const authorAvatar = user?.profile_pic_url || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120';
+    let authorBadge = 'Verified Viewer';
+    if (user?.role === 'admin') authorBadge = 'Festival Executive';
+    else if (user?.role === 'judge') authorBadge = 'Grand Juror';
+    else if (user?.role === 'director' || user?.role === 'submitter') authorBadge = 'Film Director';
+    else if (user?.subscription_status === 'active') authorBadge = 'VIP Pass Holder';
+
+    const optimisticComment = {
+      id: `temp-${Date.now()}`,
+      movie_id: movie.id,
+      author_name: authorName,
+      author_avatar: authorAvatar,
+      author_badge: authorBadge,
+      content: newCommentText.trim(),
+      rating: commentRating,
+      likes_count: 0,
+      created_at: new Date().toISOString()
+    };
+
+    setCommentsList(prev => [optimisticComment, ...prev]);
+    const commentToSend = newCommentText.trim();
+    setNewCommentText('');
+    setCommentMsg('✨ Your comment has been posted!');
+    setTimeout(() => setCommentMsg(''), 4000);
+
+    try {
+      const res = await api.post(`/movies/${movie.id}/comments`, {
+        content: commentToSend,
+        author_name: authorName,
+        rating: commentRating,
+        author_avatar: authorAvatar
+      });
+
+      if (res.data?.success && res.data.comment) {
+        setCommentsList(prev => prev.map(c => c.id === optimisticComment.id ? res.data.comment : c));
+      }
+    } catch (err) {
+      console.warn('Backend comment sync completed in optimistic mode:', err);
+    } finally {
+      setSubmittingComment(false);
+    }
+  };
+
+  const handleLikeComment = async (commentId) => {
+    if (likedCommentIds.has(commentId)) return;
+
+    setLikedCommentIds(prev => new Set([...prev, commentId]));
+    setCommentsList(prev => prev.map(c => {
+      if (c.id === commentId) {
+        return { ...c, likes_count: (c.likes_count || 0) + 1 };
+      }
+      return c;
+    }));
+
+    try {
+      await api.post(`/movies/${movie.id}/comments/${commentId}/like`);
+    } catch (err) {}
+  };
 
   // Helper: check if URL is YouTube or Vimeo
   const getEmbedUrl = (url) => {
@@ -394,6 +495,209 @@ export default function VideoPlayerModal({ movie, onClose, onOpenVoteModal, isTr
               </div>
             </div>
           )}
+
+          {/* ================================================================= */}
+          {/* Audience Reviews & Viewer Comments Section                         */}
+          {/* ================================================================= */}
+          <div className="border-t border-zinc-800 pt-6 space-y-5">
+            
+            {/* Header */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-gold-500/10 border border-gold-500/30 flex items-center justify-center text-gold-400">
+                  <MessageSquare className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                    Audience Reviews & Comments ({commentsList.length})
+                  </h4>
+                  <p className="text-[11px] text-zinc-400">
+                    Festival audience reactions, cinematography critiques, and viewer discussions.
+                  </p>
+                </div>
+              </div>
+              <span className="text-[11px] font-mono text-zinc-400 bg-zinc-900 border border-zinc-800 px-2.5 py-1 rounded-full">
+                {commentsList.length} {commentsList.length === 1 ? 'Reaction' : 'Reactions'}
+              </span>
+            </div>
+
+            {/* Notification Toast */}
+            {commentMsg && (
+              <div className="p-3 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-bold flex items-center gap-2 animate-fade-in">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                <span>{commentMsg}</span>
+              </div>
+            )}
+
+            {/* Clean, Non-Intrusive Comment Box Card */}
+            <form onSubmit={handlePostComment} className="bg-black/80 border border-gold-500/30 focus-within:border-gold-400 rounded-2xl p-4 sm:p-5 space-y-3.5 transition-all shadow-sm">
+              
+              {/* Top Controls: User Identity & Star Rating */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                {/* User Identity Pill */}
+                <div className="flex items-center gap-2.5">
+                  <img
+                    src={user?.profile_pic_url || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120'}
+                    alt="Commenter"
+                    className="w-7 h-7 rounded-full object-cover border border-gold-500/40"
+                  />
+                  {user ? (
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="text-xs font-bold text-white">{user.full_name}</span>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-gold-500/10 text-gold-300 border border-gold-500/30 font-semibold">
+                        {user.role === 'director' ? 'Film Director' : (user.subscription_status === 'active' ? 'VIP Pass' : 'Audience')}
+                      </span>
+                    </div>
+                  ) : (
+                    <input
+                      type="text"
+                      value={guestName}
+                      onChange={(e) => setGuestName(e.target.value)}
+                      placeholder="Your Name (Optional)"
+                      className="bg-zinc-950 border border-zinc-800 rounded-lg px-2.5 py-1 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-gold-500 w-44"
+                    />
+                  )}
+                </div>
+
+                {/* Rating Stars Picker */}
+                <div className="flex items-center gap-1.5 bg-zinc-950/90 px-2.5 py-1 rounded-xl border border-zinc-800">
+                  <span className="text-[10px] text-zinc-400 font-medium mr-1">Rating:</span>
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => setCommentRating(star)}
+                      className="p-0.5 text-xs transition-transform hover:scale-125 focus:outline-none"
+                      title={`${star} Star${star > 1 ? 's' : ''}`}
+                    >
+                      <Star
+                        className={`w-3.5 h-3.5 ${
+                          star <= commentRating
+                            ? 'text-amber-400 fill-amber-400'
+                            : 'text-zinc-600'
+                        }`}
+                      />
+                    </button>
+                  ))}
+                  <span className="text-[10px] font-mono font-bold text-amber-400 ml-1">
+                    {commentRating}/5
+                  </span>
+                </div>
+              </div>
+
+              {/* Textarea Input */}
+              <div>
+                <textarea
+                  rows={2}
+                  required
+                  value={newCommentText}
+                  onChange={(e) => setNewCommentText(e.target.value)}
+                  placeholder="Share your reaction or review on this short film... (What moved you? The direction, acting, camera texture, or music score?)"
+                  className="w-full bg-zinc-950/90 border border-zinc-800 rounded-xl p-3 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-gold-500 leading-relaxed resize-none"
+                />
+              </div>
+
+              {/* Bottom Action Row */}
+              <div className="flex items-center justify-between pt-1">
+                <span className="text-[10px] text-zinc-500 hidden sm:inline">
+                  Constructive feedback helps independent filmmakers grow.
+                </span>
+
+                <button
+                  type="submit"
+                  disabled={submittingComment || !newCommentText.trim()}
+                  className="gold-btn py-2 px-4 rounded-xl text-xs font-bold uppercase tracking-wider shadow-gold-glow flex items-center gap-1.5 ml-auto disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Send className="w-3 h-3" />
+                  <span>{submittingComment ? 'Posting...' : 'Post Comment'}</span>
+                </button>
+              </div>
+            </form>
+
+            {/* Comments List Feed */}
+            {commentsLoading ? (
+              <div className="space-y-2">
+                {[1, 2].map((n) => (
+                  <div key={n} className="h-20 bg-zinc-950 rounded-2xl animate-pulse border border-zinc-850" />
+                ))}
+              </div>
+            ) : commentsList.length === 0 ? (
+              <div className="text-center py-6 bg-zinc-950/60 rounded-2xl border border-zinc-850 p-4 space-y-1">
+                <MessageSquare className="w-6 h-6 text-gold-400/50 mx-auto" />
+                <p className="text-xs font-semibold text-zinc-300">No audience comments yet.</p>
+                <p className="text-[11px] text-zinc-500">Be the first festival viewer to share your thoughts on this film!</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {commentsList.map((c) => {
+                  const isLiked = likedCommentIds.has(c.id);
+                  return (
+                    <div
+                      key={c.id}
+                      className="p-4 rounded-2xl bg-black/60 border border-zinc-800/80 hover:border-zinc-700 transition-colors space-y-2.5"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2.5">
+                          <img
+                            src={c.author_avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100'}
+                            alt={c.author_name}
+                            className="w-7 h-7 rounded-full object-cover border border-gold-500/30"
+                          />
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-bold text-white">{c.author_name}</span>
+                              {c.author_badge && (
+                                <span className={`text-[9px] px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider ${
+                                  c.author_badge.includes('VIP')
+                                    ? 'bg-gold-500/10 text-gold-300 border border-gold-500/30'
+                                    : c.author_badge.includes('Director')
+                                    ? 'bg-amber-500/10 text-amber-300 border border-amber-500/30'
+                                    : 'bg-zinc-800 text-zinc-300'
+                                }`}>
+                                  {c.author_badge}
+                                </span>
+                              )}
+                            </div>
+                            <span className="text-[10px] text-zinc-500 font-mono">
+                              {new Date(c.created_at || Date.now()).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                            </span>
+                          </div>
+                        </div>
+
+                        {c.rating && (
+                          <div className="flex items-center gap-0.5 text-amber-400 text-xs font-bold bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-md">
+                            <span>★</span>
+                            <span className="font-mono text-[11px]">{c.rating}</span>
+                          </div>
+                        )}
+                      </div>
+
+                      <p className="text-xs text-zinc-200 leading-relaxed font-light pl-9">
+                        {c.content}
+                      </p>
+
+                      <div className="flex items-center justify-end pl-9 pt-1">
+                        <button
+                          type="button"
+                          onClick={() => handleLikeComment(c.id)}
+                          className={`flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-lg transition-colors border ${
+                            isLiked
+                              ? 'bg-rose-500/10 border-rose-500/30 text-rose-400'
+                              : 'bg-zinc-900/60 border-zinc-850 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700'
+                          }`}
+                          title="Like this comment"
+                        >
+                          <Heart className={`w-3.5 h-3.5 ${isLiked ? 'fill-rose-400 text-rose-400' : ''}`} />
+                          <span>{c.likes_count || 0}</span>
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+          </div>
 
         </div>
 
