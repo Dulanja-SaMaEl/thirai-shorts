@@ -11,7 +11,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className="dark">
-      <body className="min-h-screen flex flex-col justify-between bg-black text-slate-100 antialiased selection:bg-gold-500 selection:text-black">
+      <body className="min-h-screen flex flex-col justify-between bg-canvas text-slate-100 antialiased selection:bg-gold-500 selection:text-black">
         <ClientProviders>
           {children}
         </ClientProviders>

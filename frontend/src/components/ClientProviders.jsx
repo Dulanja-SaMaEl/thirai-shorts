@@ -12,7 +12,7 @@ export default function ClientProviders({ children }) {
       <AuthProvider>
         <Header />
         <SubmitterPerksModal />
-        <main className="flex-grow max-w-7xl w-full mx-auto px-4 md:px-6 py-6">
+        <main className="flex-grow w-full">
           {children}
         </main>
         <Footer />

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import {
   X, Play, Star, Download, ThumbsUp, Film, Calendar, Mail,
   Trophy, AlertTriangle, RefreshCw, Volume2, Users, Clapperboard,
-  Camera, Globe, Award, MessageSquare, Send, Heart, UserCheck, Sparkles
+  Camera, Globe, Award, MessageSquare, Send, Heart, UserCheck, Sparkles, CheckCircle2
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import api from '../lib/api';
@@ -22,6 +22,7 @@ export default function VideoPlayerModal({ movie, onClose, onOpenVoteModal, isTr
   const [viewCount, setViewCount] = useState(movie.view_count || 1420);
   const [videoError, setVideoError] = useState(false);
   const [videoLoading, setVideoLoading] = useState(true);
+  const [activeModalTab, setActiveModalTab] = useState('overview'); // 'overview' | 'critiques' | 'comments'
 
   // Audience Comments State
   const [commentsList, setCommentsList] = useState([]);
@@ -207,7 +208,7 @@ export default function VideoPlayerModal({ movie, onClose, onOpenVoteModal, isTr
         </div>
 
         {/* Video Player Container */}
-        <div className="relative aspect-video w-full bg-black border-b border-zinc-800 flex items-center justify-center shadow-inner overflow-hidden">
+        <div className="relative aspect-video w-full bg-black border-b border-white/[0.08] flex items-center justify-center shadow-inner overflow-hidden">
           
           {embedUrl ? (
             // YouTube / Vimeo Iframe Embed
@@ -255,12 +256,57 @@ export default function VideoPlayerModal({ movie, onClose, onOpenVoteModal, isTr
 
         </div>
 
-        {/* Film Details & Metadata Section */}
-        <div className="p-6 md:p-8 space-y-6 max-h-[45vh] overflow-y-auto">
+        {/* Tab Switcher Bar */}
+        <div className="flex items-center gap-1 sm:gap-2 px-6 pt-3 bg-[#07080B] border-b border-white/[0.08] overflow-x-auto scrollbar-none">
+          <button
+            onClick={() => setActiveModalTab('overview')}
+            className={`px-4 py-2.5 rounded-t-xl text-xs font-bold transition-all flex items-center gap-2 border-b-2 shrink-0 ${
+              activeModalTab === 'overview'
+                ? 'border-gold-400 text-gold-300 bg-white/[0.04]'
+                : 'border-transparent text-zinc-400 hover:text-white'
+            }`}
+          >
+            <Film className="w-3.5 h-3.5 text-gold-400" />
+            <span>Overview & Credits</span>
+          </button>
+
+          <button
+            onClick={() => setActiveModalTab('critiques')}
+            className={`px-4 py-2.5 rounded-t-xl text-xs font-bold transition-all flex items-center gap-2 border-b-2 shrink-0 ${
+              activeModalTab === 'critiques'
+                ? 'border-gold-400 text-gold-300 bg-white/[0.04]'
+                : 'border-transparent text-zinc-400 hover:text-white'
+            }`}
+          >
+            <Star className="w-3.5 h-3.5 text-gold-400" />
+            <span>Jury Critiques</span>
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-surface-card border border-white/[0.08] text-zinc-400 font-mono">
+              {movie.reviews?.length || 0}
+            </span>
+          </button>
+
+          <button
+            onClick={() => setActiveModalTab('comments')}
+            className={`px-4 py-2.5 rounded-t-xl text-xs font-bold transition-all flex items-center gap-2 border-b-2 shrink-0 ${
+              activeModalTab === 'comments'
+                ? 'border-gold-400 text-gold-300 bg-white/[0.04]'
+                : 'border-transparent text-zinc-400 hover:text-white'
+            }`}
+          >
+            <MessageSquare className="w-3.5 h-3.5 text-gold-400" />
+            <span>Audience Discussion</span>
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-gold-500/15 border border-gold-500/30 text-gold-300 font-mono font-bold">
+              {commentsList.length}
+            </span>
+          </button>
+        </div>
+
+        {/* Film Details & Metadata Section (Tab Content) */}
+        <div className="p-6 md:p-8 space-y-6 max-h-[46vh] overflow-y-auto bg-[#0D1017]">
 
           {/* Trailer Free Mode Callout Banner */}
           {isTrailerMode && (
-            <div className="p-4 rounded-2xl bg-gradient-to-r from-gold-500/20 via-surface-card to-gold-500/10 border border-gold-500/50 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-gold-glow">
+            <div className="p-4 rounded-2xl bg-gradient-to-r from-gold-500/15 via-surface-card to-gold-500/10 border border-gold-500/40 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-gold-glow">
               <div className="flex items-center gap-2.5">
                 <Sparkles className="w-5 h-5 text-gold-400 shrink-0" />
                 <div>
@@ -282,422 +328,437 @@ export default function VideoPlayerModal({ movie, onClose, onOpenVoteModal, isTr
               )}
             </div>
           )}
-          
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-            <div>
-              <div className="flex flex-wrap items-center gap-2 mb-2">
-                {movie.is_winner && (
-                  <span className="gold-btn px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider flex items-center gap-1 shadow-gold-glow">
-                    <Trophy className="w-3.5 h-3.5 fill-black" /> Winner: {movie.winner_category || 'Golden Thira Winner'}
-                  </span>
-                )}
-                {movie.genre && (
-                  <span className="text-xs bg-gold-500/10 border border-gold-500/30 text-gold-300 px-2.5 py-0.5 rounded-md font-bold">
-                    {movie.genre}
-                  </span>
-                )}
-                {movie.running_time && (
-                  <span className="text-xs bg-zinc-800 text-zinc-300 px-2.5 py-0.5 rounded-md font-mono font-bold">
-                    ⏱ {movie.running_time}
-                  </span>
-                )}
-                {movie.premiere_status && (
-                  <span className="text-xs bg-purple-500/10 border border-purple-500/30 text-purple-300 px-2.5 py-0.5 rounded-md font-bold">
-                    {movie.premiere_status}
-                  </span>
-                )}
-                {movie.film_type && (
-                  <span className="text-xs bg-blue-500/10 border border-blue-500/30 text-blue-300 px-2.5 py-0.5 rounded-md font-bold">
-                    {movie.film_type}
-                  </span>
-                )}
-                <span className="text-xs bg-zinc-800 text-zinc-300 px-2.5 py-0.5 rounded-md font-mono font-bold">
-                  {viewCount} Views
-                </span>
-              </div>
 
-              <h2 className="text-2xl md:text-3xl font-black text-white">{movie.title}</h2>
-              <div className="text-xs text-zinc-400 mt-1.5 flex flex-wrap items-center gap-4">
-                <span className="flex items-center gap-1 text-zinc-300">
-                  <Globe className="w-3.5 h-3.5 text-gold-400" /> {movie.original_language || 'Tamil'} {movie.subtitle_language ? `(Subtitles: ${movie.subtitle_language})` : ''}
-                </span>
-                <span className="flex items-center gap-1 text-zinc-300">
-                  <Mail className="w-3.5 h-3.5 text-gold-400" /> {movie.director_email || movie.uploader_email || 'director@thiraiplus.com'}
-                </span>
-                <span className="flex items-center gap-1 text-zinc-400">
-                  <Calendar className="w-3.5 h-3.5 text-gold-400" /> {movie.year_of_production || new Date(movie.created_at || Date.now()).getFullYear()}
-                </span>
-              </div>
-            </div>
-
-            {onOpenVoteModal && (
-              <button
-                onClick={() => {
-                  onClose();
-                  onOpenVoteModal(movie);
-                }}
-                className="gold-btn py-2.5 px-5 rounded-2xl text-xs font-black uppercase tracking-wider inline-flex items-center gap-2 shadow-gold-glow shrink-0 hover:scale-105 active:scale-95 transition-all"
-              >
-                <ThumbsUp className="w-4 h-4" /> Cast Public Vote
-              </button>
-            )}
-          </div>
-
-          {/* Description / Synopsis */}
-          <div className="bg-black/60 border border-zinc-800 rounded-2xl p-5 text-xs text-zinc-300 leading-relaxed space-y-1.5">
-            <h4 className="text-[11px] font-bold text-gold-400 uppercase tracking-widest flex items-center gap-1.5">
-              <Film className="w-3.5 h-3.5" /> Synopsis & Narrative Overview
-            </h4>
-            <p className="text-zinc-300 text-xs sm:text-sm font-light leading-relaxed">{movie.description}</p>
-          </div>
-
-          {/* Cast & Crew Credits Section */}
-          <div className="bg-black/60 border border-gold-500/20 rounded-2xl p-5 space-y-4">
-            <h4 className="text-xs font-bold text-gold-400 uppercase tracking-widest flex items-center gap-2">
-              <Users className="w-4 h-4 text-gold-400" /> Film Credits & Cast
-            </h4>
-
-            {/* Crew Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 text-xs">
-              {movie.director_name && (
-                <div className="bg-zinc-950 p-2.5 rounded-xl border border-zinc-800/80 flex items-center gap-2.5">
-                  {movie.director_photo_url && (
-                    <img
-                      src={movie.director_photo_url}
-                      alt={movie.director_name}
-                      className="w-8 h-8 rounded-full object-cover border border-gold-500/40 shrink-0 shadow-gold-glow"
-                    />
-                  )}
-                  <div className="min-w-0">
-                    <span className="text-[10px] uppercase font-bold text-gold-400 block">Director</span>
-                    <span className="font-semibold text-white truncate block">{movie.director_name}</span>
-                  </div>
-                </div>
-              )}
-              {movie.producer_name && (
-                <div className="bg-zinc-950 p-2.5 rounded-xl border border-zinc-800/80">
-                  <span className="text-[10px] uppercase font-bold text-zinc-400 block">Producer</span>
-                  <span className="font-semibold text-white">{movie.producer_name}</span>
-                </div>
-              )}
-              {movie.writer_name && (
-                <div className="bg-zinc-950 p-2.5 rounded-xl border border-zinc-800/80">
-                  <span className="text-[10px] uppercase font-bold text-zinc-400 block">Screenwriter</span>
-                  <span className="font-semibold text-white">{movie.writer_name}</span>
-                </div>
-              )}
-              {movie.cinematographer_name && (
-                <div className="bg-zinc-950 p-2.5 rounded-xl border border-zinc-800/80">
-                  <span className="text-[10px] uppercase font-bold text-gold-400/80 block">Cinematographer (DOP)</span>
-                  <span className="font-semibold text-white">{movie.cinematographer_name}</span>
-                </div>
-              )}
-              {movie.editor_name && (
-                <div className="bg-zinc-950 p-2.5 rounded-xl border border-zinc-800/80">
-                  <span className="text-[10px] uppercase font-bold text-zinc-400 block">Editor</span>
-                  <span className="font-semibold text-white">{movie.editor_name}</span>
-                </div>
-              )}
-              {movie.sound_designer_name && (
-                <div className="bg-zinc-950 p-2.5 rounded-xl border border-zinc-800/80">
-                  <span className="text-[10px] uppercase font-bold text-zinc-400 block">Sound Designer</span>
-                  <span className="font-semibold text-white">{movie.sound_designer_name}</span>
-                </div>
-              )}
-              {movie.music_composer_name && (
-                <div className="bg-zinc-950 p-2.5 rounded-xl border border-zinc-800/80">
-                  <span className="text-[10px] uppercase font-bold text-zinc-400 block">Music Composer</span>
-                  <span className="font-semibold text-white">{movie.music_composer_name}</span>
-                </div>
-              )}
-              {movie.shooting_format && (
-                <div className="bg-zinc-950 p-2.5 rounded-xl border border-zinc-800/80">
-                  <span className="text-[10px] uppercase font-bold text-zinc-400 block">Shooting Format</span>
-                  <span className="font-semibold text-zinc-300">{movie.shooting_format}</span>
-                </div>
-              )}
-            </div>
-
-            {/* Lead Casts */}
-            {movie.lead_casts && Array.isArray(movie.lead_casts) && movie.lead_casts.length > 0 && (
-              <div className="pt-2 border-t border-zinc-800/60">
-                <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider block mb-2">
-                  Lead Cast
-                </span>
-                <div className="flex flex-wrap gap-2">
-                  {movie.lead_casts.map((cast, i) => (
-                    <div
-                      key={i}
-                      className="px-3 py-1.5 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-zinc-200 flex items-center gap-1.5"
-                    >
-                      <span className="font-bold text-white">{cast.actor || 'Actor'}</span>
-                      {cast.character && (
-                        <>
-                          <span className="text-zinc-500 font-serif italic text-[11px]">as</span>
-                          <span className="text-gold-400 font-medium">{cast.character}</span>
-                        </>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Film Attachments & Press Kit */}
-          {movie.attachments && movie.attachments.length > 0 && (
-            <div className="space-y-2">
-              <h4 className="text-xs font-bold text-gold-400 uppercase tracking-widest flex items-center gap-1.5">
-                <Download className="w-3.5 h-3.5" /> Official Press Kit & Attachments
-              </h4>
-              <div className="flex flex-wrap gap-2">
-                {movie.attachments.map((att, idx) => (
-                  <a
-                    key={idx}
-                    href={att.url || '#'}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="px-3.5 py-2 bg-zinc-900 border border-zinc-700 hover:border-gold-500 rounded-xl text-xs text-zinc-200 flex items-center gap-2 transition-colors hover:text-gold-300"
-                  >
-                    <Download className="w-3.5 h-3.5 text-gold-400" />
-                    <span>{att.name || `Attachment ${idx + 1}`}</span>
-                  </a>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Jury Reviews Section */}
-          {movie.reviews && movie.reviews.length > 0 && (
-            <div className="border-t border-zinc-800 pt-5 space-y-3">
-              <h4 className="text-xs font-bold text-gold-400 uppercase tracking-widest flex items-center gap-1.5">
-                <Star className="w-4 h-4 text-gold-400 fill-gold-400" /> Official Jury Reviews ({movie.reviews.length})
-              </h4>
-              <div className="space-y-3">
-                {movie.reviews.map((rev) => (
-                  <div key={rev.id} className="p-4 rounded-2xl bg-black/80 border border-gold-500/20 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <img
-                          src={rev.users?.profile_pic_url || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150'}
-                          alt="Judge"
-                          className="w-7 h-7 rounded-full object-cover border border-gold-400"
-                        />
-                        <span className="text-xs font-bold text-white">{rev.users?.full_name || 'Festival Judge'}</span>
-                      </div>
-                      <span className="text-xs font-extrabold text-gold-400 bg-gold-500/10 px-2.5 py-0.5 rounded-full border border-gold-500/30">
-                        ⭐ {rev.score} / 10
-                      </span>
-                    </div>
-                    <p className="text-xs text-zinc-300 italic">"{rev.comment}"</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* ================================================================= */}
-          {/* Audience Reviews & Viewer Comments Section                         */}
-          {/* ================================================================= */}
-          <div className="border-t border-zinc-800 pt-6 space-y-5">
-            
-            {/* Header */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-gold-500/10 border border-gold-500/30 flex items-center justify-center text-gold-400">
-                  <MessageSquare className="w-4 h-4" />
-                </div>
+          {/* ========================================================================= */}
+          {/* TAB 1: OVERVIEW & CREDITS                                                 */}
+          {/* ========================================================================= */}
+          {activeModalTab === 'overview' && (
+            <div className="space-y-6 animate-fade-in">
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                 <div>
-                  <h4 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                    Audience Reviews & Comments ({commentsList.length})
+                  <div className="flex flex-wrap items-center gap-2 mb-2">
+                    {movie.is_winner && (
+                      <span className="gold-btn px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider flex items-center gap-1 shadow-gold-glow">
+                        <Trophy className="w-3.5 h-3.5 fill-[#07080B]" /> Winner: {movie.winner_category || 'Golden Thira Winner'}
+                      </span>
+                    )}
+                    {movie.genre && (
+                      <span className="text-xs bg-gold-500/10 border border-gold-500/30 text-gold-300 px-2.5 py-0.5 rounded-md font-bold">
+                        {movie.genre}
+                      </span>
+                    )}
+                    {movie.running_time && (
+                      <span className="text-xs bg-zinc-800 text-zinc-300 px-2.5 py-0.5 rounded-md font-mono font-bold">
+                        ⏱ {movie.running_time}
+                      </span>
+                    )}
+                    {movie.premiere_status && (
+                      <span className="text-xs bg-purple-500/10 border border-purple-500/30 text-purple-300 px-2.5 py-0.5 rounded-md font-bold">
+                        {movie.premiere_status}
+                      </span>
+                    )}
+                    <span className="text-xs bg-zinc-800 text-zinc-300 px-2.5 py-0.5 rounded-md font-mono font-bold">
+                      {viewCount} Streams
+                    </span>
+                  </div>
+
+                  <h2 className="text-2xl md:text-3xl font-black text-white">{movie.title}</h2>
+                  <div className="text-xs text-zinc-400 mt-1.5 flex flex-wrap items-center gap-4">
+                    <span className="flex items-center gap-1 text-zinc-300">
+                      <Globe className="w-3.5 h-3.5 text-gold-400" /> {movie.original_language || 'Tamil'} {movie.subtitle_language ? `(Subtitles: ${movie.subtitle_language})` : ''}
+                    </span>
+                    <span className="flex items-center gap-1 text-zinc-400">
+                      <Calendar className="w-3.5 h-3.5 text-gold-400" /> {movie.year_of_production || new Date(movie.created_at || Date.now()).getFullYear()}
+                    </span>
+                  </div>
+                </div>
+
+                {onOpenVoteModal && (
+                  <button
+                    onClick={() => {
+                      onClose();
+                      onOpenVoteModal(movie);
+                    }}
+                    className="gold-btn py-2.5 px-5 rounded-2xl text-xs font-black uppercase tracking-wider inline-flex items-center gap-2 shadow-gold-glow shrink-0 hover:scale-105 active:scale-95 transition-all"
+                  >
+                    <ThumbsUp className="w-4 h-4" /> Cast Public Vote
+                  </button>
+                )}
+              </div>
+
+              {/* Description / Synopsis */}
+              <div className="bg-[#07080B] border border-white/[0.08] rounded-2xl p-5 text-xs text-zinc-300 leading-relaxed space-y-1.5">
+                <h4 className="text-[11px] font-bold text-gold-400 uppercase tracking-widest flex items-center gap-1.5">
+                  <Film className="w-3.5 h-3.5" /> Synopsis & Narrative Overview
+                </h4>
+                <p className="text-zinc-300 text-xs sm:text-sm font-light leading-relaxed">{movie.description}</p>
+              </div>
+
+              {/* Cast & Crew Credits Section */}
+              <div className="bg-[#07080B] border border-white/[0.08] rounded-2xl p-5 space-y-4">
+                <h4 className="text-xs font-bold text-gold-400 uppercase tracking-widest flex items-center gap-2">
+                  <Users className="w-4 h-4 text-gold-400" /> Film Credits & Cast
+                </h4>
+
+                {/* Crew Grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 text-xs">
+                  {movie.director_name && (
+                    <div className="bg-surface-card p-2.5 rounded-xl border border-white/[0.06] flex items-center gap-2.5">
+                      {movie.director_photo_url && (
+                        <img
+                          src={movie.director_photo_url}
+                          alt={movie.director_name}
+                          className="w-8 h-8 rounded-full object-cover border border-gold-500/40 shrink-0 shadow-gold-glow"
+                        />
+                      )}
+                      <div className="min-w-0">
+                        <span className="text-[10px] uppercase font-bold text-gold-400 block">Director</span>
+                        <span className="font-semibold text-white truncate block">{movie.director_name}</span>
+                      </div>
+                    </div>
+                  )}
+                  {movie.producer_name && (
+                    <div className="bg-surface-card p-2.5 rounded-xl border border-white/[0.06]">
+                      <span className="text-[10px] uppercase font-bold text-zinc-400 block">Producer</span>
+                      <span className="font-semibold text-white">{movie.producer_name}</span>
+                    </div>
+                  )}
+                  {movie.writer_name && (
+                    <div className="bg-surface-card p-2.5 rounded-xl border border-white/[0.06]">
+                      <span className="text-[10px] uppercase font-bold text-zinc-400 block">Screenwriter</span>
+                      <span className="font-semibold text-white">{movie.writer_name}</span>
+                    </div>
+                  )}
+                  {movie.cinematographer_name && (
+                    <div className="bg-surface-card p-2.5 rounded-xl border border-white/[0.06]">
+                      <span className="text-[10px] uppercase font-bold text-gold-400/80 block">Cinematographer (DOP)</span>
+                      <span className="font-semibold text-white">{movie.cinematographer_name}</span>
+                    </div>
+                  )}
+                  {movie.editor_name && (
+                    <div className="bg-surface-card p-2.5 rounded-xl border border-white/[0.06]">
+                      <span className="text-[10px] uppercase font-bold text-zinc-400 block">Editor</span>
+                      <span className="font-semibold text-white">{movie.editor_name}</span>
+                    </div>
+                  )}
+                  {movie.sound_designer_name && (
+                    <div className="bg-surface-card p-2.5 rounded-xl border border-white/[0.06]">
+                      <span className="text-[10px] uppercase font-bold text-zinc-400 block">Sound Designer</span>
+                      <span className="font-semibold text-white">{movie.sound_designer_name}</span>
+                    </div>
+                  )}
+                  {movie.music_composer_name && (
+                    <div className="bg-surface-card p-2.5 rounded-xl border border-white/[0.06]">
+                      <span className="text-[10px] uppercase font-bold text-zinc-400 block">Music Composer</span>
+                      <span className="font-semibold text-white">{movie.music_composer_name}</span>
+                    </div>
+                  )}
+                  {movie.shooting_format && (
+                    <div className="bg-surface-card p-2.5 rounded-xl border border-white/[0.06]">
+                      <span className="text-[10px] uppercase font-bold text-zinc-400 block">Shooting Format</span>
+                      <span className="font-semibold text-zinc-300">{movie.shooting_format}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Lead Casts */}
+                {movie.lead_casts && Array.isArray(movie.lead_casts) && movie.lead_casts.length > 0 && (
+                  <div className="pt-3 border-t border-white/[0.06]">
+                    <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider block mb-2">
+                      Lead Cast
+                    </span>
+                    <div className="flex flex-wrap gap-2">
+                      {movie.lead_casts.map((cast, i) => (
+                        <div
+                          key={i}
+                          className="px-3 py-1.5 rounded-xl bg-surface-card border border-white/[0.06] text-xs text-zinc-200 flex items-center gap-1.5"
+                        >
+                          <span className="font-bold text-white">{cast.actor || 'Actor'}</span>
+                          {cast.character && (
+                            <>
+                              <span className="text-zinc-500 font-serif italic text-[11px]">as</span>
+                              <span className="text-gold-400 font-medium">{cast.character}</span>
+                            </>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Film Attachments & Press Kit */}
+              {movie.attachments && movie.attachments.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="text-xs font-bold text-gold-400 uppercase tracking-widest flex items-center gap-1.5">
+                    <Download className="w-3.5 h-3.5" /> Official Press Kit & Attachments
                   </h4>
-                  <p className="text-[11px] text-zinc-400">
-                    Festival audience reactions, cinematography critiques, and viewer discussions.
+                  <div className="flex flex-wrap gap-2">
+                    {movie.attachments.map((att, idx) => (
+                      <a
+                        key={idx}
+                        href={att.url || '#'}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="px-3.5 py-2 bg-surface-card border border-white/[0.08] hover:border-gold-500 rounded-xl text-xs text-zinc-200 flex items-center gap-2 transition-colors hover:text-gold-300"
+                      >
+                        <Download className="w-3.5 h-3.5 text-gold-400" />
+                        <span>{att.name || `Attachment ${idx + 1}`}</span>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ========================================================================= */}
+          {/* TAB 2: GRAND JURY CRITIQUES                                               */}
+          {/* ========================================================================= */}
+          {activeModalTab === 'critiques' && (
+            <div className="space-y-4 animate-fade-in">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-bold text-white">Official Jury Evaluations</h3>
+                  <p className="text-xs text-zinc-400 mt-0.5">
+                    Written critiques and craft scores from international festival grand jurors.
                   </p>
                 </div>
-              </div>
-              <span className="text-[11px] font-mono text-zinc-400 bg-zinc-900 border border-zinc-800 px-2.5 py-1 rounded-full">
-                {commentsList.length} {commentsList.length === 1 ? 'Reaction' : 'Reactions'}
-              </span>
-            </div>
-
-            {/* Notification Toast */}
-            {commentMsg && (
-              <div className="p-3 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-bold flex items-center gap-2 animate-fade-in">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                <span>{commentMsg}</span>
-              </div>
-            )}
-
-            {/* Clean, Non-Intrusive Comment Box Card */}
-            <form onSubmit={handlePostComment} className="bg-black/80 border border-gold-500/30 focus-within:border-gold-400 rounded-2xl p-4 sm:p-5 space-y-3.5 transition-all shadow-sm">
-              
-              {/* Top Controls: User Identity & Star Rating */}
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                {/* User Identity Pill */}
-                <div className="flex items-center gap-2.5">
-                  <img
-                    src={user?.profile_pic_url || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120'}
-                    alt="Commenter"
-                    className="w-7 h-7 rounded-full object-cover border border-gold-500/40"
-                  />
-                  {user ? (
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="text-xs font-bold text-white">{user.full_name}</span>
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-gold-500/10 text-gold-300 border border-gold-500/30 font-semibold">
-                        {user.role === 'director' ? 'Film Director' : (user.subscription_status === 'active' ? 'VIP Pass' : 'Audience')}
-                      </span>
-                    </div>
-                  ) : (
-                    <input
-                      type="text"
-                      value={guestName}
-                      onChange={(e) => setGuestName(e.target.value)}
-                      placeholder="Your Name (Optional)"
-                      className="bg-zinc-950 border border-zinc-800 rounded-lg px-2.5 py-1 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-gold-500 w-44"
-                    />
-                  )}
-                </div>
-
-                {/* Rating Stars Picker */}
-                <div className="flex items-center gap-1.5 bg-zinc-950/90 px-2.5 py-1 rounded-xl border border-zinc-800">
-                  <span className="text-[10px] text-zinc-400 font-medium mr-1">Rating:</span>
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <button
-                      key={star}
-                      type="button"
-                      onClick={() => setCommentRating(star)}
-                      className="p-0.5 text-xs transition-transform hover:scale-125 focus:outline-none"
-                      title={`${star} Star${star > 1 ? 's' : ''}`}
-                    >
-                      <Star
-                        className={`w-3.5 h-3.5 ${
-                          star <= commentRating
-                            ? 'text-amber-400 fill-amber-400'
-                            : 'text-zinc-600'
-                        }`}
-                      />
-                    </button>
-                  ))}
-                  <span className="text-[10px] font-mono font-bold text-amber-400 ml-1">
-                    {commentRating}/5
-                  </span>
-                </div>
-              </div>
-
-              {/* Textarea Input */}
-              <div>
-                <textarea
-                  rows={2}
-                  required
-                  value={newCommentText}
-                  onChange={(e) => setNewCommentText(e.target.value)}
-                  placeholder="Share your reaction or review on this short film... (What moved you? The direction, acting, camera texture, or music score?)"
-                  className="w-full bg-zinc-950/90 border border-zinc-800 rounded-xl p-3 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-gold-500 leading-relaxed resize-none"
-                />
-              </div>
-
-              {/* Bottom Action Row */}
-              <div className="flex items-center justify-between pt-1">
-                <span className="text-[10px] text-zinc-500 hidden sm:inline">
-                  Constructive feedback helps independent filmmakers grow.
+                <span className="text-xs font-mono font-bold text-gold-400 bg-gold-500/10 border border-gold-500/25 px-3 py-1 rounded-full">
+                  {movie.reviews?.length || 0} Critiques
                 </span>
+              </div>
 
-                <button
-                  type="submit"
-                  disabled={submittingComment || !newCommentText.trim()}
-                  className="gold-btn py-2 px-4 rounded-xl text-xs font-bold uppercase tracking-wider shadow-gold-glow flex items-center gap-1.5 ml-auto disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <Send className="w-3 h-3" />
-                  <span>{submittingComment ? 'Posting...' : 'Post Comment'}</span>
-                </button>
-              </div>
-            </form>
-
-            {/* Comments List Feed */}
-            {commentsLoading ? (
-              <div className="space-y-2">
-                {[1, 2].map((n) => (
-                  <div key={n} className="h-20 bg-zinc-950 rounded-2xl animate-pulse border border-zinc-850" />
-                ))}
-              </div>
-            ) : commentsList.length === 0 ? (
-              <div className="text-center py-6 bg-zinc-950/60 rounded-2xl border border-zinc-850 p-4 space-y-1">
-                <MessageSquare className="w-6 h-6 text-gold-400/50 mx-auto" />
-                <p className="text-xs font-semibold text-zinc-300">No audience comments yet.</p>
-                <p className="text-[11px] text-zinc-500">Be the first festival viewer to share your thoughts on this film!</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {commentsList.map((c) => {
-                  const isLiked = likedCommentIds.has(c.id);
-                  return (
-                    <div
-                      key={c.id}
-                      className="p-4 rounded-2xl bg-black/60 border border-zinc-800/80 hover:border-zinc-700 transition-colors space-y-2.5"
-                    >
+              {movie.reviews && movie.reviews.length > 0 ? (
+                <div className="space-y-3.5">
+                  {movie.reviews.map((rev) => (
+                    <div key={rev.id} className="p-4 rounded-2xl bg-[#07080B] border border-white/[0.08] space-y-2.5">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2.5">
                           <img
-                            src={c.author_avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100'}
-                            alt={c.author_name}
-                            className="w-7 h-7 rounded-full object-cover border border-gold-500/30"
+                            src={rev.users?.profile_pic_url || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150'}
+                            alt="Judge"
+                            className="w-8 h-8 rounded-full object-cover border border-gold-400/80"
                           />
                           <div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs font-bold text-white">{c.author_name}</span>
-                              {c.author_badge && (
-                                <span className={`text-[9px] px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider ${
-                                  c.author_badge.includes('VIP')
-                                    ? 'bg-gold-500/10 text-gold-300 border border-gold-500/30'
-                                    : c.author_badge.includes('Director')
-                                    ? 'bg-amber-500/10 text-amber-300 border border-amber-500/30'
-                                    : 'bg-zinc-800 text-zinc-300'
-                                }`}>
-                                  {c.author_badge}
-                                </span>
-                              )}
-                            </div>
-                            <span className="text-[10px] text-zinc-500 font-mono">
-                              {new Date(c.created_at || Date.now()).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                            </span>
+                            <span className="text-xs font-bold text-white block">{rev.users?.full_name || 'Grand Juror'}</span>
+                            <span className="text-[10px] text-zinc-500">Verified Festival Juror</span>
                           </div>
                         </div>
-
-                        {c.rating && (
-                          <div className="flex items-center gap-0.5 text-amber-400 text-xs font-bold bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-md">
-                            <span>★</span>
-                            <span className="font-mono text-[11px]">{c.rating}</span>
-                          </div>
-                        )}
+                        <span className="text-xs font-extrabold text-gold-400 bg-gold-500/10 px-3 py-1 rounded-full border border-gold-500/30 font-mono">
+                          ⭐ {rev.score} / 10
+                        </span>
                       </div>
-
-                      <p className="text-xs text-zinc-200 leading-relaxed font-light pl-9">
-                        {c.content}
+                      <p className="text-xs text-zinc-300 italic leading-relaxed pl-3 border-l-2 border-gold-500/40">
+                        "{rev.comment}"
                       </p>
-
-                      <div className="flex items-center justify-end pl-9 pt-1">
-                        <button
-                          type="button"
-                          onClick={() => handleLikeComment(c.id)}
-                          className={`flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-lg transition-colors border ${
-                            isLiked
-                              ? 'bg-rose-500/10 border-rose-500/30 text-rose-400'
-                              : 'bg-zinc-900/60 border-zinc-850 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700'
-                          }`}
-                          title="Like this comment"
-                        >
-                          <Heart className={`w-3.5 h-3.5 ${isLiked ? 'fill-rose-400 text-rose-400' : ''}`} />
-                          <span>{c.likes_count || 0}</span>
-                        </button>
-                      </div>
                     </div>
-                  );
-                })}
-              </div>
-            )}
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12 bg-[#07080B] rounded-2xl border border-white/[0.06] space-y-2">
+                  <Star className="w-8 h-8 text-gold-400/40 mx-auto" />
+                  <h4 className="text-sm font-bold text-white">Jury Deliberation In Progress</h4>
+                  <p className="text-xs text-zinc-400 max-w-sm mx-auto">
+                    The Grand Jury is currently scoring official festival selections against the 5-pillar rubric. Scores will appear here once finalized.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
 
-          </div>
+          {/* ========================================================================= */}
+          {/* TAB 3: AUDIENCE DISCUSSION & COMMENTS                                     */}
+          {/* ========================================================================= */}
+          {activeModalTab === 'comments' && (
+            <div className="space-y-6 animate-fade-in">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-bold text-white">Audience Reviews & Community Discussion</h3>
+                  <p className="text-xs text-zinc-400 mt-0.5">
+                    Share your reactions, cinematography feedback, and director accolades.
+                  </p>
+                </div>
+                <span className="text-xs font-mono text-zinc-400 bg-surface-card border border-white/[0.08] px-3 py-1 rounded-full">
+                  {commentsList.length} {commentsList.length === 1 ? 'Comment' : 'Comments'}
+                </span>
+              </div>
+
+              {/* Toast Notification */}
+              {commentMsg && (
+                <div className="p-3 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-bold flex items-center gap-2 animate-fade-in">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                  <span>{commentMsg}</span>
+                </div>
+              )}
+
+              {/* Clean Comment Box Card */}
+              <form onSubmit={handlePostComment} className="bg-[#07080B] border border-white/[0.1] focus-within:border-gold-400/80 rounded-2xl p-4 sm:p-5 space-y-3.5 transition-all shadow-sm">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                  {/* User identity */}
+                  <div className="flex items-center gap-2.5">
+                    <img
+                      src={user?.profile_pic_url || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120'}
+                      alt="Commenter"
+                      className="w-7 h-7 rounded-full object-cover border border-gold-500/40"
+                    />
+                    {user ? (
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-xs font-bold text-white">{user.full_name}</span>
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-gold-500/10 text-gold-300 border border-gold-500/30 font-semibold">
+                          {user.role === 'director' ? 'Film Director' : (user.subscription_status === 'active' ? 'VIP Pass' : 'Audience')}
+                        </span>
+                      </div>
+                    ) : (
+                      <input
+                        type="text"
+                        value={guestName}
+                        onChange={(e) => setGuestName(e.target.value)}
+                        placeholder="Your Name (Optional)"
+                        className="bg-surface-card border border-white/[0.08] rounded-lg px-2.5 py-1 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-gold-500 w-44"
+                      />
+                    )}
+                  </div>
+
+                  {/* Rating Stars Picker */}
+                  <div className="flex items-center gap-1.5 bg-surface-card px-3 py-1 rounded-xl border border-white/[0.08]">
+                    <span className="text-[10px] text-zinc-400 font-medium mr-1">Rating:</span>
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        type="button"
+                        onClick={() => setCommentRating(star)}
+                        className="p-0.5 text-xs transition-transform hover:scale-125 focus:outline-none"
+                        title={`${star} Star${star > 1 ? 's' : ''}`}
+                      >
+                        <Star
+                          className={`w-3.5 h-3.5 ${
+                            star <= commentRating
+                              ? 'text-amber-400 fill-amber-400'
+                              : 'text-zinc-600'
+                          }`}
+                        />
+                      </button>
+                    ))}
+                    <span className="text-[10px] font-mono font-bold text-amber-400 ml-1">
+                      {commentRating}/5
+                    </span>
+                  </div>
+                </div>
+
+                {/* Textarea */}
+                <div>
+                  <textarea
+                    rows={2}
+                    required
+                    value={newCommentText}
+                    onChange={(e) => setNewCommentText(e.target.value)}
+                    placeholder="Share your thoughts on this short film... (What moved you? The direction, acting, camera texture, or music score?)"
+                    className="w-full bg-surface-card border border-white/[0.08] rounded-xl p-3 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-gold-500 leading-relaxed resize-none"
+                  />
+                </div>
+
+                {/* Bottom Action Row */}
+                <div className="flex items-center justify-between pt-1">
+                  <span className="text-[10px] text-zinc-500 hidden sm:inline">
+                    Constructive feedback helps independent filmmakers grow.
+                  </span>
+
+                  <button
+                    type="submit"
+                    disabled={submittingComment || !newCommentText.trim()}
+                    className="gold-btn py-2 px-4 rounded-xl text-xs font-bold uppercase tracking-wider shadow-gold-glow flex items-center gap-1.5 ml-auto disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Send className="w-3 h-3" />
+                    <span>{submittingComment ? 'Posting...' : 'Post Comment'}</span>
+                  </button>
+                </div>
+              </form>
+
+              {/* Comments Feed */}
+              {commentsLoading ? (
+                <div className="space-y-2">
+                  {[1, 2].map((n) => (
+                    <div key={n} className="h-20 bg-[#07080B] rounded-2xl animate-pulse border border-white/[0.06]" />
+                  ))}
+                </div>
+              ) : commentsList.length === 0 ? (
+                <div className="text-center py-8 bg-[#07080B] rounded-2xl border border-white/[0.06] p-4 space-y-1">
+                  <MessageSquare className="w-6 h-6 text-gold-400/50 mx-auto" />
+                  <p className="text-xs font-semibold text-zinc-300">No audience comments yet.</p>
+                  <p className="text-[11px] text-zinc-500">Be the first festival viewer to share your thoughts on this film!</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {commentsList.map((c) => {
+                    const isLiked = likedCommentIds.has(c.id);
+                    return (
+                      <div
+                        key={c.id}
+                        className="p-4 rounded-2xl bg-[#07080B] border border-white/[0.06] hover:border-white/[0.12] transition-colors space-y-2.5"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2.5">
+                            <img
+                              src={c.author_avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100'}
+                              alt={c.author_name}
+                              className="w-7 h-7 rounded-full object-cover border border-gold-500/30"
+                            />
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs font-bold text-white">{c.author_name}</span>
+                                {c.author_badge && (
+                                  <span className={`text-[9px] px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider ${
+                                    c.author_badge.includes('VIP')
+                                      ? 'bg-gold-500/10 text-gold-300 border border-gold-500/30'
+                                      : c.author_badge.includes('Director')
+                                      ? 'bg-amber-500/10 text-amber-300 border border-amber-500/30'
+                                      : 'bg-zinc-800 text-zinc-300'
+                                  }`}>
+                                    {c.author_badge}
+                                  </span>
+                                )}
+                              </div>
+                              <span className="text-[10px] text-zinc-500 font-mono">
+                                {new Date(c.created_at || Date.now()).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                              </span>
+                            </div>
+                          </div>
+
+                          {c.rating && (
+                            <div className="flex items-center gap-0.5 text-amber-400 text-xs font-bold bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-md">
+                              <span>★</span>
+                              <span className="font-mono text-[11px]">{c.rating}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        <p className="text-xs text-zinc-200 leading-relaxed font-light pl-9">
+                          {c.content}
+                        </p>
+
+                        <div className="flex items-center justify-end pl-9 pt-1">
+                          <button
+                            type="button"
+                            onClick={() => handleLikeComment(c.id)}
+                            className={`flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-lg transition-colors border ${
+                              isLiked
+                                ? 'bg-rose-500/10 border-rose-500/30 text-rose-400'
+                                : 'bg-surface-card border-white/[0.08] text-zinc-400 hover:text-zinc-200 hover:border-white/20'
+                            }`}
+                            title="Like this comment"
+                          >
+                            <Heart className={`w-3.5 h-3.5 ${isLiked ? 'fill-rose-400 text-rose-400' : ''}`} />
+                            <span>{c.likes_count || 0}</span>
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
 
         </div>
 

@@ -96,44 +96,44 @@ export default function PackagesSection({ onSubscribed }) {
       </div>
 
       {/* 50% OFF Launch Offer Callout Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-gold-950 via-black to-zinc-950 border-2 border-gold-500/70 p-6 sm:p-8 shadow-gold-glow-lg">
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#171B26] via-[#0E1119] to-[#07080B] border border-gold-500/35 p-6 sm:p-10 shadow-cinema-card">
         <div className="absolute top-0 right-0 w-96 h-96 bg-gold-500/10 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
-          <div className="space-y-3 max-w-2xl">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-gold-500/20 border border-gold-400/60 text-gold-300 text-xs font-black uppercase tracking-wider shadow-gold-glow">
-              <Flame className="w-4 h-4 text-gold-400 fill-gold-400 animate-pulse" /> Limited Early Bird Launch Offer
+        <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
+          <div className="space-y-3.5 max-w-2xl">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-gold-500/15 border border-gold-400/40 text-gold-300 text-xs font-black uppercase tracking-wider">
+              <Flame className="w-3.5 h-3.5 text-gold-400 fill-gold-400" /> Limited Early Bird Launch Offer
             </div>
 
             <h3 className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-tight leading-tight">
-              First 1–50 Members Get <span className="text-gold-400 underline decoration-gold-400 decoration-4">50% OFF</span> on Any VIP Pass
+              First 1–50 Members Get <span className="gold-text-gradient">50% OFF</span> on Any VIP Pass
             </h3>
 
             {/* Prominent Dec 31 Deadline Highlight Badge */}
             <div className="flex flex-wrap items-center gap-3 pt-1">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-gradient-to-r from-gold-500/20 to-amber-500/10 border-2 border-gold-400/80 text-white font-extrabold text-sm sm:text-base shadow-gold-glow">
-                <Clock className="w-5 h-5 text-gold-400 animate-spin-slow shrink-0" />
-                <span>Annual Pass: <strong className="text-gold-300 font-mono text-lg">$39.99</strong> only until <span className="text-gold-400 underline">December 31st</span>!</span>
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-gold-500/10 border border-gold-400/50 text-white font-extrabold text-xs sm:text-sm">
+                <Clock className="w-4 h-4 text-gold-400 shrink-0" />
+                <span>Annual Pass: <strong className="text-gold-300 font-mono text-base">$39.99</strong> only until <span className="text-gold-400 underline underline-offset-4">December 31st</span>!</span>
               </div>
               <span className="text-xs text-zinc-400">Regular price $79.99/year after promo</span>
             </div>
 
-            <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed pt-1">
+            <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed font-normal">
               Celebrate the premiere season of Thirai+ Shorts. Free trailers can be watched by anyone without tokens. Lock in your 50% discount to enjoy unlimited festival streaming.
             </p>
           </div>
 
           {/* Spots Remaining Indicator */}
-          <div className="bg-black/90 border border-gold-500/50 rounded-2xl p-5 text-center shrink-0 w-full lg:w-64 space-y-3 shadow-gold-glow">
-            <div className="flex items-center justify-between text-xs font-black">
+          <div className="bg-[#07080B]/90 border border-white/[0.08] rounded-2xl p-5 text-center shrink-0 w-full lg:w-64 space-y-3 shadow-lg">
+            <div className="flex items-center justify-between text-xs font-bold">
               <span className="text-zinc-400 uppercase tracking-wider">Early Spots:</span>
               <span className="text-gold-400 font-mono text-sm">38 / 50 Claimed</span>
             </div>
             {/* Progress Bar */}
-            <div className="w-full h-2.5 bg-zinc-800 rounded-full overflow-hidden p-0.5 border border-zinc-700">
-              <div className="h-full bg-gold-gradient rounded-full w-[76%] transition-all shadow-gold-glow" />
+            <div className="w-full h-2 bg-zinc-800 rounded-full overflow-hidden p-0.5 border border-white/[0.06]">
+              <div className="h-full bg-gold-gradient rounded-full w-[76%] transition-all" />
             </div>
-            <span className="block text-xs font-black text-rose-400 animate-pulse uppercase tracking-wider">
+            <span className="block text-xs font-bold text-amber-400 uppercase tracking-wider">
               🔥 Only 12 Passes Left at this rate!
             </span>
           </div>

@@ -177,12 +177,12 @@ export default function SponsorsSection() {
       {/* Background ambient lighting */}
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-gold-500/5 to-transparent pointer-events-none rounded-3xl" />
 
-      <div className="relative rounded-3xl bg-zinc-950/70 border border-gold-500/30 p-6 sm:p-8 md:p-10 backdrop-blur-md shadow-gold-glow space-y-8">
+      <div className="relative rounded-3xl bg-surface border border-white/[0.08] p-6 sm:p-8 md:p-10 backdrop-blur-md shadow-cinema-card space-y-8">
         
         {/* Header Title & Subtitle */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-zinc-850 pb-6">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-white/[0.06] pb-6">
           <div className="space-y-2">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gold-500/15 border border-gold-400/40 text-gold-300 text-xs font-mono font-bold tracking-wider shadow-sm">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gold-500/10 border border-gold-500/25 text-champagne-300 text-xs font-mono font-bold tracking-wider">
               <Sparkles className="w-3.5 h-3.5 text-gold-400" />
               OFFICIAL FESTIVAL SPONSORS & INDUSTRY PARTNERS
             </div>
@@ -196,7 +196,7 @@ export default function SponsorsSection() {
 
           <a
             href="#contact"
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-zinc-900/90 hover:bg-gold-500 hover:text-black border border-zinc-800 hover:border-gold-400 text-xs font-bold text-zinc-300 transition-all shrink-0 self-start md:self-auto shadow-sm"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-surface-elevated hover:bg-gold-500 hover:text-black border border-white/[0.08] hover:border-gold-400 text-xs font-bold text-zinc-300 transition-all shrink-0 self-start md:self-auto shadow-sm"
           >
             Become a Sponsor <ArrowUpRight className="w-4 h-4" />
           </a>
@@ -215,12 +215,12 @@ export default function SponsorsSection() {
               <CardWrapper
                 key={sponsor.id || sponsor.name}
                 {...cardProps}
-                className="group relative rounded-2xl bg-surface-card border border-zinc-800/80 hover:border-gold-500/60 p-5 transition-all duration-300 hover:shadow-gold-glow flex flex-col justify-between block text-left"
+                className="group relative rounded-2xl bg-surface-card border border-white/[0.07] hover:border-gold-500/40 p-5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-cinema-card flex flex-col justify-between block text-left"
               >
                 <div className="space-y-3">
                   {/* Header Icon & Tag */}
                   <div className="flex items-center justify-between">
-                    <div className="w-12 h-12 rounded-xl bg-black/80 border border-gold-500/20 flex items-center justify-center group-hover:scale-105 group-hover:border-gold-400 transition-all shadow-sm overflow-hidden p-2">
+                    <div className="w-12 h-12 rounded-xl bg-[#07080B] border border-white/[0.08] flex items-center justify-center group-hover:scale-105 group-hover:border-gold-400/50 transition-all shadow-sm overflow-hidden p-2">
                       {sponsor.logo_url ? (
                         <img
                           src={sponsor.logo_url}
@@ -237,7 +237,7 @@ export default function SponsorsSection() {
                       )}
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <span className="px-2.5 py-0.5 rounded-full bg-gold-500/10 border border-gold-500/20 text-gold-400 text-[10px] font-mono font-semibold">
+                      <span className="px-2.5 py-0.5 rounded-full bg-gold-500/10 border border-gold-500/20 text-champagne-300 text-[10px] font-mono font-semibold">
                         {sponsor.tag || 'Official Partner'}
                       </span>
                       {hasLink && (
@@ -248,7 +248,7 @@ export default function SponsorsSection() {
 
                   {/* Brand Name & Product */}
                   <div>
-                    <h3 className="text-base font-extrabold text-white group-hover:text-gold-300 transition-colors">
+                    <h3 className="text-base font-extrabold text-white group-hover:text-champagne-300 transition-colors">
                       {sponsor.name}
                     </h3>
                     {sponsor.product && (
@@ -259,7 +259,7 @@ export default function SponsorsSection() {
                   </div>
 
                   {/* Role Pill */}
-                  <div className="text-[11px] font-mono text-gold-300/90 bg-black/60 px-2.5 py-1 rounded-lg border border-zinc-850">
+                  <div className="text-[11px] font-mono text-champagne-300/90 bg-[#07080B]/70 px-2.5 py-1 rounded-lg border border-white/[0.06]">
                     {sponsor.role}
                   </div>
 
@@ -272,9 +272,9 @@ export default function SponsorsSection() {
                 </div>
 
                 {/* Bottom Subtle Indicator */}
-                <div className="pt-4 mt-3 border-t border-zinc-850/80 flex items-center justify-between text-[11px] text-zinc-500">
+                <div className="pt-4 mt-3 border-t border-white/[0.06] flex items-center justify-between text-[11px] text-zinc-500">
                   <span className="text-[10px] uppercase font-mono tracking-wider">{sponsor.category || 'Partner'}</span>
-                  <span className="text-gold-400 text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                  <span className="text-champagne-400 text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
                     Verified Partner ✓
                   </span>
                 </div>
@@ -284,12 +284,12 @@ export default function SponsorsSection() {
         </div>
 
         {/* Guild Associates & Cultural Partners Strip */}
-        <div className="pt-2 border-t border-zinc-850">
+        <div className="pt-2 border-t border-white/[0.06]">
           <div className="flex items-center justify-between mb-3">
             <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-400">
               Official Guild Associates & Cultural Entities
             </span>
-            <span className="text-[10px] font-mono text-gold-400">
+            <span className="text-[10px] font-mono text-champagne-400">
               2026-2027 Season
             </span>
           </div>
@@ -306,7 +306,7 @@ export default function SponsorsSection() {
                 <GuildWrapper
                   key={guild.id || idx}
                   {...guildProps}
-                  className="bg-black/60 hover:bg-black border border-zinc-800/80 hover:border-gold-500/40 rounded-xl p-3 text-center space-y-1 transition-all group block"
+                  className="bg-[#07080B]/60 hover:bg-[#07080B] border border-white/[0.07] hover:border-gold-500/35 rounded-xl p-3 text-center space-y-1 transition-all group block"
                 >
                   {guild.logo_url && (
                     <div className="h-7 w-auto mx-auto mb-1 flex items-center justify-center">
@@ -314,7 +314,7 @@ export default function SponsorsSection() {
                     </div>
                   )}
                   <div className="flex items-center justify-center gap-1">
-                    <span className="block text-xs font-bold text-white group-hover:text-gold-300 transition-colors line-clamp-1">
+                    <span className="block text-xs font-bold text-white group-hover:text-champagne-300 transition-colors line-clamp-1">
                       {guild.name}
                     </span>
                     {hasLink && (
@@ -324,7 +324,7 @@ export default function SponsorsSection() {
                   <span className="block text-[10px] text-zinc-400 line-clamp-1">
                     {guild.role}
                   </span>
-                  <span className="inline-block text-[9px] font-mono px-2 py-0.5 rounded-full bg-zinc-900 border border-zinc-800 text-gold-400/90">
+                  <span className="inline-block text-[9px] font-mono px-2 py-0.5 rounded-full bg-surface-elevated border border-white/[0.06] text-champagne-400">
                     {guild.tag || guild.badge || 'Partner'}
                   </span>
                 </GuildWrapper>
