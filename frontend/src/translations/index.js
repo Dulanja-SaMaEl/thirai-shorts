@@ -2,7 +2,7 @@ export const TRANSLATIONS = {
   en: {
     nav: {
       home: 'Home',
-      officialSelections: 'Official Selections ⭐',
+      officialSelections: 'Official Selections',
       nominations: 'Nominations',
       vipPasses: 'VIP Passes',
       jury: 'Jury',
@@ -127,7 +127,7 @@ export const TRANSLATIONS = {
   si: {
     nav: {
       home: 'මුල් පිටුව',
-      officialSelections: 'නිල තේරීම් ⭐',
+      officialSelections: 'නිල තේරීම්',
       nominations: 'නාමයෝජනා',
       vipPasses: 'වීඅයිපී පාස්',
       jury: 'විනිශ්චය මණ්ඩලය',
@@ -252,7 +252,7 @@ export const TRANSLATIONS = {
   ta: {
     nav: {
       home: 'முகப்பு',
-      officialSelections: 'அதிகாரப்பூர்வ தேர்வுகள் ⭐',
+      officialSelections: 'அதிகாரப்பூர்வ தேர்வுகள்',
       nominations: 'பரிந்துரைகள்',
       vipPasses: 'விஐபி பாஸ்கள்',
       jury: 'நடுவர் குழு',
