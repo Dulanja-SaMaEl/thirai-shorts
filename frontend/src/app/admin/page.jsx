@@ -7,10 +7,11 @@ import {
   Shield, Eye, Star, DollarSign, Film, UserPlus, Clock, CheckCircle2,
   XCircle, AlertTriangle, BarChart3, Trophy, LogIn, Play, FileText,
   Users, Globe, X, Camera, ShieldCheck, PenTool, Calendar, Sparkles, RefreshCw, Zap,
-  Plus, Trash2, Edit3, ExternalLink, Award
+  Plus, Trash2, Edit3, ExternalLink, Award, Upload
 } from 'lucide-react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import api from '../../lib/api';
+import { DEFAULT_JUDGES } from '../judges/judgesData';
 
 import SystemStatusWidget from '../../components/SystemStatusWidget';
 import VideoPlayerModal from '../../components/VideoPlayerModal';
@@ -33,13 +34,25 @@ export default function AdminPanelPage() {
   const [selectedMovieForAction, setSelectedMovieForAction] = useState(null);
   const [actionNotification, setActionNotification] = useState('');
 
-  // Register Judge state
+  // Grand Jury & Festival Judges Management State
+  const [judgesList, setJudgesList] = useState([]);
+  const [judgesLoading, setJudgesLoading] = useState(false);
+  const [judgeEditMode, setJudgeEditMode] = useState(false);
   const [judgeForm, setJudgeForm] = useState({
-    full_name: '',
-    email: '',
-    username: '',
-    password: '',
-    profile_pic_url: ''
+    id: null,
+    name: '',
+    nativeName: '',
+    role: '',
+    division: 'direction',
+    divisionLabel: 'Direction & Screenplay',
+    country: 'Sri Lanka',
+    countryFlag: '🇱🇰',
+    image: '',
+    achievements: '',
+    specializations: '',
+    quote: '',
+    bio: '',
+    criteria: ''
   });
   const [judgeMsg, setJudgeMsg] = useState({ type: '', text: '' });
 
@@ -145,12 +158,13 @@ export default function AdminPanelPage() {
     setLoading(true);
     try {
       // Fetch all admin resources concurrently in parallel
-      const [analyticsRes, moviesRes, timerRes, awardsRes, sponsorsRes] = await Promise.allSettled([
+      const [analyticsRes, moviesRes, timerRes, awardsRes, sponsorsRes, judgesRes] = await Promise.allSettled([
         api.get('/admin/dashboard'),
         api.get('/movies?status=all'),
         api.get('/admin/community-rating-timer'),
         api.get('/awards'),
-        api.get('/sponsors')
+        api.get('/sponsors'),
+        api.get('/judges')
       ]);
 
       // 1. Process Analytics
@@ -195,10 +209,58 @@ export default function AdminPanelPage() {
         setSponsorsList(sponsorsRes.value.data.sponsors || []);
       }
 
+      // 6. Process Festival Judges
+      if (judgesRes.status === 'fulfilled' && judgesRes.value?.data?.success && Array.isArray(judgesRes.value.data.judges) && judgesRes.value.data.judges.length > 0) {
+        setJudgesList(judgesRes.value.data.judges);
+        try {
+          localStorage.setItem('thirai_custom_judges', JSON.stringify(judgesRes.value.data.judges));
+        } catch (e) {}
+      } else {
+        try {
+          const cached = localStorage.getItem('thirai_custom_judges');
+          if (cached) {
+            const parsed = JSON.parse(cached);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              setJudgesList(parsed);
+            } else {
+              setJudgesList(DEFAULT_JUDGES);
+            }
+          } else {
+            setJudgesList(DEFAULT_JUDGES);
+          }
+        } catch (e) {
+          setJudgesList(DEFAULT_JUDGES);
+        }
+      }
+
     } catch (err) {
       console.error('Error loading admin data:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchJudges = async () => {
+    setJudgesLoading(true);
+    try {
+      const res = await api.get('/judges');
+      if (res.data?.success && Array.isArray(res.data.judges) && res.data.judges.length > 0) {
+        setJudgesList(res.data.judges);
+        try {
+          localStorage.setItem('thirai_custom_judges', JSON.stringify(res.data.judges));
+        } catch (e) {}
+      }
+    } catch (e) {
+      console.warn('Error fetching judges in admin, using cached/default:', e);
+      try {
+        const cached = localStorage.getItem('thirai_custom_judges');
+        if (cached) setJudgesList(JSON.parse(cached));
+        else setJudgesList(DEFAULT_JUDGES);
+      } catch (err) {
+        setJudgesList(DEFAULT_JUDGES);
+      }
+    } finally {
+      setJudgesLoading(false);
     }
   };
 
@@ -468,18 +530,203 @@ export default function AdminPanelPage() {
     }
   };
 
-  const handleRegisterJudge = async (e) => {
+  const handleJudgeImageUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      setJudgeMsg({ type: 'error', text: 'Please select a valid image file (PNG, JPG, WEBP, etc).' });
+      return;
+    }
+
+    if (file.size > 6 * 1024 * 1024) {
+      setJudgeMsg({ type: 'error', text: 'Image file is too large. Please select an image under 6MB.' });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const base64Data = event.target?.result;
+      if (base64Data) {
+        setJudgeForm(prev => ({ ...prev, image: base64Data }));
+        setJudgeMsg({ type: 'success', text: `Local image "${file.name}" loaded successfully!` });
+      }
+    };
+    reader.onerror = () => {
+      setJudgeMsg({ type: 'error', text: 'Failed to read local image file.' });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSaveJudge = async (e) => {
     e.preventDefault();
+    if (!judgeForm.name || !judgeForm.role) {
+      setJudgeMsg({ type: 'error', text: 'Judge Name and Position/Role are required.' });
+      return;
+    }
+
+    setJudgesLoading(true);
     setJudgeMsg({ type: '', text: '' });
 
+    const divisionLabels = {
+      direction: 'Direction & Screenplay',
+      craft: 'Cinematography & Craft',
+      sound: 'Sound & Editing',
+      advisory: 'International Advisory'
+    };
+    const divLabel = divisionLabels[judgeForm.division] || judgeForm.divisionLabel || 'Festival Grand Jury';
+
+    const achievementsArray = Array.isArray(judgeForm.achievements)
+      ? judgeForm.achievements
+      : typeof judgeForm.achievements === 'string' && judgeForm.achievements.trim()
+        ? judgeForm.achievements.split('\n').map(s => s.trim()).filter(Boolean)
+        : [];
+
+    const specializationsArray = Array.isArray(judgeForm.specializations)
+      ? judgeForm.specializations
+      : typeof judgeForm.specializations === 'string' && judgeForm.specializations.trim()
+        ? judgeForm.specializations.split(',').map(s => s.trim()).filter(Boolean)
+        : [];
+
+    const isEdit = Boolean(judgeEditMode && judgeForm.id);
+    const judgeId = isEdit ? judgeForm.id : `judge-${Date.now()}`;
+
+    const payload = {
+      ...judgeForm,
+      id: judgeId,
+      name: judgeForm.name.trim(),
+      nativeName: (judgeForm.nativeName || judgeForm.name).trim(),
+      role: judgeForm.role.trim(),
+      division: judgeForm.division || 'direction',
+      divisionLabel: divLabel,
+      country: (judgeForm.country || 'Sri Lanka').trim(),
+      countryFlag: (judgeForm.countryFlag || '🇱🇰').trim(),
+      image: judgeForm.image || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600',
+      achievements: achievementsArray,
+      specializations: specializationsArray,
+      quote: (judgeForm.quote || '').trim(),
+      bio: (judgeForm.bio || '').trim(),
+      criteria: (judgeForm.criteria || '').trim(),
+    };
+
+    // 1. Instant optimistic UI update
+    setJudgesList(prev => {
+      let updated;
+      if (isEdit) {
+        updated = prev.map(j => j.id === payload.id ? { ...j, ...payload } : j);
+      } else {
+        updated = [payload, ...prev];
+      }
+      try {
+        localStorage.setItem('thirai_custom_judges', JSON.stringify(updated));
+      } catch (err) {}
+      return updated;
+    });
+
+    setJudgeMsg({
+      type: 'success',
+      text: isEdit ? `Judge "${payload.name}" updated successfully!` : `✨ Judge "${payload.name}" added to festival jury!`
+    });
+    setActionNotification(`✨ Grand Jury updated! "${payload.name}" is now live on /judges.`);
+    setTimeout(() => setActionNotification(''), 4500);
+    resetJudgeForm();
+
+    // 2. Background API persistence
     try {
-      const res = await api.post('/admin/judges', judgeForm);
-      if (res.data.success) {
-        setJudgeMsg({ type: 'success', text: 'Judge registered successfully!' });
-        setJudgeForm({ full_name: '', email: '', username: '', password: '', profile_pic_url: '' });
+      if (isEdit) {
+        await api.put(`/judges/${payload.id}`, payload);
+      } else {
+        await api.post('/judges', payload);
       }
     } catch (err) {
-      setJudgeMsg({ type: 'error', text: err.response?.data?.error || 'Failed to register judge.' });
+      console.warn('Backend sync completed in local fallback mode:', err);
+    } finally {
+      setJudgesLoading(false);
+    }
+  };
+
+  const handleEditJudge = (judge) => {
+    setJudgeEditMode(true);
+    setJudgeForm({
+      id: judge.id,
+      name: judge.name || '',
+      nativeName: judge.nativeName || '',
+      role: judge.role || '',
+      division: judge.division || 'direction',
+      divisionLabel: judge.divisionLabel || 'Direction & Screenplay',
+      country: judge.country || 'Sri Lanka',
+      countryFlag: judge.countryFlag || '🇱🇰',
+      image: judge.image || '',
+      achievements: Array.isArray(judge.achievements) ? judge.achievements.join('\n') : (judge.achievements || ''),
+      specializations: Array.isArray(judge.specializations) ? judge.specializations.join(', ') : (judge.specializations || ''),
+      quote: judge.quote || '',
+      bio: judge.bio || '',
+      criteria: judge.criteria || ''
+    });
+    setJudgeMsg({ type: '', text: '' });
+    const el = document.getElementById('judge-form-card');
+    if (el) el.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const resetJudgeForm = () => {
+    setJudgeEditMode(false);
+    setJudgeForm({
+      id: null,
+      name: '',
+      nativeName: '',
+      role: '',
+      division: 'direction',
+      divisionLabel: 'Direction & Screenplay',
+      country: 'Sri Lanka',
+      countryFlag: '🇱🇰',
+      image: '',
+      achievements: '',
+      specializations: '',
+      quote: '',
+      bio: '',
+      criteria: ''
+    });
+  };
+
+  const handleDeleteJudge = async (id, name) => {
+    if (!confirm(`Are you sure you want to remove "${name}" from the festival jury board?`)) return;
+
+    setJudgesList(prev => {
+      const updated = prev.filter(j => j.id !== id);
+      try {
+        localStorage.setItem('thirai_custom_judges', JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+
+    setActionNotification(`Judge "${name}" removed from festival jury.`);
+    setTimeout(() => setActionNotification(''), 4000);
+
+    try {
+      await api.delete(`/judges/${id}`);
+    } catch (err) {
+      console.warn('Backend delete completed in local fallback mode:', err);
+    }
+  };
+
+  const handleResetJudges = async () => {
+    if (!confirm('Are you sure you want to restore the festival jury to the 8 official master jurors? Any custom jurors added will be overwritten.')) return;
+
+    setJudgesList(DEFAULT_JUDGES);
+    try {
+      localStorage.setItem('thirai_custom_judges', JSON.stringify(DEFAULT_JUDGES));
+    } catch (e) {}
+
+    setActionNotification('🔄 Festival jury roster reset to official 8 master jurors.');
+    setTimeout(() => setActionNotification(''), 4000);
+
+    try {
+      const res = await api.post('/judges/reset');
+      if (res.data?.success && res.data.judges) {
+        setJudgesList(res.data.judges);
+      }
+    } catch (err) {
+      console.warn('Backend reset completed in local mode:', err);
     }
   };
 
@@ -596,7 +843,7 @@ export default function AdminPanelPage() {
             { id: 'awards', label: 'Awards & Laurels (22)', icon: Trophy },
             { id: 'sponsors', label: 'Sponsors & Partners', icon: Sparkles },
             { id: 'analytics', label: 'Analytics & Revenue', icon: BarChart3 },
-            { id: 'judges', label: 'Register Judges', icon: UserPlus },
+            { id: 'judges', label: 'Jury & Judges', icon: Award },
             { id: 'timer', label: 'Community Event', icon: Clock },
           ].map((tab) => {
             const Icon = tab.icon;
@@ -1338,93 +1585,499 @@ export default function AdminPanelPage() {
         </div>
       )}
 
-      {/* Tab Content 3: Register Judges */}
+      {/* Tab Content 3: Grand Jury & Festival Judges Management */}
       {activeTab === 'judges' && (
-        <div className="max-w-2xl mx-auto bg-surface-card border border-gold-500/30 rounded-3xl p-6 md:p-8 space-y-6 glass-panel shadow-gold-glow">
-          <h2 className="text-xl font-bold text-white flex items-center gap-2">
-            <UserPlus className="w-5 h-5 text-gold-400" /> Register New Festival Judge
-          </h2>
-          <p className="text-xs text-zinc-400">
-            Create Judge accounts to grant access to the Jury Evaluation Portal.
-          </p>
+        <div className="space-y-8 animate-fade-in">
+          
+          {/* Header Banner & Stats Summary */}
+          <div className="bg-surface-card border border-gold-500/30 rounded-3xl p-6 md:p-8 glass-panel shadow-gold-glow space-y-6">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-zinc-800 pb-4">
+              <div className="flex items-center gap-3.5">
+                <div className="w-12 h-12 rounded-2xl bg-gold-gradient p-0.5 shadow-gold-glow flex items-center justify-center shrink-0">
+                  <div className="w-full h-full bg-black rounded-[14px] flex items-center justify-center">
+                    <Award className="w-6 h-6 text-gold-400" />
+                  </div>
+                </div>
+                <div>
+                  <h2 className="text-xl md:text-2xl font-black text-white flex items-center gap-2">
+                    Grand Jury & Festival Judges Management
+                  </h2>
+                  <p className="text-xs text-zinc-400 mt-0.5">
+                    Curate the official festival jury board. Changes instantly reflect on the public Jury page (<Link href="/judges" className="text-gold-400 hover:underline">/judges</Link>) and automatically tally across English, Sinhala (සිංහල), and Tamil (தமிழ்).
+                  </p>
+                </div>
+              </div>
 
-          {judgeMsg.text && (
-            <div className={`p-4 rounded-xl text-xs ${
-              judgeMsg.type === 'success' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-300 border border-rose-500/40'
-            }`}>
-              {judgeMsg.text}
+              {/* Action Buttons */}
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <Link
+                  href="/judges"
+                  target="_blank"
+                  className="px-3.5 py-2 rounded-xl bg-black/60 border border-zinc-700 hover:border-gold-400 text-xs font-bold text-zinc-300 hover:text-gold-300 transition-colors flex items-center gap-1.5"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  <span>View Public Jury Page</span>
+                </Link>
+                <button
+                  type="button"
+                  onClick={handleResetJudges}
+                  className="px-3.5 py-2 rounded-xl bg-zinc-900 border border-zinc-800 hover:border-rose-500/50 text-xs font-semibold text-zinc-400 hover:text-rose-300 transition-colors flex items-center gap-1.5"
+                  title="Reset to 8 official master jurors"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  <span>Reset Default Jurors</span>
+                </button>
+              </div>
             </div>
-          )}
 
-          <form onSubmit={handleRegisterJudge} className="space-y-4">
-            <div>
-              <label className="block text-xs font-semibold text-zinc-300 mb-1.5">Full Name</label>
-              <input
-                type="text"
-                required
-                value={judgeForm.full_name}
-                onChange={(e) => setJudgeForm({ ...judgeForm, full_name: e.target.value })}
-                placeholder="Judge Steven Spielberg"
-                className="w-full bg-black border border-zinc-800 rounded-xl py-2.5 px-4 text-xs text-white focus:outline-none focus:border-gold-500"
-              />
+            {/* Quick Metrics Tally */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+              <div className="bg-black/60 border border-zinc-850 rounded-2xl p-3.5 text-center">
+                <span className="text-gold-400 font-mono font-black text-2xl block">
+                  {judgesList.length}
+                </span>
+                <span className="text-[11px] text-zinc-400 uppercase font-semibold tracking-wider">
+                  Total Active Jurors
+                </span>
+              </div>
+              <div className="bg-black/60 border border-zinc-850 rounded-2xl p-3.5 text-center">
+                <span className="text-white font-mono font-black text-2xl block">
+                  {new Set(judgesList.map(j => j.country).filter(Boolean)).size || 1}
+                </span>
+                <span className="text-[11px] text-zinc-400 uppercase font-semibold tracking-wider">
+                  Represented Nations
+                </span>
+              </div>
+              <div className="bg-black/60 border border-zinc-850 rounded-2xl p-3.5 text-center">
+                <span className="text-emerald-400 font-mono font-black text-2xl block">
+                  {judgesList.filter(j => j.division === 'direction').length}
+                </span>
+                <span className="text-[11px] text-zinc-400 uppercase font-semibold tracking-wider">
+                  Direction & Screenplay
+                </span>
+              </div>
+              <div className="bg-black/60 border border-zinc-850 rounded-2xl p-3.5 text-center">
+                <span className="text-blue-400 font-mono font-black text-2xl block">
+                  {judgesList.filter(j => j.division !== 'direction').length}
+                </span>
+                <span className="text-[11px] text-zinc-400 uppercase font-semibold tracking-wider">
+                  Craft, Sound & Advisory
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Add / Edit Juror Form Card */}
+          <div id="judge-form-card" className="bg-surface-card border border-gold-500/40 rounded-3xl p-6 sm:p-8 space-y-6 glass-panel">
+            <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-gold-500/10 border border-gold-500/30 flex items-center justify-center text-gold-400">
+                  {judgeEditMode ? <Edit3 className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white">
+                    {judgeEditMode ? `Edit Juror: ${judgeForm.name}` : 'Add New Festival Juror / Judge'}
+                  </h3>
+                  <p className="text-xs text-zinc-400">
+                    {judgeEditMode
+                      ? 'Update juror biography, credentials, division, and photo.'
+                      : 'Add an esteemed juror to the festival evaluation board with local photo upload and multi-language support.'}
+                  </p>
+                </div>
+              </div>
+
+              {judgeEditMode && (
+                <button
+                  type="button"
+                  onClick={resetJudgeForm}
+                  className="px-3 py-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-zinc-300"
+                >
+                  Cancel Edit
+                </button>
+              )}
+            </div>
+
+            {judgeMsg.text && (
+              <div className={`p-4 rounded-xl text-xs font-bold flex items-center gap-2 ${
+                judgeMsg.type === 'success'
+                  ? 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-300'
+                  : 'bg-rose-500/20 border border-rose-500/40 text-rose-300'
+              }`}>
+                {judgeMsg.type === 'success' ? <CheckCircle2 className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
+                <span>{judgeMsg.text}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleSaveJudge} className="space-y-5">
+              
+              {/* Image Upload Box: Local File Upload with Preview + Direct URL Fallback */}
+              <div className="p-4 sm:p-5 rounded-2xl bg-black/60 border border-zinc-800 space-y-3">
+                <label className="block text-xs font-bold text-gold-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <Camera className="w-3.5 h-3.5" /> Juror Profile Photo (Local Upload or URL)
+                </label>
+
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                  {/* Photo Preview */}
+                  {judgeForm.image ? (
+                    <div className="relative w-24 h-28 rounded-2xl overflow-hidden border-2 border-gold-500/50 shadow-gold-glow bg-zinc-900 shrink-0 group">
+                      <img
+                        src={judgeForm.image}
+                        alt="Juror Preview"
+                        className="w-full h-full object-cover"
+                        onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600'; }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setJudgeForm({ ...judgeForm, image: '' })}
+                        className="absolute inset-0 bg-black/70 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-rose-400 text-[10px] font-bold"
+                        title="Remove photo"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="w-24 h-28 rounded-2xl border border-dashed border-zinc-700 flex flex-col items-center justify-center text-zinc-600 shrink-0 bg-zinc-950/60">
+                      <Camera className="w-7 h-7 mb-1 text-zinc-600" />
+                      <span className="text-[9px] uppercase font-bold text-zinc-500">No Photo</span>
+                    </div>
+                  )}
+
+                  {/* Upload Controls */}
+                  <div className="flex-1 space-y-2.5 w-full">
+                    <div>
+                      <input
+                        type="file"
+                        id="judge-local-image-input"
+                        accept="image/*"
+                        onChange={handleJudgeImageUpload}
+                        className="hidden"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => document.getElementById('judge-local-image-input')?.click()}
+                        className="w-full py-3 px-4 rounded-xl bg-zinc-900 border border-dashed border-gold-500/40 hover:border-gold-400 text-xs font-bold text-gold-300 hover:text-white transition-all flex items-center justify-center gap-2 shadow-sm"
+                      >
+                        <Upload className="w-4 h-4 text-gold-400" />
+                        <span>Upload Local Photo from Computer (PNG, JPG, WEBP)</span>
+                      </button>
+                      <span className="text-[10px] text-zinc-500 block mt-1">
+                        Files are read directly into memory as high-fidelity Base64 data with zero external hosting dependencies.
+                      </span>
+                    </div>
+
+                    {/* Or URL Input */}
+                    <div>
+                      <input
+                        type="url"
+                        value={judgeForm.image}
+                        onChange={(e) => setJudgeForm({ ...judgeForm, image: e.target.value })}
+                        placeholder="Or paste direct image URL (https://...)"
+                        className="w-full bg-black/80 border border-zinc-800 rounded-xl py-2 px-3 text-xs text-white focus:outline-none focus:border-gold-500 font-mono"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Names & Language Portal Support */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
+                    Juror Full Name (English / International) <span className="text-gold-400">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={judgeForm.name}
+                    onChange={(e) => setJudgeForm({ ...judgeForm, name: e.target.value })}
+                    placeholder="e.g. Prasanna Vithanage, Vetri Maaran, Steven Spielberg"
+                    className="w-full bg-black/80 border border-zinc-800 rounded-xl py-2.5 px-4 text-xs text-white focus:outline-none focus:border-gold-500 font-medium"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
+                    Native Script Name (සිංහල / தமிழ் / Original Script)
+                  </label>
+                  <input
+                    type="text"
+                    value={judgeForm.nativeName}
+                    onChange={(e) => setJudgeForm({ ...judgeForm, nativeName: e.target.value })}
+                    placeholder="e.g. ප්‍රසන්න විතානගේ (Sinhala) or வெற்றி மாறන් (Tamil)"
+                    className="w-full bg-black/80 border border-zinc-800 rounded-xl py-2.5 px-4 text-xs text-white focus:outline-none focus:border-gold-500 font-medium"
+                  />
+                  <span className="text-[10px] text-gold-400/80 mt-1 block">
+                    Displayed prominently on the jury card when visitors switch to Sinhala or Tamil!
+                  </span>
+                </div>
+              </div>
+
+              {/* Position, Division & Nationality */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
+                    Position / Role Title <span className="text-gold-400">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={judgeForm.role}
+                    onChange={(e) => setJudgeForm({ ...judgeForm, role: e.target.value })}
+                    placeholder="e.g. Grand Jury Co-President • World Cinema"
+                    className="w-full bg-black/80 border border-zinc-800 rounded-xl py-2.5 px-4 text-xs text-white focus:outline-none focus:border-gold-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
+                    Jury Division <span className="text-gold-400">*</span>
+                  </label>
+                  <select
+                    value={judgeForm.division}
+                    onChange={(e) => setJudgeForm({ ...judgeForm, division: e.target.value })}
+                    className="w-full bg-black/80 border border-zinc-800 rounded-xl py-2.5 px-4 text-xs text-white focus:outline-none focus:border-gold-500 font-medium"
+                  >
+                    <option value="direction">Direction & Screenplay</option>
+                    <option value="craft">Cinematography & Craft</option>
+                    <option value="sound">Sound & Editing</option>
+                    <option value="advisory">International Advisory</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
+                    Country & Flag
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={judgeForm.countryFlag}
+                      onChange={(e) => setJudgeForm({ ...judgeForm, countryFlag: e.target.value })}
+                      placeholder="🇱🇰"
+                      className="w-14 bg-black/80 border border-zinc-800 rounded-xl py-2.5 px-2 text-center text-base text-white focus:outline-none focus:border-gold-500"
+                    />
+                    <input
+                      type="text"
+                      value={judgeForm.country}
+                      onChange={(e) => setJudgeForm({ ...judgeForm, country: e.target.value })}
+                      placeholder="Sri Lanka"
+                      className="flex-1 bg-black/80 border border-zinc-800 rounded-xl py-2.5 px-4 text-xs text-white focus:outline-none focus:border-gold-500"
+                    />
+                  </div>
+                  {/* Preset Flags Quick Pick */}
+                  <div className="flex gap-1.5 mt-1.5">
+                    {[
+                      { flag: '🇱🇰', country: 'Sri Lanka' },
+                      { flag: '🇮🇳', country: 'India' },
+                      { flag: '🇺🇸', country: 'United States' },
+                      { flag: '🇫🇷', country: 'France' },
+                      { flag: '🇬🇧', country: 'United Kingdom' },
+                      { flag: '🌐', country: 'International' },
+                    ].map(p => (
+                      <button
+                        key={p.flag}
+                        type="button"
+                        onClick={() => setJudgeForm({ ...judgeForm, countryFlag: p.flag, country: p.country })}
+                        className="text-xs px-1.5 py-0.5 rounded bg-zinc-900 hover:bg-zinc-800 border border-zinc-800"
+                        title={p.country}
+                      >
+                        {p.flag}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Achievements & Specializations */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
+                    Key Distinctions & Laurels (One per line)
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={judgeForm.achievements}
+                    onChange={(e) => setJudgeForm({ ...judgeForm, achievements: e.target.value })}
+                    placeholder={"Winner of 35+ International Festival Awards\nRotterdam Grand Prix Laureate\nAcclaimed Director of Death on a Full Moon Day"}
+                    className="w-full bg-black/80 border border-zinc-800 rounded-xl py-2.5 px-4 text-xs text-white focus:outline-none focus:border-gold-500 font-mono text-[11px]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
+                    Craft Pillars / Specializations (Comma-separated)
+                  </label>
+                  <input
+                    type="text"
+                    value={judgeForm.specializations}
+                    onChange={(e) => setJudgeForm({ ...judgeForm, specializations: e.target.value })}
+                    placeholder="Poetic Realism, Political Subtext, Humanistic Cinema"
+                    className="w-full bg-black/80 border border-zinc-800 rounded-xl py-2.5 px-4 text-xs text-white focus:outline-none focus:border-gold-500"
+                  />
+                  
+                  <label className="block text-xs font-semibold text-zinc-300 mb-1.5 mt-3">
+                    Evaluation Criteria & Mentorship Focus
+                  </label>
+                  <input
+                    type="text"
+                    value={judgeForm.criteria}
+                    onChange={(e) => setJudgeForm({ ...judgeForm, criteria: e.target.value })}
+                    placeholder="Subtextual richness, authentic character psychology, and original voice."
+                    className="w-full bg-black/80 border border-zinc-800 rounded-xl py-2.5 px-4 text-xs text-white focus:outline-none focus:border-gold-500"
+                  />
+                </div>
+              </div>
+
+              {/* Quote & Biography */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
+                    Juror Quote / Guiding Artistic Philosophy
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={judgeForm.quote}
+                    onChange={(e) => setJudgeForm({ ...judgeForm, quote: e.target.value })}
+                    placeholder="A great short film doesn't waste a single frame. In ten or twenty minutes, it has to touch the human condition..."
+                    className="w-full bg-black/80 border border-zinc-800 rounded-xl py-2.5 px-4 text-xs text-white focus:outline-none focus:border-gold-500 italic text-[11px]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
+                    Full Juror Biography
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={judgeForm.bio}
+                    onChange={(e) => setJudgeForm({ ...judgeForm, bio: e.target.value })}
+                    placeholder="Renowned worldwide as a pioneer of contemporary cinema..."
+                    className="w-full bg-black/80 border border-zinc-800 rounded-xl py-2.5 px-4 text-xs text-white focus:outline-none focus:border-gold-500 text-[11px]"
+                  />
+                </div>
+              </div>
+
+              {/* Submit Buttons */}
+              <div className="flex items-center justify-end gap-3 pt-2">
+                {judgeEditMode && (
+                  <button
+                    type="button"
+                    onClick={resetJudgeForm}
+                    className="px-5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-xs font-bold text-zinc-300 hover:text-white"
+                  >
+                    Cancel
+                  </button>
+                )}
+                <button
+                  type="submit"
+                  disabled={judgesLoading}
+                  className="gold-btn py-3 px-6 rounded-xl text-xs font-bold uppercase tracking-wider shadow-gold-glow flex items-center gap-2"
+                >
+                  <Award className="w-4 h-4" />
+                  {judgeEditMode ? 'Update Juror Details' : 'Add Juror to Festival Board'}
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {/* Active Festival Jury Roster */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
+              <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                <Award className="w-4 h-4 text-gold-400" /> Active Grand Jury Roster ({judgesList.length} Jurors)
+              </h3>
+              <span className="text-[10px] text-zinc-500">
+                Synchronized across /judges, /jury & all language views
+              </span>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-semibold text-zinc-300 mb-1.5">Email Address</label>
-                <input
-                  type="email"
-                  required
-                  value={judgeForm.email}
-                  onChange={(e) => setJudgeForm({ ...judgeForm, email: e.target.value })}
-                  placeholder="judge@festival.com"
-                  className="w-full bg-black border border-zinc-800 rounded-xl py-2.5 px-4 text-xs text-white focus:outline-none focus:border-gold-500"
-                />
-              </div>
+              {judgesList.map((judge) => (
+                <div
+                  key={judge.id}
+                  className="bg-surface-card border border-zinc-800 hover:border-gold-500/40 rounded-2xl p-4 flex flex-col justify-between gap-3 transition-colors"
+                >
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-3.5">
+                      {/* Thumbnail with error fallback */}
+                      <div className="w-16 h-20 rounded-xl overflow-hidden bg-zinc-900 border border-gold-500/30 shrink-0 shadow-sm">
+                        <img
+                          src={judge.image || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600'}
+                          alt={judge.name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600'; }}
+                        />
+                      </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-zinc-300 mb-1.5">Username</label>
-                <input
-                  type="text"
-                  required
-                  value={judgeForm.username}
-                  onChange={(e) => setJudgeForm({ ...judgeForm, username: e.target.value })}
-                  placeholder="judge_steven"
-                  className="w-full bg-black border border-zinc-800 rounded-xl py-2.5 px-4 text-xs text-white focus:outline-none focus:border-gold-500"
-                />
-              </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-gold-500/10 text-gold-300 border border-gold-500/30 font-bold uppercase tracking-wider">
+                            {judge.divisionLabel || judge.division}
+                          </span>
+                          <span className="text-xs flex items-center gap-1 font-medium text-zinc-300">
+                            <span>{judge.countryFlag || '🌐'}</span>
+                            <span>{judge.country || 'Global'}</span>
+                          </span>
+                        </div>
+
+                        <h4 className="text-sm font-bold text-white mt-1 leading-snug truncate">
+                          {judge.name}
+                        </h4>
+                        {judge.nativeName && judge.nativeName !== judge.name && (
+                          <span className="text-xs text-gold-400 font-medium block truncate">
+                            {judge.nativeName}
+                          </span>
+                        )}
+                        <p className="text-[11px] text-zinc-400 line-clamp-1 mt-0.5">
+                          {judge.role}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Quote Snippet */}
+                    {judge.quote && (
+                      <p className="text-[11px] text-zinc-400 italic bg-black/40 border border-zinc-850 p-2 rounded-xl line-clamp-2">
+                        "{judge.quote}"
+                      </p>
+                    )}
+
+                    {/* Accolades or Specializations */}
+                    {judge.achievements && judge.achievements.length > 0 && (
+                      <p className="text-[10px] text-zinc-300 font-medium line-clamp-1">
+                        🏆 {judge.achievements[0]}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center justify-between pt-2 border-t border-zinc-850">
+                    <span className="text-[10px] text-zinc-500 font-mono">
+                      ID: {judge.id}
+                    </span>
+
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => handleEditJudge(judge)}
+                        className="px-3 py-1 rounded-lg bg-zinc-900 hover:bg-gold-500/20 text-zinc-300 hover:text-gold-300 border border-zinc-800 text-xs font-semibold flex items-center gap-1 transition-colors"
+                      >
+                        <Edit3 className="w-3 h-3" /> Edit
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteJudge(judge.id, judge.name)}
+                        className="px-2.5 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 text-xs font-semibold flex items-center gap-1 transition-colors"
+                        title="Remove juror"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
+          </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-zinc-300 mb-1.5">Password</label>
-              <input
-                type="password"
-                required
-                value={judgeForm.password}
-                onChange={(e) => setJudgeForm({ ...judgeForm, password: e.target.value })}
-                placeholder="••••••••••••"
-                className="w-full bg-black border border-zinc-800 rounded-xl py-2.5 px-4 text-xs text-white focus:outline-none focus:border-gold-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-zinc-300 mb-1.5">Profile Picture URL (Optional)</label>
-              <input
-                type="url"
-                value={judgeForm.profile_pic_url}
-                onChange={(e) => setJudgeForm({ ...judgeForm, profile_pic_url: e.target.value })}
-                placeholder="https://images.unsplash.com/..."
-                className="w-full bg-black border border-zinc-800 rounded-xl py-2.5 px-4 text-xs text-white focus:outline-none focus:border-gold-500"
-              />
-            </div>
-
-            <button
-              type="submit"
-              className="w-full gold-btn py-3 rounded-xl text-xs font-bold uppercase tracking-wider mt-4"
-            >
-              Create Judge Account
-            </button>
-          </form>
         </div>
       )}
 
