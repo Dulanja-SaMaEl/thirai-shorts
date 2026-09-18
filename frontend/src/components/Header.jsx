@@ -93,7 +93,20 @@ export default function Header() {
             </Link>
 
             {/* Role-Gated Navigation Links */}
-            {user && user.role === 'viewer' && (
+            {user && (user.role === 'submitter' || user.role === 'director' || user.email?.includes('director')) && (
+              <Link
+                href="/dashboard"
+                className={`px-3 py-1.5 text-xs font-semibold tracking-wide transition-colors ${
+                  isActive('/dashboard')
+                    ? 'text-gold-400 border-b-2 border-gold-400 font-bold'
+                    : 'text-gold-400/80 hover:text-gold-300'
+                }`}
+              >
+                {t('nav.directorStudio', '🎬 Director Studio')}
+              </Link>
+            )}
+
+            {user && user.role !== 'submitter' && user.role !== 'director' && !user.email?.includes('director') && user.role !== 'admin' && user.role !== 'judge' && (
               <Link
                 href="/dashboard"
                 className={`px-3 py-1.5 text-xs font-semibold tracking-wide transition-colors ${
@@ -102,7 +115,7 @@ export default function Header() {
                     : 'text-zinc-400 hover:text-white'
                 }`}
               >
-                {t('nav.dashboard', 'Dashboard')}
+                {t('nav.dashboard', 'Audience Lounge')}
               </Link>
             )}
 
@@ -277,7 +290,7 @@ export default function Header() {
                     isActive('/dashboard') ? 'text-gold-400 bg-white/[0.04]' : 'text-zinc-300 hover:text-white hover:bg-white/[0.04]'
                   }`}
                 >
-                  <span>Dashboard & Wallet</span>
+                  <span>{user.role === 'submitter' || user.role === 'director' || user.email?.includes('director') ? '🎬 Director Studio' : '🎟️ Audience Lounge & Wallet'}</span>
                   <span className="font-mono text-gold-400 text-xs">{user.tokens_balance ?? 2} Tokens</span>
                 </Link>
 

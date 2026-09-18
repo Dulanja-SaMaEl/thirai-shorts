@@ -515,10 +515,45 @@ router.get('/director/analytics', requireAuth(), async (req, res) => {
       } else if (isAdmin || isDirectorDemo) {
         userMovies = DEMO_MOVIES;
       }
+    const hasSubmissions = userMovies.length > 0;
+
+    // If user has no submissions and is not an admin/director demo, return clean zeroed profile for viewer
+    if (!hasSubmissions && !isAdmin && !isDirectorDemo) {
+      return res.status(200).json({
+        success: true,
+        has_submissions: false,
+        is_sample: false,
+        director: {
+          name: req.user.full_name || 'Festival Audience Member',
+          email: userEmail,
+          role: req.user.role || 'viewer',
+          profile_pic_url: req.user.profile_pic_url,
+          is_submitter: false,
+          submitter_discount_eligible: false,
+          standard_price: '$4.99/mo'
+        },
+        kpis: {
+          totalSubmissions: 0,
+          approvedCount: 0,
+          pendingCount: 0,
+          rejectedCount: 0,
+          winnersCount: 0,
+          totalViews: 0,
+          totalWatchHours: 0,
+          avgCompletionRate: 0,
+          totalCommunityVotes: 0,
+          avgCommunityRating: 0,
+          avgJuryScore: 0
+        },
+        movies: [],
+        viewsTrendData: [],
+        craftBreakdown: [],
+        audienceLanguages: [],
+        trafficSources: []
+      });
     }
 
-    const hasSubmissions = userMovies.length > 0;
-    const activeFilms = hasSubmissions ? userMovies : DEMO_MOVIES;
+    const activeFilms = userMovies.length > 0 ? userMovies : (isAdmin || isDirectorDemo ? DEMO_MOVIES : []);
 
     // 3. Enrich films with reviews, community votes, laurels, and timeline
     const enrichedFilms = activeFilms.map((m, idx) => {
@@ -710,7 +745,7 @@ router.get('/my/is-submitter', requireAuth(), async (req, res) => {
     const userRole = req.user.role;
 
     // 1. Direct role check
-    if (userRole === 'director') {
+    if (userRole === 'director' || userRole === 'submitter') {
       return res.status(200).json({
         success: true,
         is_submitter: true,
