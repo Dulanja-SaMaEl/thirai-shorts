@@ -9,7 +9,7 @@ if (!rawUrl.endsWith('/api')) {
 
 const api = axios.create({
   baseURL: rawUrl,
-  timeout: 60000, // 60s timeout to comfortably accommodate Render free tier cold-start wakeups
+  timeout: 15000, // 15s timeout to prevent hanging UI
   headers: {
     'Content-Type': 'application/json',
   },

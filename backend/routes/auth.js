@@ -182,8 +182,18 @@ router.post('/login', authLimiter, async (req, res) => {
 
     let authenticatedUser = null;
 
-    // 1. Direct Database Password Hash Check (via public.users table in Supabase) - FAST PATH
-    if (isSupabaseConfigured) {
+    // 1. Instant Demo Accounts Validation (Fast Local Bcrypt Verification)
+    if (DEMO_USERS[targetEmail]) {
+      const isMatch = await userStore.verifyPassword(targetEmail, password);
+      if (isMatch) {
+        authenticatedUser = DEMO_USERS[targetEmail].user;
+      } else {
+        return res.status(401).json({ error: 'Invalid email/username or password.' });
+      }
+    }
+
+    // 2. Direct Database Password Hash Check (via public.users table in Supabase)
+    if (!authenticatedUser && isSupabaseConfigured) {
       try {
         const { data: dbUser } = await withTimeout(
           supabaseAdmin.from('users').select('*').eq('email', targetEmail).maybeSingle(),

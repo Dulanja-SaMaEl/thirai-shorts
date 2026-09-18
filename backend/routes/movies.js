@@ -515,6 +515,8 @@ router.get('/director/analytics', requireAuth(), async (req, res) => {
       } else if (isAdmin || isDirectorDemo) {
         userMovies = DEMO_MOVIES;
       }
+    }
+
     const hasSubmissions = userMovies.length > 0;
 
     // If user has no submissions and is not an admin/director demo, return clean zeroed profile for viewer
