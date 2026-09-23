@@ -5,7 +5,7 @@ import Link from 'next/link';
 
 export default function PrivacyPolicyPage() {
   return (
-    <div className="max-w-4xl mx-auto py-8 px-4 space-y-8">
+    <div className="max-w-5xl mx-auto py-10 sm:py-14 px-4 sm:px-6 lg:px-8 space-y-10">
       
       {/* Page Header */}
       <div className="bg-surface-card border border-gold-500/30 rounded-3xl p-8 text-center space-y-3 glass-panel shadow-gold-glow">

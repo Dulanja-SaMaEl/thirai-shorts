@@ -392,7 +392,7 @@ export default function UploadPage() {
   ];
 
   return (
-    <div className="max-w-4xl mx-auto py-6 px-3 sm:px-6">
+    <div className="max-w-5xl mx-auto py-10 sm:py-14 px-4 sm:px-6 lg:px-8 space-y-10">
       
       {/* Page Header */}
       <div className="text-center mb-8">

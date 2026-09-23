@@ -852,47 +852,94 @@ export default function AdminPanelPage() {
   const handleToggleCommunityTimer = handleScheduleEvent;
 
   return (
-    <div className="space-y-8 py-4">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-10 sm:space-y-12">
       
-      {/* Admin Header */}
-      <div className="bg-surface-card border border-gold-500/30 rounded-3xl p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 glass-panel shadow-gold-glow">
+      {/* Tier 1: Admin Studio Command Header */}
+      <div className="bg-surface-card border border-gold-500/30 rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 glass-panel shadow-gold-glow">
         <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-gold-gradient p-0.5 shadow-gold-glow flex items-center justify-center">
+          <div className="w-14 h-14 rounded-2xl bg-gold-gradient p-0.5 shadow-gold-glow flex items-center justify-center shrink-0">
             <div className="w-full h-full bg-black rounded-[14px] flex items-center justify-center">
               <Shield className="w-7 h-7 text-gold-400" />
             </div>
           </div>
           <div>
-            <h1 className="text-2xl md:text-3xl font-extrabold text-white">Thirai+ Executive Admin Panel</h1>
-            <p className="text-xs text-zinc-400 mt-1">
-              Moderation engine, judge registration, community rating controls, and financial analytics.
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-gold-500/10 border border-gold-500/30 text-gold-400 text-[10px] font-extrabold uppercase tracking-widest mb-1.5">
+              Executive Console • T+ Studio
+            </div>
+            <h1 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight">T+ Executive Studio</h1>
+            <p className="text-xs text-zinc-400 mt-1 max-w-xl leading-relaxed">
+              Moderation engine, jury allocation, community rating governance, and financial analytics.
             </p>
           </div>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="flex items-center gap-2 bg-black/60 border border-zinc-800 p-1.5 rounded-2xl flex-wrap">
+        {/* Quick Actions & Live Indicator */}
+        <div className="flex items-center gap-3 self-stretch sm:self-auto justify-end flex-wrap">
+          <div className="px-3.5 py-2 rounded-xl bg-black/60 border border-zinc-800 text-xs text-zinc-400 flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="font-mono text-zinc-300 font-semibold">Live Production</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              fetchAdminData();
+              setActionNotification('Refreshed all admin portal data.');
+              setTimeout(() => setActionNotification(''), 3000);
+            }}
+            className="px-3.5 py-2 rounded-xl bg-zinc-900 border border-zinc-700/80 hover:border-gold-400 text-xs font-semibold text-zinc-200 hover:text-white transition-all flex items-center gap-1.5"
+            title="Refresh All Records"
+          >
+            <RefreshCw className="w-3.5 h-3.5 text-gold-400" />
+            <span>Sync</span>
+          </button>
+          <Link
+            href="/"
+            className="px-3.5 py-2 rounded-xl bg-gold-500/10 border border-gold-500/30 hover:border-gold-400 text-xs font-bold text-gold-300 hover:text-white transition-all flex items-center gap-1.5"
+          >
+            <Film className="w-3.5 h-3.5 text-gold-400" />
+            <span>Cinema View</span>
+          </Link>
+        </div>
+      </div>
+
+      {/* Tier 2: Dedicated Secondary Navigation Pill Bar */}
+      <div className="bg-surface-card/90 border border-gold-500/20 rounded-2xl p-2 sm:p-2.5 glass-panel shadow-lg backdrop-blur-md">
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
           {[
-            { id: 'moderation', label: 'Moderation Queue', icon: Film },
-            { id: 'awards', label: 'Awards & Laurels (22)', icon: Trophy },
-            { id: 'sponsors', label: 'Sponsors & Partners', icon: Sparkles },
+            { id: 'moderation', label: 'Moderation Queue', count: moviesList.length, icon: Film },
+            { id: 'awards', label: 'Awards & Laurels', count: '22', icon: Trophy },
+            { id: 'sponsors', label: 'Sponsors & Partners', count: sponsorsList.length, icon: Sparkles },
             { id: 'analytics', label: 'Analytics & Revenue', icon: BarChart3 },
-            { id: 'judges', label: 'Jury & Judges', icon: Award },
-            { id: 'timer', label: 'Community Event', icon: Clock },
+            { id: 'judges', label: 'Jury & Judges', count: judgesList.length, icon: Award },
+            { id: 'timer', label: 'Community Event', count: timerActive ? 'Live' : null, icon: Clock },
           ].map((tab) => {
             const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
-                  activeTab === tab.id
-                    ? 'bg-gold-gradient text-black shadow-gold-glow'
-                    : 'text-zinc-400 hover:text-white'
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all shrink-0 whitespace-nowrap ${
+                  isActive
+                    ? 'bg-gold-gradient text-black shadow-gold-glow scale-[1.02]'
+                    : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
                 }`}
               >
-                <Icon className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">{tab.label}</span>
+                <Icon className={`w-4 h-4 ${isActive ? 'text-black' : 'text-zinc-400'}`} />
+                <span>{tab.label}</span>
+                {tab.count !== undefined && tab.count !== null && (
+                  <span
+                    className={`ml-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
+                      isActive
+                        ? 'bg-black/25 text-black'
+                        : tab.count === 'Live'
+                        ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
+                        : 'bg-zinc-800 text-zinc-300 border border-zinc-700'
+                    }`}
+                  >
+                    {tab.count}
+                  </span>
+                )}
               </button>
             );
           })}
@@ -923,23 +970,23 @@ export default function AdminPanelPage() {
         });
 
         return (
-          <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-8">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-800/80 pb-5">
               <div>
-                <h2 className="text-xl font-bold text-white">Submission Moderation Queue</h2>
-                <p className="text-xs text-zinc-400 mt-0.5">
+                <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">Submission Moderation Queue</h2>
+                <p className="text-xs text-zinc-400 mt-1">
                   Review short film entries, verify student endorsement credentials, and moderate festival status.
                 </p>
               </div>
 
               {/* Moderation Filter Pills */}
-              <div className="flex items-center gap-1.5 flex-wrap bg-black/60 p-1.5 rounded-xl border border-zinc-800">
+              <div className="flex items-center gap-2 flex-wrap bg-black/60 p-2 rounded-2xl border border-zinc-800/80">
                 <button
                   type="button"
                   onClick={() => setModerationFilter('all')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                  className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition-all ${
                     moderationFilter === 'all'
-                      ? 'bg-gold-gradient text-black font-bold shadow-sm'
+                      ? 'bg-gold-gradient text-black font-extrabold shadow-sm'
                       : 'text-zinc-400 hover:text-white'
                   }`}
                 >
@@ -948,21 +995,21 @@ export default function AdminPanelPage() {
                 <button
                   type="button"
                   onClick={() => setModerationFilter('students')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5 ${
+                  className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 ${
                     moderationFilter === 'students'
-                      ? 'bg-gold-gradient text-black font-bold shadow-sm'
+                      ? 'bg-gold-gradient text-black font-extrabold shadow-sm'
                       : 'text-zinc-400 hover:text-white'
                   }`}
                 >
-                  <GraduationCap className="w-3.5 h-3.5" />
+                  <GraduationCap className="w-4 h-4" />
                   <span>Student Films ({studentCount})</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setModerationFilter('pending_students')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5 ${
+                  className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 ${
                     moderationFilter === 'pending_students'
-                      ? 'bg-amber-500 text-black font-bold shadow-sm'
+                      ? 'bg-amber-500 text-black font-extrabold shadow-sm'
                       : 'text-amber-400 hover:text-white'
                   }`}
                 >
@@ -973,18 +1020,24 @@ export default function AdminPanelPage() {
 
             <div className="space-y-4">
               {displayedMovies.length === 0 ? (
-                <div className="text-center py-16 bg-surface-card border border-zinc-800 rounded-2xl p-8 space-y-2">
-                  <Film className="w-10 h-10 text-zinc-600 mx-auto" />
-                  <h3 className="text-base font-bold text-white">No Submissions Found</h3>
-                  <p className="text-xs text-zinc-400">
-                    No short films match the selected moderation filter.
-                  </p>
-                  <button
-                    onClick={() => setModerationFilter('all')}
-                    className="mt-2 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg text-xs font-semibold"
-                  >
-                    View All Submissions
-                  </button>
+                <div className="text-center py-20 sm:py-24 bg-surface-card/60 border border-zinc-800/80 rounded-3xl p-8 space-y-4 glass-panel shadow-lg">
+                  <div className="w-16 h-16 rounded-2xl bg-zinc-900/90 border border-zinc-700/60 flex items-center justify-center mx-auto text-gold-400/80 shadow-gold-glow">
+                    <Film className="w-8 h-8" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <h3 className="text-xl font-bold text-white tracking-tight">No Submissions Found</h3>
+                    <p className="text-xs sm:text-sm text-zinc-400 max-w-md mx-auto leading-relaxed">
+                      No short films match the selected moderation filter. Filter by all entries or refresh to inspect incoming festival submissions.
+                    </p>
+                  </div>
+                  <div className="pt-2">
+                    <button
+                      onClick={() => setModerationFilter('all')}
+                      className="gold-btn py-2.5 px-6 rounded-xl text-xs font-bold uppercase tracking-wider inline-flex items-center gap-2 shadow-gold-glow"
+                    >
+                      <span>View All Submissions ({moviesList.length})</span>
+                    </button>
+                  </div>
                 </div>
               ) : (
                 displayedMovies.map((movie) => {
@@ -993,13 +1046,13 @@ export default function AdminPanelPage() {
                   return (
                     <div
                       key={movie.id}
-                      className="bg-surface-card border border-zinc-800 rounded-2xl p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 hover:border-gold-500/30 transition-colors"
+                      className="bg-surface-card/90 border border-zinc-800/90 rounded-2xl p-5 sm:p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 hover:border-gold-500/30 transition-all shadow-sm"
                     >
-                      <div className="flex items-start sm:items-center gap-4">
+                      <div className="flex items-start sm:items-center gap-5">
                         <img
                           src={movie.thumbnail_url || '/images/logo-icon.png'}
                           alt={movie.title}
-                          className="w-24 h-16 rounded-xl object-cover shrink-0 border border-zinc-800"
+                          className="w-28 h-18 sm:w-32 sm:h-20 rounded-xl object-cover shrink-0 border border-zinc-800 shadow-md"
                         />
                         <div>
                           <div className="flex flex-wrap items-center gap-2">

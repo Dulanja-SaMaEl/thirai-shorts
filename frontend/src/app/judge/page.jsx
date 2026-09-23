@@ -108,7 +108,7 @@ export default function JudgePanelPage() {
   };
 
   return (
-    <div className="space-y-8 py-4">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-10">
       
       {/* Header Banner */}
       <div className="bg-surface-card border border-gold-500/30 rounded-3xl p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 glass-panel shadow-gold-glow">

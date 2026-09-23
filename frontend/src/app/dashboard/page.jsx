@@ -144,7 +144,7 @@ export default function UserDashboardPage() {
   const canSwitchRoles = isDirectorRole || user.role === 'admin' || user.email?.toLowerCase().includes('director');
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8 py-6 px-4">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-10 sm:space-y-12">
       
       {/* Toast Notification */}
       {shareToast && (

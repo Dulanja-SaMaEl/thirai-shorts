@@ -73,7 +73,7 @@ function LoginForm() {
   };
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center py-8 px-4">
+    <div className="min-h-[85vh] flex items-center justify-center py-12 sm:py-16 px-4 sm:px-6">
       <div className="w-full max-w-md bg-surface-card border border-gold-500/40 rounded-3xl p-8 shadow-gold-glow-lg glass-panel space-y-6">
         
         {/* Thirai+ Wordmark Logo Header */}

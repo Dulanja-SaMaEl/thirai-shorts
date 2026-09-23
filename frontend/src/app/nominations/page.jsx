@@ -10,7 +10,7 @@ export default function NominationsPage() {
   const [selectedPlayingMovie, setSelectedPlayingMovie] = useState(null);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-8">
       {/* Breadcrumb & Navigation */}
       <div className="flex items-center justify-between mb-6">
         <Link
