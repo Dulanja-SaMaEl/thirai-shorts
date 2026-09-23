@@ -290,7 +290,8 @@ CREATE INDEX IF NOT EXISTS idx_festival_awards_movie ON public.festival_awards(m
 -- --------------------------------------------------------------------
 
 -- View: Public Movie Average Rating (Judge + Verified Community)
-CREATE OR REPLACE VIEW public.movie_analytics AS
+CREATE OR REPLACE VIEW public.movie_analytics
+WITH (security_invoker = true) AS
 SELECT 
     m.id AS movie_id,
     m.title,
@@ -323,6 +324,7 @@ ALTER TABLE public.reviews ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.packages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_movie_unlocks ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.festival_awards ENABLE ROW LEVEL SECURITY;
 
 -- Movies Policies
 DROP POLICY IF EXISTS "Public can view approved movies" ON public.movies;
@@ -362,6 +364,17 @@ DROP POLICY IF EXISTS "Users can read own profile" ON public.users;
 CREATE POLICY "Users can read own profile"
 ON public.users FOR SELECT
 USING (auth.uid() = id OR auth.jwt() ->> 'role' = 'admin');
+
+-- Festival Awards Policies
+DROP POLICY IF EXISTS "Public can view festival awards" ON public.festival_awards;
+CREATE POLICY "Public can view festival awards" 
+ON public.festival_awards FOR SELECT 
+USING (true);
+
+DROP POLICY IF EXISTS "Admins have full access to festival awards" ON public.festival_awards;
+CREATE POLICY "Admins have full access to festival awards" 
+ON public.festival_awards FOR ALL 
+USING (auth.jwt() ->> 'role' = 'admin');
 
 -- --------------------------------------------------------------------
 -- STEP 6: Seed Users in Supabase Auth & Public Users with Passwords
