@@ -245,18 +245,6 @@ function GalleryContent() {
       });
   }, [movies, searchQuery, activeCategory, selectedLanguage, selectedFilmType, sortOption]);
 
-  const [spotlightIndex, setSpotlightIndex] = useState(0);
-
-  // Spotlight Showcase Films: prioritize festival award winners and top selections
-  const spotlightMovies = useMemo(() => {
-    if (!movies || movies.length === 0) return [];
-    const winners = movies.filter(m => m.is_winner);
-    const nonWinners = movies.filter(m => !m.is_winner);
-    return [...winners, ...nonWinners].slice(0, 4);
-  }, [movies]);
-
-  const currentSpotlight = spotlightMovies[spotlightIndex] || movies[0] || null;
-
   const hasActiveFilters = searchQuery || activeCategory !== 'all' || selectedLanguage !== 'all' || selectedFilmType !== 'all';
 
   const resetAllFilters = () => {
@@ -268,7 +256,7 @@ function GalleryContent() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-12">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 space-y-8">
       
       {/* Toast Notification */}
       {shareToast && (
@@ -278,158 +266,17 @@ function GalleryContent() {
         </div>
       )}
 
-      {/* ========================================================================= */}
-      {/* 1. CINEMATIC CURATOR'S SPOTLIGHT HERO SHOWCASE                            */}
-      {/* ========================================================================= */}
-      {currentSpotlight ? (
-        <div className="relative rounded-3xl overflow-hidden border border-gold-500/30 glass-panel shadow-gold-glow group">
-          {/* Backdrop Image with Multi-layered Cinema Vignette */}
-          <div className="absolute inset-0 z-0">
-            <img
-              src={currentSpotlight.thumbnail_url || '/images/logo-wordmark.png'}
-              alt={currentSpotlight.title}
-              className="w-full h-full object-cover object-center filter brightness-[0.42] contrast-[1.12] scale-100 group-hover:scale-[1.02] transition-transform duration-700 ease-out"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#07080B] via-[#07080B]/60 to-transparent" />
-            <div className="absolute inset-0 bg-gradient-to-r from-[#07080B] via-[#07080B]/70 to-transparent" />
-          </div>
-
-          <div className="relative z-10 p-6 sm:p-10 lg:p-14 flex flex-col justify-between min-h-[440px] sm:min-h-[480px] gap-8">
-            
-            {/* Top Badges & Specifications */}
-            <div className="flex items-center justify-between gap-3 flex-wrap">
-              <div className="flex items-center gap-2 flex-wrap">
-                {currentSpotlight.is_winner ? (
-                  <span className="px-3.5 py-1.5 rounded-full bg-gold-gradient text-black font-extrabold text-[11px] uppercase tracking-wider shadow-gold-glow flex items-center gap-1.5">
-                    <Trophy className="w-3.5 h-3.5 fill-black" />
-                    <span>Grand Festival Winner</span>
-                  </span>
-                ) : (
-                  <span className="px-3.5 py-1.5 rounded-full bg-gold-500/10 border border-gold-500/40 text-gold-400 font-extrabold text-[11px] uppercase tracking-wider backdrop-blur-md flex items-center gap-1.5 shadow-sm">
-                    <Sparkles className="w-3.5 h-3.5 text-gold-400" />
-                    <span>Curator's Spotlight Selection</span>
-                  </span>
-                )}
-
-                {currentSpotlight.genre && (
-                  <span className="px-3 py-1 rounded-full bg-white/[0.08] backdrop-blur-md border border-white/[0.12] text-zinc-200 text-xs font-semibold">
-                    {currentSpotlight.genre}
-                  </span>
-                )}
-
-                {currentSpotlight.running_time && (
-                  <span className="px-3 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/[0.1] text-zinc-300 font-mono text-xs">
-                    {currentSpotlight.running_time}
-                  </span>
-                )}
-              </div>
-
-              {/* 4K Ultra HD Badge */}
-              <div className="hidden sm:flex items-center gap-2 text-[10px] font-mono text-zinc-400 bg-black/60 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-white/[0.08]">
-                <span className="text-gold-400 font-bold">4K ULTRA HD</span>
-                <span>•</span>
-                <span>5.1 DOLBY SURROUND</span>
-              </div>
-            </div>
-
-            {/* Middle: Title, Synopsis, Director Info */}
-            <div className="space-y-3.5 max-w-2xl">
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-tight drop-shadow-md">
-                {currentSpotlight.title}
-              </h1>
-
-              <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed font-light line-clamp-3 max-w-xl drop-shadow">
-                {currentSpotlight.description}
-              </p>
-
-              <div className="flex items-center gap-4 text-xs text-zinc-300 pt-1 flex-wrap">
-                <span>Director: <strong className="text-white font-semibold">{currentSpotlight.director_name || 'Independent Filmmaker'}</strong></span>
-                {currentSpotlight.original_language && (
-                  <span>• Language: <strong className="text-gold-300">{currentSpotlight.original_language}</strong></span>
-                )}
-                {currentSpotlight.country_of_production && (
-                  <span>• Origin: <strong className="text-white">{currentSpotlight.country_of_production}</strong></span>
-                )}
-              </div>
-            </div>
-
-            {/* Bottom Row: Actions & Spotlight Film Switcher */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2">
-              
-              {/* Cinema Action CTAs */}
-              <div className="flex items-center gap-3 flex-wrap">
-                <button
-                  type="button"
-                  onClick={() => handleWatchMovie(currentSpotlight)}
-                  className="gold-btn py-3 px-6 rounded-xl text-xs font-extrabold uppercase tracking-wider flex items-center gap-2 shadow-gold-glow"
-                >
-                  <Play className="w-4 h-4 fill-black text-black" />
-                  <span>Stream Full Film</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleWatchTrailer(currentSpotlight)}
-                  className="py-3 px-5 rounded-xl bg-white/[0.08] hover:bg-white/[0.16] border border-white/[0.15] text-white text-xs font-bold transition-all flex items-center gap-2 backdrop-blur-md"
-                >
-                  <Film className="w-4 h-4 text-gold-400" />
-                  <span>Watch Trailer</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setSelectedDossierMovie(currentSpotlight)}
-                  className="py-3 px-4 rounded-xl bg-black/60 hover:bg-black/90 border border-white/[0.12] text-zinc-300 hover:text-white text-xs font-semibold transition-all flex items-center gap-1.5 backdrop-blur-md"
-                >
-                  <Info className="w-3.5 h-3.5 text-zinc-400" />
-                  <span className="hidden sm:inline">Dossier</span>
-                </button>
-              </div>
-
-              {/* Spotlight Film Quick Switcher */}
-              {spotlightMovies.length > 1 && (
-                <div className="flex items-center gap-2 bg-black/70 backdrop-blur-md p-2 rounded-2xl border border-white/[0.1] self-start sm:self-auto">
-                  <span className="text-[10px] font-mono uppercase text-zinc-400 px-1 hidden sm:inline">Spotlight:</span>
-                  {spotlightMovies.map((m, idx) => (
-                    <button
-                      key={m.id}
-                      type="button"
-                      onClick={() => setSpotlightIndex(idx)}
-                      className={`relative w-12 sm:w-16 h-8 sm:h-10 rounded-xl overflow-hidden transition-all border ${
-                        spotlightIndex === idx
-                          ? 'border-gold-400 ring-2 ring-gold-400/50 scale-105 shadow-gold-glow'
-                          : 'border-white/[0.1] opacity-60 hover:opacity-100'
-                      }`}
-                      title={m.title}
-                    >
-                      <img
-                        src={m.thumbnail_url || '/images/logo-wordmark.png'}
-                        alt={m.title}
-                        className="w-full h-full object-cover"
-                      />
-                    </button>
-                  ))}
-                </div>
-              )}
-
-            </div>
-          </div>
-        </div>
-      ) : null}
-
-      {/* ========================================================================= */}
-      {/* 2. FESTIVAL CATALOGUE & DISCOVERY ENGINE                                  */}
-      {/* ========================================================================= */}
-      <div className="space-y-6 pt-2">
+      {/* FESTIVAL CATALOGUE & DISCOVERY ENGINE */}
+      <div className="space-y-6">
         
         {/* Section Header & Discovery Toolbar */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-white/[0.08] pb-5">
           <div className="space-y-1">
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-              Official Festival Selections
-            </h2>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white tracking-tight">
+              Film Gallery
+            </h1>
             <p className="text-xs sm:text-sm text-zinc-400 max-w-xl">
-              Filter by genre, language, award status, or student competition entries.
+              Official festival competition entries, award-winning cinema, and student shorts.
             </p>
           </div>
 
