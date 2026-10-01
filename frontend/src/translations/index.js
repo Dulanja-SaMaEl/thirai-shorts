@@ -3,6 +3,7 @@ export const TRANSLATIONS = {
     nav: {
       home: 'Home',
       officialSelections: 'Official Selections',
+      gallery: 'Film Gallery',
       nominations: 'Nominations',
       vipPasses: 'VIP Passes',
       jury: 'Jury',
@@ -128,6 +129,7 @@ export const TRANSLATIONS = {
     nav: {
       home: 'මුල් පිටුව',
       officialSelections: 'නිල තේරීම්',
+      gallery: 'චිත්‍රපට ගැලරිය',
       nominations: 'නාමයෝජනා',
       vipPasses: 'වීඅයිපී පාස්',
       jury: 'විනිශ්චය මණ්ඩලය',
@@ -253,6 +255,7 @@ export const TRANSLATIONS = {
     nav: {
       home: 'முகப்பு',
       officialSelections: 'அதிகாரப்பூர்வ தேர்வுகள்',
+      gallery: 'திரைப்பட தொகுப்பு',
       nominations: 'பரிந்துரைகள்',
       vipPasses: 'விஐபி பாஸ்கள்',
       jury: 'நடுவர் குழு',

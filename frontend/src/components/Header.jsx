@@ -49,7 +49,18 @@ export default function Header() {
                   : 'text-zinc-400 hover:text-white'
               }`}
             >
-              {t('nav.officialSelections', 'Official Selections')}
+              {t('nav.home', 'Home')}
+            </Link>
+
+            <Link
+              href="/gallery"
+              className={`px-3 py-1.5 text-xs font-semibold tracking-wide transition-colors ${
+                isActive('/gallery') || isActive('/movies')
+                  ? 'text-white border-b-2 border-gold-400'
+                  : 'text-zinc-400 hover:text-white'
+              }`}
+            >
+              {t('nav.gallery', 'Film Gallery')}
             </Link>
 
             <Link
@@ -238,7 +249,20 @@ export default function Header() {
                 isActive('/') ? 'text-gold-400 bg-white/[0.04]' : 'text-zinc-300 hover:text-white hover:bg-white/[0.04]'
               }`}
             >
-              <span>{t('nav.officialSelections', 'Official Selections')}</span>
+              <span>{t('nav.home', 'Home')}</span>
+              <ChevronRight className="w-3.5 h-3.5 text-zinc-600" />
+            </Link>
+
+            <Link
+              href="/gallery"
+              className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-semibold transition-colors ${
+                isActive('/gallery') || isActive('/movies') ? 'text-gold-400 bg-white/[0.04]' : 'text-zinc-300 hover:text-white hover:bg-white/[0.04]'
+              }`}
+            >
+              <span className="flex items-center gap-2">
+                <Film className="w-3.5 h-3.5 text-gold-400" />
+                <span>{t('nav.gallery', 'Film Gallery')}</span>
+              </span>
               <ChevronRight className="w-3.5 h-3.5 text-zinc-600" />
             </Link>
 
