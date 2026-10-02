@@ -71,7 +71,7 @@ export default function PayPalCheckoutModal({
 
   const handleCopyCard = () => {
     if (navigator?.clipboard) {
-      navigator.clipboard.writeText('4035170000000000');
+      navigator.clipboard.writeText('4111111111111111');
       setCopiedCard(true);
       setTimeout(() => setCopiedCard(false), 2500);
     }
@@ -362,9 +362,9 @@ export default function PayPalCheckoutModal({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {/* Mock Visa Card */}
                   <div className="bg-black/40 p-2.5 rounded-xl border border-white/[0.08] space-y-1">
-                    <span className="text-[10px] text-zinc-500 block font-mono uppercase tracking-wider">Mock Visa Card (Guest)</span>
-                    <span className="font-mono text-[12px] text-white font-bold tracking-widest block">4035 1700 0000 0000</span>
-                    <span className="text-[10px] text-zinc-400 block font-mono">Exp: 12/28 · CVV: 123 · Zip: 95131</span>
+                    <span className="text-[10px] text-zinc-500 block font-mono uppercase tracking-wider">Standard PayPal Visa (Guest)</span>
+                    <span className="font-mono text-[12px] text-white font-bold tracking-widest block">4111 1111 1111 1111</span>
+                    <span className="text-[10px] text-zinc-400 block font-mono">Exp: 01/2030 · CVV: 123 · Zip: 95131</span>
                     <button
                       type="button"
                       onClick={handleCopyCard}
