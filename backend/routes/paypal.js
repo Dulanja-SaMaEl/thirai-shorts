@@ -191,4 +191,68 @@ router.post('/capture-order', optionalAuth(), async (req, res) => {
   }
 });
 
+/**
+ * @route POST /api/paypal/simulate-sandbox-payment
+ * @desc Instant sandbox simulation for testing VIP pass activation without browser cookie collisions
+ */
+router.post('/simulate-sandbox-payment', optionalAuth(), async (req, res) => {
+  try {
+    if (process.env.PAYPAL_MODE === 'live') {
+      return res.status(403).json({ error: 'Sandbox simulation is disabled in live mode.' });
+    }
+
+    const { package_id, type = 'package', movie_id } = req.body;
+    const simOrderId = `SANDBOX_SIM_${Date.now()}`;
+    const simCaptureId = `CAP_SIM_${Date.now()}`;
+    const selectedPkg = PACKAGES.find(p => p.id === package_id) || PACKAGES[0];
+    const payerEmail = 'sb-vhxn453129032@personal.example.com';
+
+    let updatedUser = null;
+
+    if (type === 'package' && package_id && req.user?.id) {
+      updatedUser = userStore.subscribeUser(req.user.id, package_id);
+
+      if (isSupabaseConfigured) {
+        try {
+          const expiresAt = new Date();
+          if (package_id.includes('yearly')) {
+            expiresAt.setFullYear(expiresAt.getFullYear() + 1);
+          } else {
+            expiresAt.setMonth(expiresAt.getMonth() + 1);
+          }
+
+          await supabaseAdmin.from('users').update({
+            subscription_tier: package_id,
+            subscription_status: 'active',
+            subscription_expires_at: expiresAt.toISOString(),
+            tokens_balance: updatedUser.tokens_balance,
+          }).eq('id', req.user.id);
+
+          await supabaseAdmin.from('payments').insert({
+            user_id: req.user.id,
+            package_type: package_id,
+            amount_cents: Math.round(selectedPkg.price_usd * 100),
+            currency: 'usd',
+            status: 'paid',
+            payer_email: payerEmail,
+          });
+        } catch (dbErr) {
+          console.warn('Simulation DB update note:', dbErr.message);
+        }
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      simulated: true,
+      message: `[Sandbox Simulator] Payment successfully simulated! Activated ${selectedPkg?.name || 'Festival Pass'}.`,
+      orderId: simOrderId,
+      captureId: simCaptureId,
+      user: updatedUser,
+    });
+  } catch (error) {
+    return res.status(500).json({ error: error.message || 'Simulation error.' });
+  }
+});
+
 export default router;

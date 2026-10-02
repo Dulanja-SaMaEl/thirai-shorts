@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   CreditCard, ShieldCheck, CheckCircle2, AlertCircle, X,
-  Sparkles, Crown, ArrowRight, Lock, Loader2, Info
+  Sparkles, Crown, ArrowRight, Lock, Loader2, Info, Copy, Check
 } from 'lucide-react';
 import api from '../lib/api';
 import { useAuth } from '../context/AuthContext';
@@ -57,6 +57,44 @@ export default function PayPalCheckoutModal({
       setIsProcessing(false);
     }
   }, [isOpen, item?.id]);
+
+  const [copiedEmail, setCopiedEmail] = useState(false);
+  const handleCopyBuyer = () => {
+    if (navigator?.clipboard) {
+      navigator.clipboard.writeText('sb-vhxn453129032@personal.example.com');
+      setCopiedEmail(true);
+      setTimeout(() => setCopiedEmail(false), 2500);
+    }
+  };
+
+  const handleSimulateSandbox = async () => {
+    setIsProcessing(true);
+    setErrorMessage('');
+    try {
+      const res = await api.post('/paypal/simulate-sandbox-payment', {
+        type,
+        package_id: item?.id,
+        movie_id: movieData?.id,
+      });
+
+      if (res.data?.success) {
+        setIsSuccess(true);
+        setCaptureDetails({
+          orderId: res.data.orderId,
+          captureId: res.data.captureId,
+          message: res.data.message,
+        });
+        await refreshUser();
+        if (onSuccess) onSuccess(res.data);
+      } else {
+        setErrorMessage(res.data?.error || 'Simulation failed.');
+      }
+    } catch (err) {
+      setErrorMessage(err.response?.data?.error || err.message || 'Error simulating payment.');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   // Load PayPal SDK and render Smart Buttons
   useEffect(() => {
@@ -295,15 +333,38 @@ export default function PayPalCheckoutModal({
                 </div>
               </div>
 
-              {/* Sandbox Test Mode Notice Badge */}
-              <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-start gap-2.5">
-                <Info className="w-4 h-4 shrink-0 text-amber-400 mt-0.5" />
-                <div className="space-y-0.5">
-                  <span className="font-bold text-[11px] block">PayPal Sandbox Mode Active</span>
-                  <p className="text-[11px] text-amber-200/80 leading-relaxed">
-                    This transaction runs on the PayPal Developer Sandbox. Use a sandbox buyer test account or test debit/credit card to simulate payment.
-                  </p>
+              {/* Sandbox Test Mode Notice & Credentials Helper */}
+              <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-xs text-amber-300 flex items-center gap-1.5">
+                    <Info className="w-3.5 h-3.5 text-amber-400" /> PayPal Sandbox Testing Mode
+                  </span>
+                  <span className="px-2 py-0.5 rounded-md bg-amber-400/20 text-amber-300 font-mono text-[10px] font-bold">
+                    Sandbox
+                  </span>
                 </div>
+
+                <div className="bg-black/50 p-2.5 rounded-xl border border-amber-500/20 flex items-center justify-between gap-2">
+                  <div className="truncate">
+                    <span className="text-[10px] text-zinc-400 block font-mono">Mock Buyer Account:</span>
+                    <span className="font-mono text-xs text-white font-semibold truncate block">
+                      sb-vhxn453129032@personal.example.com
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleCopyBuyer}
+                    className="shrink-0 px-2.5 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-[11px] font-bold flex items-center gap-1 transition-colors"
+                  >
+                    {copiedEmail ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                    <span>{copiedEmail ? 'Copied!' : 'Copy'}</span>
+                  </button>
+                </div>
+
+                <ul className="text-[11px] text-amber-200/80 space-y-1 list-disc pl-4 leading-relaxed font-light">
+                  <li><strong>Incognito Window:</strong> Recommended to prevent cookie collisions with your developer dashboard.</li>
+                  <li><strong>Account Conflict:</strong> Only log into checkout with mock buyer account (merchants cannot pay themselves).</li>
+                </ul>
               </div>
 
               {/* Error Alert */}
@@ -342,6 +403,22 @@ export default function PayPalCheckoutModal({
                   ref={paypalContainerRef}
                   className={`w-full ${sdkLoading || isProcessing ? 'hidden' : 'block'}`}
                 />
+              </div>
+
+              {/* Instant Sandbox Simulation Bypass */}
+              <div className="pt-2 text-center border-t border-white/[0.08]">
+                <button
+                  type="button"
+                  onClick={handleSimulateSandbox}
+                  disabled={isProcessing}
+                  className="w-full py-2.5 px-3 rounded-xl bg-gold-500/10 hover:bg-gold-500/20 border border-gold-500/40 text-gold-300 text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-sm"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-gold-400" />
+                  <span>⚡ Instant Sandbox Simulation (1-Click Test)</span>
+                </button>
+                <p className="text-[10px] text-zinc-400 mt-1.5">
+                  Bypasses browser cookie collisions and tests complete database pass activation immediately.
+                </p>
               </div>
 
               {/* Footer Trust Guarantee */}

@@ -93,7 +93,7 @@ class PayPalService {
           custom_id: customId || undefined,
           amount: {
             currency_code: currency.toUpperCase(),
-            value: formattedAmount,
+            value: String(formattedAmount),
           },
         },
       ],
@@ -101,6 +101,9 @@ class PayPalService {
         brand_name: 'Thirai+ Short Film Festival',
         landing_page: 'NO_PREFERENCE',
         user_action: 'PAY_NOW',
+        shipping_preference: 'NO_SHIPPING',
+        return_url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard`,
+        cancel_url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/#packages`,
       },
     };
 
