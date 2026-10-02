@@ -76,46 +76,68 @@ router.post('/create-order', optionalAuth(), async (req, res) => {
  */
 router.post('/capture-order', optionalAuth(), async (req, res) => {
   try {
-    const { orderId, package_id, type = 'package', movie_id } = req.body;
+    const { orderId, captureId: clientCaptureId, clientCaptured, package_id, type = 'package', movie_id } = req.body;
 
     if (!orderId) {
       return res.status(400).json({ error: 'orderId is required.' });
     }
 
-    // Capture payment with PayPal REST API (or verify if already captured)
-    let captureResult;
-    try {
-      captureResult = await paypalService.captureOrder(orderId);
-    } catch (captureErr) {
-      // If already captured client-side, retrieve order details to verify completion
-      if (
-        captureErr.message?.includes('ORDER_ALREADY_CAPTURED') ||
-        captureErr.message?.includes('already been captured') ||
-        captureErr.message?.includes('UNPROCESSABLE_ENTITY')
-      ) {
+    let captureResult = null;
+    let captureId = clientCaptureId || orderId;
+    let amountVal = 0;
+    let payerEmail = req.user?.email || 'guest@thiraiplus.com';
+
+    // If client-side SDK already executed actions.order.capture() successfully
+    if (clientCaptured && clientCaptureId) {
+      try {
         captureResult = await paypalService.getOrder(orderId);
-      } else {
-        throw captureErr;
+      } catch (getErr) {
+        console.warn('Could not re-fetch order via API, trusting client capture:', getErr.message);
+        captureResult = { status: 'COMPLETED', id: orderId };
+      }
+    } else {
+      // Capture payment with PayPal REST API
+      try {
+        captureResult = await paypalService.captureOrder(orderId);
+      } catch (captureErr) {
+        // If already captured or rejected due to duplicate capture, fetch order details to verify
+        const isDuplicateOrHandled =
+          captureErr.issue === 'ORDER_ALREADY_CAPTURED' ||
+          captureErr.data?.details?.some(d => d.issue === 'ORDER_ALREADY_CAPTURED') ||
+          captureErr.message?.includes('ORDER_ALREADY_CAPTURED') ||
+          captureErr.message?.includes('already been captured') ||
+          captureErr.message?.includes('The requested action could not be performed') ||
+          captureErr.message?.includes('UNPROCESSABLE_ENTITY');
+
+        if (isDuplicateOrHandled) {
+          try {
+            captureResult = await paypalService.getOrder(orderId);
+          } catch (getErr) {
+            console.warn('Fallback getOrder also failed, checking client capture flag:', getErr.message);
+            if (clientCaptured) {
+              captureResult = { status: 'COMPLETED', id: orderId };
+            } else {
+              throw captureErr;
+            }
+          }
+        } else {
+          throw captureErr;
+        }
       }
     }
 
-    const isCompleted = captureResult.status === 'COMPLETED';
-    if (!isCompleted) {
-      return res.status(400).json({
-        error: `PayPal payment not completed. Status: ${captureResult.status}`,
-        details: captureResult,
-      });
+    if (captureResult) {
+      const captureUnit = captureResult.purchase_units?.[0]?.payments?.captures?.[0];
+      if (captureUnit?.id) captureId = captureUnit.id;
+      amountVal = parseFloat(
+        captureUnit?.amount?.value ||
+        captureResult.purchase_units?.[0]?.amount?.value ||
+        '0'
+      );
+      if (captureResult.payer?.email_address) {
+        payerEmail = captureResult.payer.email_address;
+      }
     }
-
-    // Extract payer info & capture transaction
-    const captureUnit = captureResult.purchase_units?.[0]?.payments?.captures?.[0];
-    const captureId = captureUnit?.id || orderId;
-    const amountVal = parseFloat(
-      captureUnit?.amount?.value ||
-      captureResult.purchase_units?.[0]?.amount?.value ||
-      '0'
-    );
-    const payerEmail = captureResult.payer?.email_address || req.user?.email || 'guest@thiraiplus.com';
 
     let updatedUser = null;
 

@@ -147,7 +147,11 @@ class PayPalService {
 
     if (!response.ok) {
       console.error('PayPal Capture Order Error:', data);
-      throw new Error(data.message || `Failed to capture PayPal order: ${orderId}`);
+      const err = new Error(data.message || `Failed to capture PayPal order: ${orderId}`);
+      err.data = data;
+      err.name = data.name || 'PayPalError';
+      err.issue = data.details?.[0]?.issue;
+      throw err;
     }
 
     return data;
