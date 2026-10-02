@@ -99,10 +99,9 @@ class PayPalService {
       ],
       application_context: {
         brand_name: 'Thirai+ Short Film Festival',
-        landing_page: 'BILLING',          // Forces card form first, not login page
+        landing_page: 'NO_PREFERENCE',   // Standard flow: popup shows login + card link beneath
         user_action: 'PAY_NOW',
         shipping_preference: 'NO_SHIPPING',
-        locale: 'en-US',
       },
     };
 

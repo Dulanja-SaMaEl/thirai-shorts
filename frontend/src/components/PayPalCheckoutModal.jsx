@@ -132,6 +132,7 @@ export default function PayPalCheckoutModal({
             setErrorMessage('');
             try {
               return actions.order.create({
+                intent: 'CAPTURE',
                 purchase_units: [
                   {
                     description: `${itemName}`.substring(0, 127),
@@ -145,8 +146,7 @@ export default function PayPalCheckoutModal({
                   brand_name: 'Thirai Plus',
                   shipping_preference: 'NO_SHIPPING',
                   user_action: 'PAY_NOW',
-                  landing_page: 'BILLING',    // ← CRITICAL: opens card form directly, not the login page
-                  locale: 'en-US',
+                  landing_page: 'NO_PREFERENCE',  // Standard flow: shows login + "Pay with Debit or Credit Card" link beneath
                 },
               });
             } catch (err) {
@@ -329,65 +329,83 @@ export default function PayPalCheckoutModal({
                 </div>
               </div>
 
-              {/* Sandbox Test Mode Notice & Credentials Helper */}
-              <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-xs text-amber-300 flex items-center gap-1.5">
-                    <Info className="w-3.5 h-3.5 text-amber-400" /> PayPal Sandbox Testing Mode
-                  </span>
-                  <span className="px-2 py-0.5 rounded-md bg-amber-400/20 text-amber-300 font-mono text-[10px] font-bold">
-                    Sandbox Active
-                  </span>
+              {/* Guest Checkout How-To Guide */}
+              <div className="rounded-2xl border border-white/[0.08] bg-[#0F131C] overflow-hidden">
+                <div className="px-4 py-3 border-b border-white/[0.06] flex items-center gap-2">
+                  <CreditCard className="w-3.5 h-3.5 text-gold-400" />
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-gold-400">Paying Without a PayPal Account</span>
                 </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-left">
-                  {/* Mock Personal Account */}
-                  <div className="bg-black/50 p-2.5 rounded-xl border border-amber-500/20 space-y-1">
-                    <span className="text-[10px] text-zinc-400 block font-mono">1. Mock PayPal Login:</span>
-                    <span className="font-mono text-[11px] text-white font-semibold truncate block">
-                      sb-vhxn453129032@personal.example.com
-                    </span>
-                    <button
-                      type="button"
-                      onClick={handleCopyBuyer}
-                      className="mt-1 w-full px-2 py-1 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-[10px] font-bold flex items-center justify-center gap-1 transition-colors"
-                    >
-                      {copiedEmail ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
-                      <span>{copiedEmail ? 'Copied' : 'Copy Mock Email'}</span>
-                    </button>
-                  </div>
-
-                  {/* Mock Visa Test Card */}
-                  <div className="bg-black/50 p-2.5 rounded-xl border border-amber-500/20 space-y-1">
-                    <span className="text-[10px] text-zinc-400 block font-mono">2. Mock Visa Card (Guest):</span>
-                    <span className="font-mono text-[11px] text-white font-semibold tracking-wider block">
-                      4035 1700 0000 0000
-                    </span>
-                    <span className="text-[10px] text-zinc-400 block font-mono">Exp: 12/28 • CVV: 123 • Zip: 95131</span>
-                    <button
-                      type="button"
-                      onClick={handleCopyCard}
-                      className="mt-1 w-full px-2 py-1 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-[10px] font-bold flex items-center justify-center gap-1 transition-colors"
-                    >
-                      {copiedCard ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
-                      <span>{copiedCard ? 'Copied' : 'Copy Mock Visa'}</span>
-                    </button>
-                  </div>
-                </div>
-
-                <div className="text-[11px] text-amber-200/80 leading-relaxed font-light space-y-1 pt-1 border-t border-amber-500/20">
-                  <p>
-                    💳 <strong>Visa Guest Flow:</strong> Click the PayPal button below, then choose <strong>"Pay with Debit or Credit Card"</strong> inside the secure popup. No PayPal account required!
-                  </p>
-                  <p>
-                    ⚠️ <strong>Notice:</strong> Real bank cards are rejected by PayPal Sandbox. Use the mock Visa above for testing. (In live production, all real Visa & Mastercard cards work).
-                  </p>
+                <div className="px-4 py-3 space-y-2.5">
+                  {[
+                    { step: '1', label: 'Click the yellow PayPal button below' },
+                    { step: '2', label: 'In the popup, scroll down past "Log In" and "Sign Up" to find the link:' },
+                    { step: '3', label: 'Enter your Visa / Mastercard details and pay as a guest — no account needed' },
+                  ].map(({ step, label }) => (
+                    <div key={step} className="flex items-start gap-3">
+                      <span className="shrink-0 w-5 h-5 rounded-full bg-gold-500/20 border border-gold-500/40 text-gold-300 text-[10px] font-black flex items-center justify-center mt-0.5">{step}</span>
+                      <span className="text-[11px] text-zinc-300 leading-relaxed">{label}
+                        {step === '2' && (
+                          <span className="block mt-1 font-bold text-gold-300 bg-gold-500/10 border border-gold-500/20 rounded-lg px-2 py-1 text-[11px]">
+                            💳 &quot;Pay with Debit or Credit Card&quot;
+                          </span>
+                        )}
+                      </span>
+                    </div>
+                  ))}
                 </div>
               </div>
 
-              {/* Payment Methods Accepted Strip */}
-              <div className="bg-[#121622] border border-white/[0.08] rounded-xl px-3.5 py-2.5 flex items-center justify-between text-xs text-zinc-300">
-                <span className="font-medium text-[11px] text-zinc-400">Accepted Payment Methods:</span>
+              {/* Sandbox Test Credentials */}
+              <div className="p-3.5 rounded-2xl bg-amber-500/[0.07] border border-amber-500/25 text-xs space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-[11px] text-amber-300 flex items-center gap-1.5">
+                    <Info className="w-3.5 h-3.5 text-amber-400" /> Sandbox Test Credentials
+                  </span>
+                  <span className="px-2 py-0.5 rounded bg-amber-400/20 text-amber-300 font-mono text-[10px] font-bold">Sandbox Active</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {/* Mock Visa Card */}
+                  <div className="bg-black/40 p-2.5 rounded-xl border border-white/[0.08] space-y-1">
+                    <span className="text-[10px] text-zinc-500 block font-mono uppercase tracking-wider">Mock Visa Card (Guest)</span>
+                    <span className="font-mono text-[12px] text-white font-bold tracking-widest block">4035 1700 0000 0000</span>
+                    <span className="text-[10px] text-zinc-400 block font-mono">Exp: 12/28 · CVV: 123 · Zip: 95131</span>
+                    <button
+                      type="button"
+                      onClick={handleCopyCard}
+                      className="mt-1.5 w-full px-2 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 text-[10px] font-bold flex items-center justify-center gap-1 transition-colors border border-amber-500/20"
+                    >
+                      {copiedCard ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                      <span>{copiedCard ? 'Copied!' : 'Copy Card Number'}</span>
+                    </button>
+                  </div>
+
+                  {/* Mock PayPal Account */}
+                  <div className="bg-black/40 p-2.5 rounded-xl border border-white/[0.08] space-y-1">
+                    <span className="text-[10px] text-zinc-500 block font-mono uppercase tracking-wider">Mock PayPal Login</span>
+                    <span className="font-mono text-[11px] text-white font-semibold block break-all leading-relaxed">
+                      sb-vhxn453129032@personal.example.com
+                    </span>
+                    <span className="text-[10px] text-zinc-400 block font-mono">Password: see developer.paypal.com</span>
+                    <button
+                      type="button"
+                      onClick={handleCopyBuyer}
+                      className="mt-1.5 w-full px-2 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 text-[10px] font-bold flex items-center justify-center gap-1 transition-colors border border-amber-500/20"
+                    >
+                      {copiedEmail ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                      <span>{copiedEmail ? 'Copied!' : 'Copy Email'}</span>
+                    </button>
+                  </div>
+                </div>
+
+                <p className="text-[10px] text-amber-200/60 leading-relaxed">
+                  ⚠️ Real bank cards are rejected in Sandbox. Use the mock Visa above. In live production, all real Visa & Mastercard cards work.
+                </p>
+              </div>
+
+              {/* Accepted Payment Methods */}
+              <div className="bg-[#121622] border border-white/[0.08] rounded-xl px-3.5 py-2.5 flex items-center justify-between">
+                <span className="text-[11px] text-zinc-500 font-medium">Accepted via PayPal:</span>
                 <div className="flex items-center gap-1.5 text-[10px] font-bold font-mono">
                   <span className="px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/30">VISA</span>
                   <span className="px-2 py-0.5 rounded bg-orange-500/20 text-orange-300 border border-orange-500/30">MC</span>
