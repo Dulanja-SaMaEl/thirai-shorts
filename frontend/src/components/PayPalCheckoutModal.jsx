@@ -9,7 +9,7 @@ import {
 import api from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 
-const DEFAULT_SANDBOX_CLIENT_ID = 'AVA-3ilu07V-E_gBmP5_3dgBvcoagmEqvGVK-ZS9IJbJSpm_lXvnZZYdhW7afqMTg029PrI-I3CcnfWi';
+const DEFAULT_SANDBOX_CLIENT_ID = 'BAAYuQ3A5_s248zg7kipb_K9_hiqutCCtc1xl73RVI7JTO5pXMe7jSWw3_ktAAl9fkzNmwtiL5NniJL9vw';
 
 export default function PayPalCheckoutModal({
   isOpen,
