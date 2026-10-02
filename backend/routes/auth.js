@@ -341,6 +341,13 @@ router.get('/me', async (req, res) => {
             3000
           );
           if (data) profile = data;
+          if (!profile && decoded.email) {
+            const { data: emailData } = await withTimeout(
+              supabaseAdmin.from('users').select('*').eq('email', decoded.email).maybeSingle(),
+              3000
+            );
+            if (emailData) profile = emailData;
+          }
         } catch (e) {}
       }
 

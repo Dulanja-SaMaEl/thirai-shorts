@@ -65,13 +65,13 @@ export const DEMO_USERS = {
   },
   'dulanja150abeysinghe@gmail.com': {
     password: 'Password@123',
-    password_hash: bcrypt.hashSync('Password@123', 10),
+    password_hash: '$2b$10$Dmy2qTll1hV1GrboBXzt.uyFAZQsUtGVOV6lKi/VyDearxXPksske',
     user: {
-      id: 'd1500000-0000-0000-0000-000000000001',
+      id: '41fb0550-5d45-4cc4-ae38-6d86e14abac3',
       email: 'dulanja150abeysinghe@gmail.com',
       full_name: 'Dulanja Abeysinghe',
       role: 'viewer',
-      username: 'dulanja_abeysinghe',
+      username: 'dulanja150abeysinghe',
       tokens_balance: 20,
       subscription_tier: 'monthly',
       subscription_status: 'active',

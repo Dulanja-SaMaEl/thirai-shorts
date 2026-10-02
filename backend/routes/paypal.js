@@ -174,30 +174,45 @@ router.post('/capture-order', optionalAuth(), async (req, res) => {
             expiresAt.setMonth(expiresAt.getMonth() + 1);
           }
 
-          const query = targetUserId
-            ? supabaseAdmin.from('users').update({
-                subscription_tier: package_id,
-                subscription_status: 'active',
-                subscription_expires_at: expiresAt.toISOString(),
-                tokens_balance: updatedUser?.tokens_balance ?? 20,
-              }).eq('id', targetUserId)
-            : supabaseAdmin.from('users').update({
-                subscription_tier: package_id,
-                subscription_status: 'active',
-                subscription_expires_at: expiresAt.toISOString(),
-                tokens_balance: updatedUser?.tokens_balance ?? 20,
-              }).eq('email', targetEmail);
+          // 1. Fetch exact user from Supabase by ID or Email
+          let dbUser = null;
+          if (targetUserId) {
+            const { data } = await supabaseAdmin.from('users').select('*').eq('id', targetUserId).maybeSingle();
+            if (data) dbUser = data;
+          }
+          if (!dbUser && targetEmail) {
+            const { data } = await supabaseAdmin.from('users').select('*').eq('email', targetEmail).maybeSingle();
+            if (data) dbUser = data;
+          }
 
-          await query;
+          if (dbUser) {
+            const addedTokens = package_id.includes('yearly') ? 50 : 20;
+            const newTokens = (dbUser.tokens_balance || 0) + addedTokens;
 
-          await supabaseAdmin.from('payments').insert({
-            user_id: targetUserId || updatedUser?.id || null,
-            package_type: package_id,
-            amount_cents: Math.round(amountVal * 100),
-            currency: 'usd',
-            status: 'paid',
-            payer_email: payerEmail,
-          });
+            const { data: updatedDbUser, error: updateErr } = await supabaseAdmin.from('users').update({
+              subscription_tier: package_id,
+              subscription_status: 'active',
+              subscription_expires_at: expiresAt.toISOString(),
+              tokens_balance: newTokens,
+              updated_at: new Date().toISOString(),
+            }).eq('id', dbUser.id).select().maybeSingle();
+
+            if (updateErr) {
+              console.error('Supabase DB subscription update error:', updateErr);
+            } else if (updatedDbUser) {
+              updatedUser = updatedDbUser;
+            }
+
+            // Insert payment audit log
+            await supabaseAdmin.from('payments').insert({
+              user_id: dbUser.id,
+              package_type: package_id,
+              amount_cents: Math.round(amountVal * 100),
+              currency: 'usd',
+              status: 'paid',
+              payer_email: payerEmail || dbUser.email,
+            });
+          }
         } catch (dbErr) {
           console.warn('Supabase DB subscription update note:', dbErr.message);
         }

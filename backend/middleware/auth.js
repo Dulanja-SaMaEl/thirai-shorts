@@ -26,6 +26,14 @@ export const requireAuth = (roles = []) => {
               .eq('id', decoded.id)
               .maybeSingle();
             if (dbUser) user = dbUser;
+            if (!user && decoded.email) {
+              const { data: dbUserByEmail } = await supabaseAdmin
+                .from('users')
+                .select('*')
+                .eq('email', decoded.email)
+                .maybeSingle();
+              if (dbUserByEmail) user = dbUserByEmail;
+            }
           } catch (e) {
             console.warn('Supabase profile fetch notice in auth middleware:', e.message);
           }
