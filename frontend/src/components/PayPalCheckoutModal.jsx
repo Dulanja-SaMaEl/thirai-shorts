@@ -85,7 +85,7 @@ export default function PayPalCheckoutModal({
     setSdkLoading(true);
     setSdkError('');
 
-    const targetSrc = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD&intent=capture&disable-funding=card`;
+    const targetSrc = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD&intent=capture&disable-funding=card,credit`;
 
     const loadScript = () => {
       return new Promise((resolve, reject) => {
@@ -142,7 +142,11 @@ export default function PayPalCheckoutModal({
                   },
                 ],
                 application_context: {
+                  brand_name: 'Thirai Plus',
                   shipping_preference: 'NO_SHIPPING',
+                  user_action: 'PAY_NOW',
+                  landing_page: 'BILLING',    // ← CRITICAL: opens card form directly, not the login page
+                  locale: 'en-US',
                 },
               });
             } catch (err) {
