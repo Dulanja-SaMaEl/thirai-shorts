@@ -81,18 +81,17 @@ export default function PayPalCheckoutModal({
         const existingScript = document.getElementById(scriptId);
 
         if (existingScript) {
-          if (window.paypal) {
+          if (window.paypal && existingScript.getAttribute('data-client-id') === clientId) {
             resolve(window.paypal);
             return;
           }
-          existingScript.addEventListener('load', () => resolve(window.paypal));
-          existingScript.addEventListener('error', (e) => reject(e));
-          return;
+          existingScript.remove();
         }
 
         const script = document.createElement('script');
         script.id = scriptId;
-        script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD&intent=capture&components=buttons`;
+        script.setAttribute('data-client-id', clientId);
+        script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD&intent=capture`;
         script.async = true;
         script.onload = () => resolve(window.paypal);
         script.onerror = (err) => reject(err);
@@ -116,31 +115,40 @@ export default function PayPalCheckoutModal({
             label: 'pay',
             height: 44,
           },
-          createOrder: async () => {
+          createOrder: (data, actions) => {
             setErrorMessage('');
             try {
-              const payload = {
-                type,
-                package_id: item?.id,
-                movie_title: movieData?.title,
-              };
-
-              const res = await api.post('/paypal/create-order', payload);
-              if (res.data?.success && res.data?.orderId) {
-                return res.data.orderId;
-              } else {
-                throw new Error(res.data?.error || 'Failed to initiate PayPal order.');
-              }
+              return actions.order.create({
+                purchase_units: [
+                  {
+                    description: `${itemName}`.substring(0, 127),
+                    amount: {
+                      currency_code: 'USD',
+                      value: Number(priceUsd).toFixed(2),
+                    },
+                  },
+                ],
+                application_context: {
+                  shipping_preference: 'NO_SHIPPING',
+                },
+              });
             } catch (err) {
-              const msg = err.response?.data?.error || err.message || 'Error creating PayPal order.';
+              const msg = err.message || 'Error creating PayPal order.';
               setErrorMessage(msg);
               throw err;
             }
           },
-          onApprove: async (data) => {
+          onApprove: async (data, actions) => {
             setIsProcessing(true);
             setErrorMessage('');
             try {
+              let captureId = data.orderID;
+              if (actions.order && typeof actions.order.capture === 'function') {
+                const captured = await actions.order.capture();
+                const capUnit = captured?.purchase_units?.[0]?.payments?.captures?.[0];
+                if (capUnit?.id) captureId = capUnit.id;
+              }
+
               const capturePayload = {
                 orderId: data.orderID,
                 type,
@@ -154,8 +162,8 @@ export default function PayPalCheckoutModal({
                 setIsSuccess(true);
                 setCaptureDetails({
                   orderId: data.orderID,
-                  captureId: res.data.captureId,
-                  message: res.data.message,
+                  captureId: res.data.captureId || captureId,
+                  message: res.data.message || 'Payment confirmed!',
                 });
                 await refreshUser();
                 if (onSuccess) onSuccess(res.data);

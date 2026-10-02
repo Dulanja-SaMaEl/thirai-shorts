@@ -82,8 +82,22 @@ router.post('/capture-order', optionalAuth(), async (req, res) => {
       return res.status(400).json({ error: 'orderId is required.' });
     }
 
-    // Capture payment with PayPal REST API
-    const captureResult = await paypalService.captureOrder(orderId);
+    // Capture payment with PayPal REST API (or verify if already captured)
+    let captureResult;
+    try {
+      captureResult = await paypalService.captureOrder(orderId);
+    } catch (captureErr) {
+      // If already captured client-side, retrieve order details to verify completion
+      if (
+        captureErr.message?.includes('ORDER_ALREADY_CAPTURED') ||
+        captureErr.message?.includes('already been captured') ||
+        captureErr.message?.includes('UNPROCESSABLE_ENTITY')
+      ) {
+        captureResult = await paypalService.getOrder(orderId);
+      } else {
+        throw captureErr;
+      }
+    }
 
     const isCompleted = captureResult.status === 'COMPLETED';
     if (!isCompleted) {
@@ -96,7 +110,11 @@ router.post('/capture-order', optionalAuth(), async (req, res) => {
     // Extract payer info & capture transaction
     const captureUnit = captureResult.purchase_units?.[0]?.payments?.captures?.[0];
     const captureId = captureUnit?.id || orderId;
-    const amountVal = parseFloat(captureUnit?.amount?.value || '0');
+    const amountVal = parseFloat(
+      captureUnit?.amount?.value ||
+      captureResult.purchase_units?.[0]?.amount?.value ||
+      '0'
+    );
     const payerEmail = captureResult.payer?.email_address || req.user?.email || 'guest@thiraiplus.com';
 
     let updatedUser = null;
