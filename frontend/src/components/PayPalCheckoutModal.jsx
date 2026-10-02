@@ -132,7 +132,7 @@ export default function PayPalCheckoutModal({
             setErrorMessage('');
             try {
               return actions.order.create({
-                intent: 'CAPTURE',
+                // NOTE: intent is already set via the SDK URL (&intent=capture) — do not repeat it here
                 purchase_units: [
                   {
                     description: `${itemName}`.substring(0, 127),
@@ -146,7 +146,7 @@ export default function PayPalCheckoutModal({
                   brand_name: 'Thirai Plus',
                   shipping_preference: 'NO_SHIPPING',
                   user_action: 'PAY_NOW',
-                  landing_page: 'NO_PREFERENCE',  // Standard flow: shows login + "Pay with Debit or Credit Card" link beneath
+                  landing_page: 'NO_PREFERENCE',
                 },
               });
             } catch (err) {
