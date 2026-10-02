@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Clapperboard, Sparkles, Check, Crown, X, ArrowRight, ShieldCheck, Tag } from 'lucide-react';
 import api from '../lib/api';
 import { useAuth } from '../context/AuthContext';
+import PayPalCheckoutModal from './PayPalCheckoutModal';
 
 export default function SubmitterPerksModal() {
   const { user, refreshUser } = useAuth();
@@ -13,6 +14,10 @@ export default function SubmitterPerksModal() {
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
+
+  // PayPal Checkout State
+  const [isPayPalOpen, setIsPayPalOpen] = useState(false);
+  const [selectedPkg, setSelectedPkg] = useState(null);
 
   useEffect(() => {
     // Only check if user is logged in and not already on an active VIP plan
@@ -45,26 +50,31 @@ export default function SubmitterPerksModal() {
     setIsOpen(false);
   };
 
-  const handleSubscribe = async (tier) => {
-    setLoading(true);
-    setErrorMsg('');
-    setSuccessMsg('');
-    try {
-      const res = await api.post('/packages/subscribe', { package_id: tier });
-      if (res.data.success) {
-        setSuccessMsg(res.data.message || 'Filmmaker VIP Pass activated!');
-        await refreshUser();
-        setTimeout(() => {
-          handleClose();
-        }, 1500);
-      } else {
-        setErrorMsg(res.data.error || 'Failed to activate pass.');
-      }
-    } catch (err) {
-      setErrorMsg(err.response?.data?.error || 'Subscription failed. Please try again.');
-    } finally {
-      setLoading(false);
-    }
+  const handleSubscribe = (tier) => {
+    const pkg = tier === 'submitter_yearly' ? {
+      id: 'submitter_yearly',
+      name: 'Filmmaker Submitter VIP (Annual)',
+      price_usd: 29.99,
+      price_lkr_estimate: 9300,
+      billing_period: 'yearly'
+    } : {
+      id: 'submitter_monthly',
+      name: 'Filmmaker Submitter VIP (Monthly)',
+      price_usd: 2.99,
+      price_lkr_estimate: 930,
+      billing_period: 'monthly'
+    };
+
+    setSelectedPkg(pkg);
+    setIsPayPalOpen(true);
+  };
+
+  const handlePayPalSuccess = async (data) => {
+    setSuccessMsg(data.message || 'Filmmaker VIP Pass activated!');
+    await refreshUser();
+    setTimeout(() => {
+      handleClose();
+    }, 1500);
   };
 
   if (!isOpen) return null;
@@ -222,6 +232,15 @@ export default function SubmitterPerksModal() {
           </div>
         </motion.div>
       </div>
+
+      {/* Filmmaker PayPal Checkout Modal */}
+      <PayPalCheckoutModal
+        isOpen={isPayPalOpen}
+        onClose={() => setIsPayPalOpen(false)}
+        item={selectedPkg}
+        type="package"
+        onSuccess={handlePayPalSuccess}
+      />
     </AnimatePresence>
   );
 }

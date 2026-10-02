@@ -1,0 +1,360 @@
+"use client";
+
+import { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  CreditCard, ShieldCheck, CheckCircle2, AlertCircle, X,
+  Sparkles, Crown, ArrowRight, Lock, Loader2, Info
+} from 'lucide-react';
+import api from '../lib/api';
+import { useAuth } from '../context/AuthContext';
+
+const DEFAULT_SANDBOX_CLIENT_ID = 'AVA-3ilu07V-E_gBmP5_3dgBvcoagmEqvGVK-ZS9IJbJSpm_lXvnZZYdhW7afqMTg029PrI-I3CcnfWi';
+
+export default function PayPalCheckoutModal({
+  isOpen,
+  onClose,
+  item = null, // { id: 'yearly', name: 'Viewer Cinema Pass (Annual)', price_usd: 39.99, price_lkr_estimate: 12400, features: [...] }
+  type = 'package', // 'package' | 'submission'
+  movieData = null, // { id, title }
+  onSuccess,
+}) {
+  const { user, refreshUser } = useAuth();
+  const [clientId, setClientId] = useState(
+    process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || DEFAULT_SANDBOX_CLIENT_ID
+  );
+  const [sdkLoading, setSdkLoading] = useState(true);
+  const [sdkError, setSdkError] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [captureDetails, setCaptureDetails] = useState(null);
+  const [errorMessage, setErrorMessage] = useState('');
+
+  const paypalContainerRef = useRef(null);
+
+  // Fetch PayPal config from backend if env var is not present
+  useEffect(() => {
+    let isMounted = true;
+    api.get('/paypal/config')
+      .then(res => {
+        if (isMounted && res.data?.clientId) {
+          setClientId(res.data.clientId);
+        }
+      })
+      .catch(err => {
+        console.warn('Could not fetch PayPal config, using fallback:', err.message);
+      });
+
+    return () => { isMounted = false; };
+  }, []);
+
+  // Reset modal state when opened
+  useEffect(() => {
+    if (isOpen) {
+      setIsSuccess(false);
+      setCaptureDetails(null);
+      setErrorMessage('');
+      setIsProcessing(false);
+    }
+  }, [isOpen, item?.id]);
+
+  // Load PayPal SDK and render Smart Buttons
+  useEffect(() => {
+    if (!isOpen || isSuccess || !clientId) return;
+
+    let isCancelled = false;
+    setSdkLoading(true);
+    setSdkError('');
+
+    const loadScript = () => {
+      return new Promise((resolve, reject) => {
+        const scriptId = 'paypal-sdk-script';
+        const existingScript = document.getElementById(scriptId);
+
+        if (existingScript) {
+          if (window.paypal) {
+            resolve(window.paypal);
+            return;
+          }
+          existingScript.addEventListener('load', () => resolve(window.paypal));
+          existingScript.addEventListener('error', (e) => reject(e));
+          return;
+        }
+
+        const script = document.createElement('script');
+        script.id = scriptId;
+        script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD&intent=capture&components=buttons`;
+        script.async = true;
+        script.onload = () => resolve(window.paypal);
+        script.onerror = (err) => reject(err);
+        document.body.appendChild(script);
+      });
+    };
+
+    loadScript()
+      .then((paypal) => {
+        if (isCancelled || !paypalContainerRef.current) return;
+        setSdkLoading(false);
+
+        // Clear any previous rendered buttons
+        paypalContainerRef.current.innerHTML = '';
+
+        paypal.Buttons({
+          style: {
+            layout: 'vertical',
+            color: 'gold',
+            shape: 'rect',
+            label: 'pay',
+            height: 44,
+          },
+          createOrder: async () => {
+            setErrorMessage('');
+            try {
+              const payload = {
+                type,
+                package_id: item?.id,
+                movie_title: movieData?.title,
+              };
+
+              const res = await api.post('/paypal/create-order', payload);
+              if (res.data?.success && res.data?.orderId) {
+                return res.data.orderId;
+              } else {
+                throw new Error(res.data?.error || 'Failed to initiate PayPal order.');
+              }
+            } catch (err) {
+              const msg = err.response?.data?.error || err.message || 'Error creating PayPal order.';
+              setErrorMessage(msg);
+              throw err;
+            }
+          },
+          onApprove: async (data) => {
+            setIsProcessing(true);
+            setErrorMessage('');
+            try {
+              const capturePayload = {
+                orderId: data.orderID,
+                type,
+                package_id: item?.id,
+                movie_id: movieData?.id,
+              };
+
+              const res = await api.post('/paypal/capture-order', capturePayload);
+
+              if (res.data?.success) {
+                setIsSuccess(true);
+                setCaptureDetails({
+                  orderId: data.orderID,
+                  captureId: res.data.captureId,
+                  message: res.data.message,
+                });
+                await refreshUser();
+                if (onSuccess) onSuccess(res.data);
+              } else {
+                setErrorMessage(res.data?.error || 'Payment capture failed.');
+              }
+            } catch (err) {
+              const msg = err.response?.data?.error || err.message || 'Error processing payment capture.';
+              setErrorMessage(msg);
+            } finally {
+              setIsProcessing(false);
+            }
+          },
+          onError: (err) => {
+            console.error('PayPal checkout error:', err);
+            setErrorMessage('PayPal encountered an error. Please try again or verify your sandbox test account.');
+          },
+          onCancel: () => {
+            console.log('PayPal checkout was cancelled by the user.');
+          },
+        }).render(paypalContainerRef.current);
+      })
+      .catch((err) => {
+        if (!isCancelled) {
+          console.error('PayPal SDK loading error:', err);
+          setSdkError('Unable to load PayPal Checkout. Please check your internet connection.');
+          setSdkLoading(false);
+        }
+      });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [isOpen, isSuccess, clientId, item?.id, type, movieData?.title, movieData?.id]);
+
+  if (!isOpen) return null;
+
+  const priceUsd = item?.price_usd !== undefined ? item.price_usd : 4.99;
+  const priceLkr = item?.price_lkr_estimate || Math.round(priceUsd * 310);
+  const itemName = item?.name || (type === 'submission' ? 'Film Submission Entry Fee' : 'Festival VIP Pass');
+
+  return (
+    <AnimatePresence>
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md overflow-y-auto">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95, y: 15 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95, y: 15 }}
+          className="relative w-full max-w-lg bg-[#0B0D13] border-2 border-gold-500/50 rounded-3xl p-6 sm:p-8 shadow-gold-glow-lg text-white space-y-6 overflow-hidden my-8"
+        >
+          {/* Close button */}
+          <button
+            onClick={onClose}
+            className="absolute top-5 right-5 p-2 rounded-full bg-zinc-900/80 text-zinc-400 hover:text-white border border-zinc-800 transition-colors z-10"
+            disabled={isProcessing}
+          >
+            <X className="w-4 h-4" />
+          </button>
+
+          {/* Success Screen */}
+          {isSuccess ? (
+            <div className="text-center space-y-5 py-4 animate-fade-in">
+              <div className="w-16 h-16 rounded-full bg-emerald-500/20 border-2 border-emerald-500 flex items-center justify-center mx-auto text-emerald-400 shadow-lg shadow-emerald-500/20">
+                <CheckCircle2 className="w-8 h-8" />
+              </div>
+
+              <div className="space-y-1">
+                <span className="text-[11px] font-mono uppercase text-gold-400 tracking-wider font-bold">
+                  Transaction Completed
+                </span>
+                <h3 className="text-2xl font-black text-white">Payment Confirmed!</h3>
+                <p className="text-xs text-zinc-300 max-w-sm mx-auto">
+                  {captureDetails?.message || `Your payment for "${itemName}" has been successfully processed.`}
+                </p>
+              </div>
+
+              <div className="bg-[#121622] border border-white/[0.08] rounded-2xl p-4 text-left text-xs space-y-2 font-mono">
+                <div className="flex justify-between text-zinc-400">
+                  <span>Product:</span>
+                  <span className="text-white font-semibold">{itemName}</span>
+                </div>
+                <div className="flex justify-between text-zinc-400">
+                  <span>Amount Paid:</span>
+                  <span className="text-emerald-400 font-bold">${priceUsd.toFixed(2)} USD</span>
+                </div>
+                {captureDetails?.captureId && (
+                  <div className="flex justify-between text-zinc-400 truncate gap-2">
+                    <span>Capture ID:</span>
+                    <span className="text-zinc-300 truncate">{captureDetails.captureId}</span>
+                  </div>
+                )}
+                <div className="flex justify-between text-zinc-400">
+                  <span>Status:</span>
+                  <span className="text-emerald-400 font-bold uppercase">PAID & ACTIVE</span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={onClose}
+                className="w-full gold-btn py-3.5 rounded-xl font-bold uppercase tracking-wider text-xs shadow-gold-glow flex items-center justify-center gap-2"
+              >
+                <span>Continue to Festival</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          ) : (
+            /* Checkout Screen */
+            <div className="space-y-6">
+              
+              {/* Header */}
+              <div className="space-y-1">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gold-500/10 border border-gold-500/30 text-gold-400 text-[11px] font-bold uppercase tracking-wider">
+                  <CreditCard className="w-3.5 h-3.5" /> Secure PayPal Checkout
+                </div>
+                <h3 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight">
+                  {itemName}
+                </h3>
+                <p className="text-xs text-zinc-400">
+                  Complete your order securely with PayPal balance, linked cards, or credit.
+                </p>
+              </div>
+
+              {/* Price & Plan Summary Card */}
+              <div className="bg-[#121622] border border-white/[0.08] rounded-2xl p-4 sm:p-5 flex items-center justify-between gap-4">
+                <div>
+                  <span className="text-[10px] text-zinc-400 uppercase font-semibold block">Total Due</span>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-2xl sm:text-3xl font-black font-mono text-white">
+                      ${priceUsd.toFixed(2)}
+                    </span>
+                    <span className="text-xs text-zinc-400 font-mono">USD</span>
+                  </div>
+                  <span className="text-[11px] text-gold-400/90 font-mono">
+                    ≈ Rs. {priceLkr.toLocaleString()} LKR
+                  </span>
+                </div>
+
+                <div className="text-right">
+                  <span className="inline-block px-2.5 py-1 rounded-full bg-gold-500/20 text-gold-300 border border-gold-500/40 text-[10px] font-bold uppercase">
+                    {item?.billing_period === 'yearly' ? 'Annual Pass' : (item?.billing_period === 'monthly' ? 'Monthly Pass' : 'Standard Entry')}
+                  </span>
+                  <div className="text-[10px] text-zinc-400 mt-1 flex items-center gap-1 justify-end">
+                    <Lock className="w-3 h-3 text-emerald-400" /> 256-bit Encrypted
+                  </div>
+                </div>
+              </div>
+
+              {/* Sandbox Test Mode Notice Badge */}
+              <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-start gap-2.5">
+                <Info className="w-4 h-4 shrink-0 text-amber-400 mt-0.5" />
+                <div className="space-y-0.5">
+                  <span className="font-bold text-[11px] block">PayPal Sandbox Mode Active</span>
+                  <p className="text-[11px] text-amber-200/80 leading-relaxed">
+                    This transaction runs on the PayPal Developer Sandbox. Use a sandbox buyer test account or test debit/credit card to simulate payment.
+                  </p>
+                </div>
+              </div>
+
+              {/* Error Alert */}
+              {errorMessage && (
+                <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-300 text-xs flex items-start gap-2.5 animate-fade-in">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-red-400 mt-0.5" />
+                  <span className="leading-relaxed">{errorMessage}</span>
+                </div>
+              )}
+
+              {sdkError && (
+                <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-300 text-xs flex items-start gap-2.5">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-red-400 mt-0.5" />
+                  <span>{sdkError}</span>
+                </div>
+              )}
+
+              {/* Loading State or PayPal Button Container */}
+              <div className="min-h-[140px] flex flex-col justify-center">
+                {sdkLoading && (
+                  <div className="flex flex-col items-center justify-center py-6 text-zinc-400 space-y-2">
+                    <Loader2 className="w-6 h-6 animate-spin text-gold-400" />
+                    <span className="text-xs">Initializing PayPal Gateway...</span>
+                  </div>
+                )}
+
+                {isProcessing && (
+                  <div className="flex flex-col items-center justify-center py-6 text-zinc-300 space-y-2 bg-[#0F131C] rounded-2xl border border-white/[0.08]">
+                    <Loader2 className="w-6 h-6 animate-spin text-emerald-400" />
+                    <span className="text-xs font-semibold">Verifying & Capturing PayPal Transaction...</span>
+                  </div>
+                )}
+
+                {/* PayPal Smart Buttons target container */}
+                <div
+                  ref={paypalContainerRef}
+                  className={`w-full ${sdkLoading || isProcessing ? 'hidden' : 'block'}`}
+                />
+              </div>
+
+              {/* Footer Trust Guarantee */}
+              <div className="flex items-center justify-between text-[11px] text-zinc-500 pt-2 border-t border-white/[0.06]">
+                <span className="flex items-center gap-1">
+                  <ShieldCheck className="w-3.5 h-3.5 text-zinc-400" /> Buyer Protection Included
+                </span>
+                <span>Immediate Digital Activation</span>
+              </div>
+            </div>
+          )}
+        </motion.div>
+      </div>
+    </AnimatePresence>
+  );
+}

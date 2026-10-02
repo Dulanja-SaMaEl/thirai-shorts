@@ -113,3 +113,34 @@ export const requireAuth = (roles = []) => {
     }
   };
 };
+
+export const optionalAuth = () => {
+  return async (req, res, next) => {
+    try {
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return next();
+      }
+
+      const token = authHeader.split(' ')[1];
+      const decoded = verifyToken(token);
+      if (decoded && decoded.id) {
+        let user = userStore.getUserById(decoded.id) || (decoded.email ? userStore.getUserByEmail(decoded.email)?.user : null);
+        if (!user) {
+          user = {
+            id: decoded.id,
+            email: decoded.email,
+            role: decoded.role || 'viewer',
+            full_name: decoded.full_name || decoded.email.split('@')[0],
+            tokens_balance: 2
+          };
+        }
+        req.user = user;
+      }
+      return next();
+    } catch (e) {
+      return next();
+    }
+  };
+};
+

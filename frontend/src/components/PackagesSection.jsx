@@ -9,6 +9,38 @@ import Link from 'next/link';
 import api from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import PayPalCheckoutModal from './PayPalCheckoutModal';
+
+const PACKAGES_MAP = {
+  monthly: {
+    id: 'monthly',
+    name: 'Viewer Cinema Pass (Monthly)',
+    price_usd: 4.99,
+    price_lkr_estimate: 1550,
+    billing_period: 'monthly'
+  },
+  yearly: {
+    id: 'yearly',
+    name: 'Viewer Cinema Pass (Annual)',
+    price_usd: 39.99,
+    price_lkr_estimate: 12400,
+    billing_period: 'yearly'
+  },
+  submitter_monthly: {
+    id: 'submitter_monthly',
+    name: 'Filmmaker Submitter VIP (Monthly)',
+    price_usd: 2.99,
+    price_lkr_estimate: 930,
+    billing_period: 'monthly'
+  },
+  submitter_yearly: {
+    id: 'submitter_yearly',
+    name: 'Filmmaker Submitter VIP (Annual)',
+    price_usd: 29.99,
+    price_lkr_estimate: 9300,
+    billing_period: 'yearly'
+  }
+};
 
 export default function PackagesSection({ onSubscribed }) {
   const { user, refreshUser } = useAuth();
@@ -17,6 +49,10 @@ export default function PackagesSection({ onSubscribed }) {
   const [successMsg, setSuccessMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [submitterStatus, setSubmitterStatus] = useState(null);
+
+  // PayPal Checkout Modal State
+  const [isPayPalModalOpen, setIsPayPalModalOpen] = useState(false);
+  const [selectedCheckoutPkg, setSelectedCheckoutPkg] = useState(null);
 
   useEffect(() => {
     if (user) {
@@ -44,29 +80,29 @@ export default function PackagesSection({ onSubscribed }) {
     user?.role === 'admin'
   );
 
-  const handleSubscribe = async (pkgId) => {
+  const handleSubscribe = (pkgId) => {
     if (!user) {
       window.location.href = '/login?redirect=/#packages';
       return;
     }
 
-    setLoadingPkg(pkgId);
-    setSuccessMsg('');
-    setErrorMsg('');
+    const pkg = PACKAGES_MAP[pkgId] || {
+      id: pkgId,
+      name: 'Festival VIP Pass',
+      price_usd: 4.99,
+      price_lkr_estimate: 1550,
+      billing_period: 'monthly'
+    };
 
-    try {
-      const res = await api.post('/packages/subscribe', { package_id: pkgId });
-      if (res.data.success) {
-        setSuccessMsg(res.data.message || 'Pass activated successfully!');
-        await refreshUser();
-        if (onSubscribed) onSubscribed(res.data.user);
-      } else {
-        setErrorMsg(res.data.error || 'Failed to activate pass.');
-      }
-    } catch (err) {
-      setErrorMsg(err.response?.data?.error || 'Failed to process pass subscription.');
-    } finally {
-      setLoadingPkg(null);
+    setSelectedCheckoutPkg(pkg);
+    setIsPayPalModalOpen(true);
+  };
+
+  const handleCheckoutSuccess = async (result) => {
+    setSuccessMsg(result.message || 'Pass activated successfully via PayPal!');
+    await refreshUser();
+    if (onSubscribed && result.user) {
+      onSubscribed(result.user);
     }
   };
 
@@ -419,6 +455,15 @@ export default function PackagesSection({ onSubscribed }) {
           </div>
         </div>
       </div>
+
+      {/* Interactive PayPal Checkout Modal */}
+      <PayPalCheckoutModal
+        isOpen={isPayPalModalOpen}
+        onClose={() => setIsPayPalModalOpen(false)}
+        item={selectedCheckoutPkg}
+        type="package"
+        onSuccess={handleCheckoutSuccess}
+      />
 
     </section>
   );

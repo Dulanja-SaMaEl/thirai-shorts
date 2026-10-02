@@ -156,9 +156,9 @@ export const FAQ_ITEMS = [
     category: 'passes',
     categoryLabel: 'Passes, Pricing & Tokens',
     question: 'What payment methods are supported, and how is LKR currency handled?',
-    answerText: 'Payments are processed securely via Stripe across 135+ global currencies using Visa, Mastercard, American Express, Apple Pay, and Google Pay. Prices are billed in USD, with approximate Sri Lankan Rupee conversions displayed at 1 USD ≈ 310 LKR for reference ($4.99 ≈ Rs. 1,550 LKR; $2.99 ≈ Rs. 930 LKR; $39.99 ≈ Rs. 12,400 LKR).',
-    highlight: 'Stripe Global Checkout: Visa, Mastercard, Apple Pay & Google Pay.',
-    tags: ['payment', 'stripe', 'credit card', 'lkr', 'currency', 'visa', 'mastercard', 'apple pay']
+    answerText: 'Payments are processed securely via PayPal and Stripe across 135+ global currencies using PayPal balance, Visa, Mastercard, American Express, Apple Pay, and Google Pay. Prices are billed in USD, with approximate Sri Lankan Rupee conversions displayed at 1 USD ≈ 310 LKR for reference ($4.99 ≈ Rs. 1,550 LKR; $2.99 ≈ Rs. 930 LKR; $39.99 ≈ Rs. 12,400 LKR).',
+    highlight: 'Secure PayPal & Stripe Checkout: PayPal, Visa, Mastercard, Apple Pay & Google Pay.',
+    tags: ['payment', 'paypal', 'stripe', 'credit card', 'lkr', 'currency', 'visa', 'mastercard', 'apple pay']
   },
 
   // ==================== 3. FESTIVAL SCHEDULE & DATES ====================
