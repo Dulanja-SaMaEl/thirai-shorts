@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   CreditCard, ShieldCheck, CheckCircle2, AlertCircle, X,
-  Sparkles, Crown, ArrowRight, Lock, Loader2, Info, Copy, Check
+  ArrowRight, Lock, Loader2, Info, Copy, Check
 } from 'lucide-react';
 import api from '../lib/api';
 import { useAuth } from '../context/AuthContext';
@@ -64,35 +64,6 @@ export default function PayPalCheckoutModal({
       navigator.clipboard.writeText('sb-vhxn453129032@personal.example.com');
       setCopiedEmail(true);
       setTimeout(() => setCopiedEmail(false), 2500);
-    }
-  };
-
-  const handleSimulateSandbox = async () => {
-    setIsProcessing(true);
-    setErrorMessage('');
-    try {
-      const res = await api.post('/paypal/simulate-sandbox-payment', {
-        type,
-        package_id: item?.id,
-        movie_id: movieData?.id,
-      });
-
-      if (res.data?.success) {
-        setIsSuccess(true);
-        setCaptureDetails({
-          orderId: res.data.orderId,
-          captureId: res.data.captureId,
-          message: res.data.message,
-        });
-        await refreshUser();
-        if (onSuccess) onSuccess(res.data);
-      } else {
-        setErrorMessage(res.data?.error || 'Simulation failed.');
-      }
-    } catch (err) {
-      setErrorMessage(err.response?.data?.error || err.message || 'Error simulating payment.');
-    } finally {
-      setIsProcessing(false);
     }
   };
 
@@ -403,22 +374,6 @@ export default function PayPalCheckoutModal({
                   ref={paypalContainerRef}
                   className={`w-full ${sdkLoading || isProcessing ? 'hidden' : 'block'}`}
                 />
-              </div>
-
-              {/* Instant Sandbox Simulation Bypass */}
-              <div className="pt-2 text-center border-t border-white/[0.08]">
-                <button
-                  type="button"
-                  onClick={handleSimulateSandbox}
-                  disabled={isProcessing}
-                  className="w-full py-2.5 px-3 rounded-xl bg-gold-500/10 hover:bg-gold-500/20 border border-gold-500/40 text-gold-300 text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-sm"
-                >
-                  <Sparkles className="w-3.5 h-3.5 text-gold-400" />
-                  <span>⚡ Instant Sandbox Simulation (1-Click Test)</span>
-                </button>
-                <p className="text-[10px] text-zinc-400 mt-1.5">
-                  Bypasses browser cookie collisions and tests complete database pass activation immediately.
-                </p>
               </div>
 
               {/* Footer Trust Guarantee */}

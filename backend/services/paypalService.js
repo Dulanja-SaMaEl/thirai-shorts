@@ -102,8 +102,6 @@ class PayPalService {
         landing_page: 'NO_PREFERENCE',
         user_action: 'PAY_NOW',
         shipping_preference: 'NO_SHIPPING',
-        return_url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard`,
-        cancel_url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/#packages`,
       },
     };
 
