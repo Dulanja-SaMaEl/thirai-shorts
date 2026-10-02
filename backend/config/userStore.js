@@ -62,6 +62,21 @@ export const DEMO_USERS = {
       subscription_status: 'active',
       profile_pic_url: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150'
     }
+  },
+  'dulanja150abeysinghe@gmail.com': {
+    password: 'Password@123',
+    password_hash: bcrypt.hashSync('Password@123', 10),
+    user: {
+      id: 'd1500000-0000-0000-0000-000000000001',
+      email: 'dulanja150abeysinghe@gmail.com',
+      full_name: 'Dulanja Abeysinghe',
+      role: 'viewer',
+      username: 'dulanja_abeysinghe',
+      tokens_balance: 20,
+      subscription_tier: 'monthly',
+      subscription_status: 'active',
+      profile_pic_url: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150'
+    }
   }
 };
 
@@ -191,6 +206,21 @@ export const userStore = {
       }
     }
     return user;
+  },
+
+  subscribeUserByEmail(email, tier = 'monthly') {
+    if (!email) return null;
+    const cleanEmail = email.trim().toLowerCase();
+    const record = registeredUsersByEmail.get(cleanEmail);
+    if (record && record.user) {
+      return this.subscribeUser(record.user.id, tier);
+    }
+    for (const user of registeredUsersById.values()) {
+      if (user.email && user.email.toLowerCase() === cleanEmail) {
+        return this.subscribeUser(user.id, tier);
+      }
+    }
+    return null;
   },
 
   isMovieUnlocked(userId, movieId) {

@@ -145,36 +145,61 @@ router.post('/capture-order', optionalAuth(), async (req, res) => {
     if (type === 'package' && package_id) {
       const selectedPkg = PACKAGES.find(p => p.id === package_id);
 
-      if (req.user?.id) {
-        updatedUser = userStore.subscribeUser(req.user.id, package_id);
+      const targetUserId = req.user?.id || req.body.user_id;
+      const targetEmail = (req.user?.email || req.body.user_email || payerEmail || '').toLowerCase().trim();
 
-        if (isSupabaseConfigured) {
-          try {
-            const expiresAt = new Date();
-            if (package_id.includes('yearly')) {
-              expiresAt.setFullYear(expiresAt.getFullYear() + 1);
-            } else {
-              expiresAt.setMonth(expiresAt.getMonth() + 1);
-            }
+      if (targetUserId) {
+        updatedUser = userStore.subscribeUser(targetUserId, package_id);
+      }
+      if (!updatedUser && targetEmail) {
+        updatedUser = userStore.subscribeUserByEmail(targetEmail, package_id);
+      }
+      if (!updatedUser && targetEmail) {
+        updatedUser = userStore.registerUser({
+          email: targetEmail,
+          password: 'Password@123',
+          full_name: targetEmail.split('@')[0],
+          role: 'viewer',
+          tokens_balance: package_id === 'yearly' ? 50 : 20,
+        });
+        userStore.subscribeUser(updatedUser.id, package_id);
+      }
 
-            await supabaseAdmin.from('users').update({
-              subscription_tier: package_id,
-              subscription_status: 'active',
-              subscription_expires_at: expiresAt.toISOString(),
-              tokens_balance: updatedUser.tokens_balance,
-            }).eq('id', req.user.id);
-
-            await supabaseAdmin.from('payments').insert({
-              user_id: req.user.id,
-              package_type: package_id,
-              amount_cents: Math.round(amountVal * 100),
-              currency: 'usd',
-              status: 'paid',
-              payer_email: payerEmail,
-            });
-          } catch (dbErr) {
-            console.warn('Supabase DB subscription update note:', dbErr.message);
+      if (isSupabaseConfigured && (targetUserId || targetEmail)) {
+        try {
+          const expiresAt = new Date();
+          if (package_id.includes('yearly')) {
+            expiresAt.setFullYear(expiresAt.getFullYear() + 1);
+          } else {
+            expiresAt.setMonth(expiresAt.getMonth() + 1);
           }
+
+          const query = targetUserId
+            ? supabaseAdmin.from('users').update({
+                subscription_tier: package_id,
+                subscription_status: 'active',
+                subscription_expires_at: expiresAt.toISOString(),
+                tokens_balance: updatedUser?.tokens_balance ?? 20,
+              }).eq('id', targetUserId)
+            : supabaseAdmin.from('users').update({
+                subscription_tier: package_id,
+                subscription_status: 'active',
+                subscription_expires_at: expiresAt.toISOString(),
+                tokens_balance: updatedUser?.tokens_balance ?? 20,
+              }).eq('email', targetEmail);
+
+          await query;
+
+          await supabaseAdmin.from('payments').insert({
+            user_id: targetUserId || updatedUser?.id || null,
+            package_type: package_id,
+            amount_cents: Math.round(amountVal * 100),
+            currency: 'usd',
+            status: 'paid',
+            payer_email: payerEmail,
+          });
+        } catch (dbErr) {
+          console.warn('Supabase DB subscription update note:', dbErr.message);
         }
       }
 
