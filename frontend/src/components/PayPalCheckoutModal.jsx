@@ -85,7 +85,8 @@ export default function PayPalCheckoutModal({
     setSdkLoading(true);
     setSdkError('');
 
-    const targetSrc = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD&intent=capture&disable-funding=card,credit`;
+    // Clean SDK URL — no disable-funding flags that can conflict with popup rendering
+    const targetSrc = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD&intent=capture&components=buttons`;
 
     const loadScript = () => {
       return new Promise((resolve, reject) => {
@@ -117,43 +118,33 @@ export default function PayPalCheckoutModal({
         if (isCancelled || !paypalContainerRef.current) return;
         setSdkLoading(false);
 
-        // Clear any previous rendered buttons
         paypalContainerRef.current.innerHTML = '';
 
-        paypal.Buttons({
+        // Explicitly render only the PayPal button (fundingSource: PAYPAL)
+        // This avoids the broken inline card iframe (ACDC) without needing disable-funding
+        const button = paypal.Buttons({
+          fundingSource: paypal.FUNDING.PAYPAL,
           style: {
             layout: 'vertical',
             color: 'gold',
             shape: 'rect',
-            label: 'paypal',
-            height: 46,
+            label: 'pay',
+            height: 48,
           },
           createOrder: (data, actions) => {
             setErrorMessage('');
-            try {
-              return actions.order.create({
-                // NOTE: intent is already set via the SDK URL (&intent=capture) — do not repeat it here
-                purchase_units: [
-                  {
-                    description: `${itemName}`.substring(0, 127),
-                    amount: {
-                      currency_code: 'USD',
-                      value: Number(priceUsd).toFixed(2),
-                    },
+            // Minimal payload — application_context stripped to avoid popup renderer crash
+            return actions.order.create({
+              purchase_units: [
+                {
+                  description: `${itemName}`.substring(0, 127),
+                  amount: {
+                    currency_code: 'USD',
+                    value: Number(priceUsd).toFixed(2),
                   },
-                ],
-                application_context: {
-                  brand_name: 'Thirai Plus',
-                  shipping_preference: 'NO_SHIPPING',
-                  user_action: 'PAY_NOW',
-                  landing_page: 'NO_PREFERENCE',
                 },
-              });
-            } catch (err) {
-              const msg = err.message || 'Error creating PayPal order.';
-              setErrorMessage(msg);
-              throw err;
-            }
+              ],
+            });
           },
           onApprove: async (data, actions) => {
             setIsProcessing(true);
@@ -166,14 +157,12 @@ export default function PayPalCheckoutModal({
                 if (capUnit?.id) captureId = capUnit.id;
               }
 
-              const capturePayload = {
+              const res = await api.post('/paypal/capture-order', {
                 orderId: data.orderID,
                 type,
                 package_id: item?.id,
                 movie_id: movieData?.id,
-              };
-
-              const res = await api.post('/paypal/capture-order', capturePayload);
+              });
 
               if (res.data?.success) {
                 setIsSuccess(true);
@@ -196,12 +185,18 @@ export default function PayPalCheckoutModal({
           },
           onError: (err) => {
             console.error('PayPal checkout error:', err);
-            setErrorMessage('PayPal encountered an error. Please try again or verify your sandbox test account.');
+            setErrorMessage('PayPal encountered an error. Please try again in a private/incognito window.');
           },
           onCancel: () => {
-            console.log('PayPal checkout was cancelled by the user.');
+            console.log('PayPal checkout cancelled by user.');
           },
-        }).render(paypalContainerRef.current);
+        });
+
+        if (button.isEligible()) {
+          button.render(paypalContainerRef.current);
+        } else {
+          setSdkError('PayPal button is not available in this browser. Please try a different browser.');
+        }
       })
       .catch((err) => {
         if (!isCancelled) {
